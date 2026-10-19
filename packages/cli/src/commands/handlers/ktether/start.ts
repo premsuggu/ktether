@@ -50,19 +50,33 @@ export default Runtime.handler(
     process.stdout.write(`Idle Timeout: ${timeout} minutes` + EOL + EOL)
 
     let channelId: string
-    const pending = state.status === "pending" && state.channelId && state.model === model
+    let signingKey: string
+    let apiKey: string
+    const pending =
+      state.status === "pending" && state.channelId && state.signingKey && state.apiKey && state.model === model
     const pendingKernel = pending ? getKernelStatus(creds.username) : undefined
     if (pending && (pendingKernel === "QUEUED" || pendingKernel === "RUNNING")) {
       channelId = state.channelId!
+      signingKey = state.signingKey!
+      apiKey = state.apiKey!
       process.stdout.write(`-> Resuming previous launch (Kaggle kernel is ${pendingKernel})...` + EOL)
     } else {
       process.stdout.write("-> Packaging kernel & pushing to Kaggle GPU..." + EOL)
       const bundle = prepareStagingBundle(creds.username, model, timeout)
       channelId = bundle.channelId
+      signingKey = bundle.signingKey
+      apiKey = bundle.apiKey
       const pushOutput = pushKaggleKernel(bundle.stagingDir)
       process.stdout.write(`   ${pushOutput}` + EOL)
       // Persist right away so an interrupted or timed-out start can be resumed.
-      saveState({ model, channelId, apiKey: bundle.apiKey, status: "pending", active: false })
+      saveState({
+        model,
+        channelId,
+        apiKey: bundle.apiKey,
+        signingKey: bundle.signingKey,
+        status: "pending",
+        active: false,
+      })
       process.stdout.write("[OK] Kernel successfully queued on Kaggle GPU!" + EOL)
     }
     process.stdout.write("-> Waiting for Kaggle to assign a GPU and start the inference server..." + EOL)
@@ -81,12 +95,13 @@ export default Runtime.handler(
     }
 
     const readyData = yield* Effect.promise(() =>
-      pollSignaling(channelId, { onProgress, onStatus, username: creds.username }),
+      pollSignaling(channelId, signingKey, { onProgress, onStatus, username: creds.username }),
     )
 
     saveState({
       url: readyData.tunnel_url,
-      apiKey: readyData.api_key,
+      apiKey,
+      signingKey,
       model,
       channelId,
       sessionStart: Date.now(),

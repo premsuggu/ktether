@@ -1,8 +1,16 @@
 import fs from "node:fs"
 import path from "node:path"
 import os from "node:os"
-import crypto from "node:crypto"
 import { spawnSync } from "node:child_process"
+import {
+  generateApiKey,
+  generateChannelId,
+  generateSigningKey,
+  createStopMessage,
+  isTunnelUrl,
+  openEnvelope,
+  relayBase,
+} from "./signaling.js"
 
 /** The only Kaggle notebook ktether ever creates, updates or deletes. */
 export const KERNEL_SLUG = "ktether-runner"
@@ -78,6 +86,8 @@ export interface KTetherState {
   apiKey?: string
   model?: string
   channelId?: string
+  /** HMAC key authenticating signalling messages. Never sent over the relay. */
+  signingKey?: string
   sessionStart?: number
   active?: boolean
   status?: "pending" | "ready" | "stopped"
@@ -132,10 +142,12 @@ Runs on Kaggle GPU. Sets up llama-server, downloads the coding LLM,
 establishes a Cloudflare tunnel, and signals connection info via ntfy.sh.
 """
 
-import os, sys, json, time, re, signal, subprocess, threading, urllib.request, urllib.error, tarfile, traceback
+import os, sys, json, time, re, signal, subprocess, threading, urllib.request, urllib.error, tarfile, traceback, hmac, hashlib
 
 CONFIG_FILE = "kernel_config.json"
 EMBEDDED_CONFIG = json.loads(${configJson})
+NTFY_URL = "https://ntfy.sh"
+SIGNING_KEY = ""
 shutdown_event = threading.Event()
 active_procs = []
 
@@ -153,13 +165,17 @@ def load_config():
             log(f"Config load error: {e}")
     return EMBEDDED_CONFIG
 
+def sign(message):
+    return hmac.new(SIGNING_KEY.encode(), message.encode(), hashlib.sha256).hexdigest()
+
 def send_signal(channel_id, event_type, data):
-    url = f"https://ntfy.sh/{channel_id}"
-    payload = {"event": event_type, "timestamp": time.time(), **data}
+    url = f"{NTFY_URL}/{channel_id}"
+    payload = json.dumps({"event": event_type, "timestamp": time.time(), **data}, sort_keys=True, separators=(",", ":"))
+    body = json.dumps({"p": payload, "s": sign(payload)})
     try:
         req = urllib.request.Request(
             url,
-            data=json.dumps(payload).encode("utf-8"),
+            data=body.encode("utf-8"),
             headers={"Content-Type": "application/json", "Title": f"ktether: {event_type}"}
         )
         urllib.request.urlopen(req, timeout=10)
@@ -300,8 +316,20 @@ def start_tunnel(cloudflared_bin):
     threading.Thread(target=lambda: [print(f"[tunnel] {l.strip()}", flush=True) for l in proc.stdout if l], daemon=True).start()
     return tunnel_url
 
+def is_valid_stop(text):
+    parts = text.strip().split(":")
+    if len(parts) != 3 or parts[0] != "STOP":
+        return False
+    try:
+        ts = float(parts[1])
+    except ValueError:
+        return False
+    if abs(time.time() - ts) > 600:
+        return False
+    return hmac.compare_digest(parts[2], sign("STOP:" + parts[1]))
+
 def control_loop(channel_id):
-    url = f"https://ntfy.sh/{channel_id}_ctrl/json"
+    url = f"{NTFY_URL}/{channel_id}_ctrl/json"
     while not shutdown_event.is_set():
         try:
             req = urllib.request.Request(url, headers={"User-Agent": "ktether"})
@@ -311,8 +339,8 @@ def control_loop(channel_id):
                         return
                     if line:
                         msg = json.loads(line.decode("utf-8"))
-                        if msg.get("event") == "message" and "STOP" in msg.get("message", "").upper():
-                            log("STOP signal received! Terminating...")
+                        if msg.get("event") == "message" and is_valid_stop(msg.get("message", "")):
+                            log("Authenticated STOP signal received! Terminating...")
                             shutdown_event.set()
                             return
         except Exception:
@@ -341,7 +369,10 @@ def idle_watchdog(idle_minutes, channel_id):
             pass
 
 def main():
+    global NTFY_URL, SIGNING_KEY
     cfg = load_config()
+    NTFY_URL = cfg.get("ntfy_url", NTFY_URL)
+    SIGNING_KEY = cfg.get("signing_key", "")
     channel_id = cfg.get("channel_id", "ktether_default")
     api_key = cfg.get("api_key", "sec_default")
     model_name = cfg.get("model_name", "qwen2.5-coder-14b")
@@ -367,7 +398,6 @@ def main():
         tunnel_url = start_tunnel(cloudflared)
         send_signal(channel_id, "ready", {
             "tunnel_url": tunnel_url,
-            "api_key": api_key,
             "model": model_name,
             "gpu": gpu
         })
@@ -402,10 +432,11 @@ export function prepareStagingBundle(
   username: string,
   modelKey: string,
   idleTimeoutMinutes: number,
-): { stagingDir: string; channelId: string; apiKey: string } {
+): { stagingDir: string; channelId: string; apiKey: string; signingKey: string } {
   const modelSpec = AVAILABLE_MODELS[modelKey] ?? AVAILABLE_MODELS["qwen2.5-coder-14b"]
-  const channelId = `kt_${crypto.randomBytes(6).toString("hex")}`
-  const apiKey = `kgp_${crypto.randomBytes(16).toString("hex")}`
+  const channelId = generateChannelId()
+  const apiKey = generateApiKey()
+  const signingKey = generateSigningKey()
 
   const stagingDir = path.join(os.tmpdir(), "ktether_staging")
   if (fs.existsSync(stagingDir)) fs.rmSync(stagingDir, { recursive: true, force: true })
@@ -414,6 +445,8 @@ export function prepareStagingBundle(
   const kernelConfig = {
     channel_id: channelId,
     api_key: apiKey,
+    signing_key: signingKey,
+    ntfy_url: relayBase(),
     model_repo: modelSpec.repo,
     model_file: modelSpec.file,
     model_name: modelSpec.id,
@@ -444,7 +477,7 @@ export function prepareStagingBundle(
   }
   fs.writeFileSync(path.join(stagingDir, "kernel-metadata.json"), JSON.stringify(metadata, null, 2), "utf-8")
 
-  return { stagingDir, channelId, apiKey }
+  return { stagingDir, channelId, apiKey, signingKey }
 }
 
 export function pushKaggleKernel(stagingDir: string): string {
@@ -480,12 +513,19 @@ export interface PollOptions {
   readonly username?: string
 }
 
+export interface ReadySignal {
+  readonly tunnel_url: string
+  readonly model: string
+  readonly gpu: string
+}
+
 export async function pollSignaling(
   channelId: string,
+  signingKey: string,
   options: PollOptions = {},
-): Promise<{ tunnel_url: string; api_key: string; model: string; gpu: string }> {
+): Promise<ReadySignal> {
   const { queueTimeoutSeconds = 3600, bootTimeoutSeconds = 900, onProgress, onStatus, username } = options
-  const url = `https://ntfy.sh/${channelId}/json?poll=1&since=all`
+  const url = `${relayBase()}/${channelId}/json?poll=1&since=all`
   const startTime = Date.now()
   let runningSince: number | undefined
   let lastStatusCheck = 0
@@ -498,25 +538,31 @@ export async function pollSignaling(
       if (resp.ok) {
         for (const line of (await resp.text()).split("\n")) {
           if (!line.trim()) continue
-          let payload: Record<string, any>
+          let payload: Record<string, any> | undefined
           try {
             const entry = JSON.parse(line)
             if (entry.event !== "message") continue
-            payload = JSON.parse(entry.message)
+            payload = openEnvelope(signingKey, entry.message)
           } catch {
             continue
           }
+          // Anything not signed with our key is ignored: the relay is untrusted.
+          if (!payload) continue
           const key = `${payload.event}_${payload.timestamp}`
           if (seen.has(key)) continue
           seen.add(key)
           if (payload.event === "starting" && runningSince === undefined) runningSince = Date.now()
           onProgress?.(payload.event, payload)
-          if (payload.event === "ready") return payload as never
+          if (payload.event === "ready") {
+            if (!isTunnelUrl(payload.tunnel_url)) throw new Error("Kernel reported an invalid tunnel URL")
+            return { tunnel_url: payload.tunnel_url, model: String(payload.model), gpu: String(payload.gpu) }
+          }
           if (payload.event === "stopped") throw new Error(`Kaggle kernel stopped: ${payload.reason}`)
         }
       }
     } catch (e: unknown) {
-      if (e instanceof Error && e.message.startsWith("Kaggle kernel stopped")) throw e
+      if (e instanceof Error && (e.message.startsWith("Kaggle kernel stopped") || e.message.startsWith("Kernel reported")))
+        throw e
     }
 
     if (username && Date.now() - lastStatusCheck >= 15_000) {
@@ -548,11 +594,11 @@ export async function pollSignaling(
   }
 }
 
-export async function sendStopSignal(channelId: string): Promise<boolean> {
+export async function sendStopSignal(channelId: string, signingKey: string): Promise<boolean> {
   try {
-    const resp = await fetch(`https://ntfy.sh/${channelId}_ctrl`, {
+    const resp = await fetch(`${relayBase()}/${channelId}_ctrl`, {
       method: "POST",
-      body: "STOP",
+      body: createStopMessage(signingKey),
     })
     return resp.ok
   } catch {

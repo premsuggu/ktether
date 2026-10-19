@@ -33,8 +33,8 @@ export default Runtime.handler(
     }
 
     const state = readState()
-    if (state.channelId) {
-      yield* Effect.promise(() => sendStopSignal(state.channelId!))
+    if (state.channelId && state.signingKey) {
+      yield* Effect.promise(() => sendStopSignal(state.channelId!, state.signingKey!))
     }
     if (status === "RUNNING") {
       process.stdout.write("-> Waiting for the kernel to shut down..." + EOL)

@@ -18,8 +18,8 @@ export default Runtime.handler(
     const state = readState()
     process.stdout.write("Sending STOP signal to Kaggle GPU backend..." + EOL)
 
-    if (state.channelId) {
-      const delivered = yield* Effect.promise(() => sendStopSignal(state.channelId!))
+    if (state.channelId && state.signingKey) {
+      const delivered = yield* Effect.promise(() => sendStopSignal(state.channelId!, state.signingKey!))
       if (delivered) {
         process.stdout.write("[OK] Remote STOP signal delivered." + EOL)
       } else {
