@@ -4,6 +4,11 @@ import os from "node:os"
 import crypto from "node:crypto"
 import { spawnSync } from "node:child_process"
 
+/** The only Kaggle notebook ktether ever creates, updates or deletes. */
+export const KERNEL_SLUG = "ktether-runner"
+
+export const kernelRef = (username: string): string => `${username}/${KERNEL_SLUG}`
+
 export interface ModelSpec {
   readonly id: string
   readonly displayName: string
@@ -422,8 +427,8 @@ export function prepareStagingBundle(
   fs.writeFileSync(path.join(stagingDir, "kernel_config.json"), JSON.stringify(kernelConfig, null, 2), "utf-8")
 
   const metadata = {
-    id: `${username}/ktether-runner`,
-    title: "ktether-runner",
+    id: kernelRef(username),
+    title: KERNEL_SLUG,
     code_file: "server.py",
     language: "python",
     kernel_type: "script",
@@ -455,7 +460,7 @@ export function pushKaggleKernel(stagingDir: string): string {
 export type KernelStatus = "QUEUED" | "RUNNING" | "COMPLETE" | "ERROR" | "CANCEL_REQUESTED" | "CANCEL_ACKNOWLEDGED" | string
 
 export function getKernelStatus(username: string): KernelStatus | undefined {
-  const res = spawnSync("kaggle", ["kernels", "status", `${username}/ktether-runner`], {
+  const res = spawnSync("kaggle", ["kernels", "status", kernelRef(username)], {
     encoding: "utf-8",
     shell: true,
   })
@@ -523,7 +528,7 @@ export async function pollSignaling(
       }
       if (status === "RUNNING" && runningSince === undefined) runningSince = Date.now()
       if (status && TERMINAL_STATUSES.has(status)) {
-        const logRes = spawnSync("kaggle", ["kernels", "output", `${username}/ktether-runner`], {
+        const logRes = spawnSync("kaggle", ["kernels", "output", kernelRef(username)], {
           encoding: "utf-8",
           shell: true,
         })
@@ -583,4 +588,24 @@ export function syncOpenCodeConfig(modelId: string): void {
 
   fs.mkdirSync(path.dirname(configPath), { recursive: true })
   fs.writeFileSync(configPath, JSON.stringify(cfg, null, 2), "utf-8")
+}
+
+export async function waitForKernelIdle(username: string, timeoutSeconds: number): Promise<KernelStatus | undefined> {
+  const deadline = Date.now() + timeoutSeconds * 1000
+  let status = getKernelStatus(username)
+  while (status === "RUNNING" && Date.now() < deadline) {
+    await new Promise((resolve) => setTimeout(resolve, 5000))
+    status = getKernelStatus(username)
+  }
+  return status
+}
+
+/** Deletes the ktether notebook (and all its versions) from the user's Kaggle account. */
+export function deleteKaggleKernel(username: string): { deleted: boolean; message: string } {
+  const res = spawnSync("kaggle", ["kernels", "delete", kernelRef(username), "--yes"], {
+    encoding: "utf-8",
+    shell: true,
+  })
+  const message = `${res.stdout ?? ""}${res.stderr ?? ""}`.replace(/^Warning:.*outdated.*$/m, "").trim()
+  return { deleted: res.status === 0, message }
 }

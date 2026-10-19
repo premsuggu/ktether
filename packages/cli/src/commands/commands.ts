@@ -567,6 +567,22 @@ const Root = Spec.make(typeof OPENCODE_CLI_NAME === "string" ? OPENCODE_CLI_NAME
         }),
         Spec.make("stop", {
           description: "Stop the remote Kaggle GPU backend to preserve quota",
+          params: {
+            delete: Flag.Boolean("delete").pipe(
+              Flag.withDescription("Also delete the ktether notebook from your Kaggle account"),
+              Flag.withDefault(false),
+            ),
+          },
+        }),
+        Spec.make("clean", {
+          description: "Stop the session and delete the ktether notebook from your Kaggle account",
+          params: {
+            yes: Flag.Boolean("yes").pipe(
+              Flag.withAlias("y"),
+              Flag.withDescription("Confirm deletion without a preview"),
+              Flag.withDefault(false),
+            ),
+          },
         }),
         Spec.make("status", {
           description: "Check the status and latency of the Kaggle GPU backend",

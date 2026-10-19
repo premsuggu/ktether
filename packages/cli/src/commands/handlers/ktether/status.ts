@@ -3,7 +3,7 @@ import { EOL } from "node:os"
 import { spawnSync } from "node:child_process"
 import { Commands } from "../../commands"
 import { Runtime } from "../../../framework/runtime"
-import { readState, getKaggleCredentials } from "./service.js"
+import { readState, getKaggleCredentials, kernelRef } from "./service.js"
 
 export default Runtime.handler(
   Commands.commands.ktether.commands.status,
@@ -20,7 +20,7 @@ export default Runtime.handler(
     }
 
     if (username) {
-      const res = spawnSync("kaggle", ["kernels", "status", `${username}/ktether-runner`], {
+      const res = spawnSync("kaggle", ["kernels", "status", kernelRef(username)], {
         encoding: "utf-8",
         shell: true,
       })
