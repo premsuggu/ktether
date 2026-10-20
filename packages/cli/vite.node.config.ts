@@ -17,7 +17,7 @@ function rawTextPlugin(): Plugin {
     // .md only ever worked without it because .md is not a known asset type.
     enforce: "pre",
     async load(id) {
-      if (!id.endsWith(".md") && !id.endsWith(".txt")) return
+      if (![".md", ".txt", ".py"].some((extension) => id.endsWith(extension))) return
       return `export default ${JSON.stringify(await readFile(id, "utf8"))}`
     },
   }
