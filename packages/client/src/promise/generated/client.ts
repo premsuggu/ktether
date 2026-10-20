@@ -111,6 +111,16 @@ import type {
   GenerateTextOutput,
   VoiceSessionInput,
   VoiceSessionOutput,
+  KtetherStatusOutput,
+  KtetherModelsOutput,
+  KtetherDoctorOutput,
+  KtetherStartInput,
+  KtetherStartOutput,
+  KtetherStopInput,
+  KtetherStopOutput,
+  KtetherCleanInput,
+  KtetherCleanOutput,
+  KtetherReconnectOutput,
   ProviderListInput,
   ProviderListOutput,
   ProviderGetInput,
@@ -1162,6 +1172,82 @@ export function make(options: ClientOptions) {
             body: { model: input["model"], session: input["session"], transport: input["transport"] },
             successStatus: 200,
             declaredStatuses: [400, 401, 404, 503],
+            empty: false,
+          },
+          requestOptions,
+        ).then((value) => value.data),
+    },
+    ktether: {
+      status: (requestOptions?: RequestOptions) =>
+        request<{ readonly data: KtetherStatusOutput }>(
+          { method: "GET", path: `/api/ktether`, successStatus: 200, declaredStatuses: [400, 401], empty: false },
+          requestOptions,
+        ).then((value) => value.data),
+      models: (requestOptions?: RequestOptions) =>
+        request<{ readonly data: KtetherModelsOutput }>(
+          {
+            method: "GET",
+            path: `/api/ktether/models`,
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ).then((value) => value.data),
+      doctor: (requestOptions?: RequestOptions) =>
+        request<{ readonly data: KtetherDoctorOutput }>(
+          {
+            method: "GET",
+            path: `/api/ktether/doctor`,
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ).then((value) => value.data),
+      start: (input?: KtetherStartInput, requestOptions?: RequestOptions) =>
+        request<{ readonly data: KtetherStartOutput }>(
+          {
+            method: "POST",
+            path: `/api/ktether/start`,
+            body: { model: input?.["model"], idleTimeoutMinutes: input?.["idleTimeoutMinutes"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401, 409],
+            empty: false,
+          },
+          requestOptions,
+        ).then((value) => value.data),
+      stop: (input?: KtetherStopInput, requestOptions?: RequestOptions) =>
+        request<{ readonly data: KtetherStopOutput }>(
+          {
+            method: "POST",
+            path: `/api/ktether/stop`,
+            body: { delete: input?.["delete"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401, 409],
+            empty: false,
+          },
+          requestOptions,
+        ).then((value) => value.data),
+      clean: (input?: KtetherCleanInput, requestOptions?: RequestOptions) =>
+        request<{ readonly data: KtetherCleanOutput }>(
+          {
+            method: "POST",
+            path: `/api/ktether/clean`,
+            body: { confirm: input?.["confirm"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401, 409],
+            empty: false,
+          },
+          requestOptions,
+        ).then((value) => value.data),
+      reconnect: (requestOptions?: RequestOptions) =>
+        request<{ readonly data: KtetherReconnectOutput }>(
+          {
+            method: "POST",
+            path: `/api/ktether/reconnect`,
+            successStatus: 200,
+            declaredStatuses: [400, 401, 409],
             empty: false,
           },
           requestOptions,

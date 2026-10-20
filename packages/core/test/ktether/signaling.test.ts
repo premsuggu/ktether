@@ -7,7 +7,7 @@ import {
   isValidStopMessage,
   openEnvelope,
   sign,
-} from "./signaling"
+} from "@opencode/core/ktether/signaling"
 
 const envelope = (key: string, payload: object) => {
   const p = JSON.stringify(payload)

@@ -1,15 +1,16 @@
 import { Effect } from "effect"
+import { EOL } from "node:os"
 import { Commands } from "../../commands"
 import { Runtime } from "../../../framework/runtime"
-import { runDoctor } from "../../../ktether/lifecycle"
+import { connect } from "./connection"
+import { formatChecks } from "./format"
 
 export default Runtime.handler(
   Commands.commands.ktether.commands.doctor,
-  Effect.fn("cli.ktether.doctor")(function* () {
-    const checks = yield* Effect.promise(() => runDoctor())
-    for (const check of checks) {
-      process.stdout.write(`${check.ok ? "[OK]  " : "[FAIL]"} ${check.name.padEnd(20)} ${check.detail}\n`)
-    }
+  Effect.fn("cli.ktether.doctor")(function* (input) {
+    const client = yield* connect(input)
+    const checks = yield* Effect.promise(() => client.ktether.doctor())
+    process.stdout.write(formatChecks(checks) + EOL)
     if (checks.some((check) => !check.ok)) process.exitCode = 1
   }),
 )

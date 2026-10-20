@@ -1,4 +1,4 @@
-import { prepareStagingBundle, removeStagingBundle } from "./bundle"
+import { prepareStagingBundle, removeStagingBundle } from "./bundle.js"
 import {
   cliVersion,
   deleteKernel,
@@ -7,12 +7,11 @@ import {
   kernelRef,
   pushKernel,
   waitForKernelIdle,
-} from "./kaggle"
-import { syncOpenCodeConfig } from "./opencode-config"
-import { AVAILABLE_MODELS, DEFAULT_MODEL } from "./registry"
-import { latestReady, pollSignaling, sendStopSignal, SessionFailure, type PollOptions, type ReadySignal } from "./session"
-import { createStopMessage } from "./signaling"
-import { markStopped, readState, recordUsage, saveState, usageHoursLastWeek, type KTetherState } from "./state"
+} from "./kaggle.js"
+import { AVAILABLE_MODELS, DEFAULT_MODEL } from "./registry.js"
+import { latestReady, pollSignaling, sendStopSignal, SessionFailure, type PollOptions, type ReadySignal } from "./session.js"
+import { createStopMessage } from "./signaling.js"
+import { markStopped, readState, recordUsage, saveState, usageHoursLastWeek, type KTetherState } from "./state.js"
 
 /** Kaggle's weekly free GPU allowance. */
 export const WEEKLY_QUOTA_HOURS = 30
@@ -50,17 +49,19 @@ export async function checkHealth(url: string, doFetch: typeof fetch = fetch, ti
   }
 }
 
-function formatTimings(timings: Readonly<Record<string, number>>): string | undefined {
-  const entries = Object.entries(timings)
-  if (entries.length === 0) return undefined
+/** Turns the kernel's cumulative stage timestamps into how long each stage took. */
+export function bootStages(timings: Readonly<Record<string, number>>): { stage: string; seconds: number }[] {
   let previous = 0
-  return entries
-    .map(([stage, at]) => {
-      const took = Math.max(0, at - previous)
-      previous = at
-      return `${stage} ${took.toFixed(0)}s`
-    })
-    .join(", ")
+  return Object.entries(timings).map(([stage, at]) => {
+    const seconds = Math.max(0, at - previous)
+    previous = at
+    return { stage, seconds }
+  })
+}
+
+function formatTimings(timings: Readonly<Record<string, number>>): string | undefined {
+  const stages = bootStages(timings)
+  return stages.length === 0 ? undefined : stages.map((item) => `${item.stage} ${item.seconds.toFixed(0)}s`).join(", ")
 }
 
 const sessionEnd = (state: KTetherState, now: number): void => {
@@ -205,7 +206,6 @@ export async function startSession(input: StartInput, deps: Deps = {}): Promise<
     status: "ready",
     timings: ready.timings,
   })
-  syncOpenCodeConfig(model)
 
   out("   llama-server initialized and Cloudflare tunnel online!")
   const breakdown = formatTimings(ready.timings)
@@ -290,60 +290,85 @@ export async function cleanSession(input: { yes: boolean }, deps: Deps = {}): Pr
   return true
 }
 
-export async function sessionStatus(deps: Deps = {}): Promise<void> {
-  const { out, doFetch, now } = defaults(deps)
-  let state = readState()
-  out("=== ktether Session Status ===")
+export type SessionState = "stopped" | "pending" | "ready" | "unreachable"
 
-  let username: string | undefined
-  try {
-    username = getCredentials().username
-  } catch {
-    // Credentials are optional for a status check.
-  }
+export interface StatusSnapshot {
+  readonly state: SessionState
+  /** Kaggle's view of the notebook, when credentials are available. */
+  readonly kernel?: string
+  /** Set when a session the kernel already ended was closed during this check. */
+  readonly closedStaleSession?: string
+  readonly model?: string
+  readonly url?: string
+  readonly latencyMs?: number
+  readonly uptimeMinutes?: number
+  readonly bootStages?: readonly { readonly stage: string; readonly seconds: number }[]
+  readonly slots?: { readonly busy: number; readonly total: number }
+  readonly usage: { readonly hoursLastWeek: number; readonly quotaHours: number }
+  /** True when Kaggle credentials were found, so `kernel` being absent means "not deployed yet". */
+  readonly hasCredentials: boolean
+}
+
+const ENDED_KERNELS = ["COMPLETE", "ERROR", "CANCEL_ACKNOWLEDGED", "CANCEL_REQUESTED"]
+
+/** Reads the current session without printing. Reconciles state when the kernel ended on its own. */
+export async function getStatus(deps: Deps = {}): Promise<StatusSnapshot> {
+  const { doFetch, now } = defaults(deps)
+  let state = readState()
+
+  const username = (() => {
+    try {
+      return getCredentials().username
+    } catch {
+      // Credentials are optional for a status check.
+      return undefined
+    }
+  })()
   const kernel = username ? getKernelStatus(username) : undefined
-  if (username) out(`Kaggle Kernel: ${kernel ?? "not deployed yet"}`)
 
   // The kernel can end on its own (idle timeout, session limit, Kaggle). Reconcile so state does not lie.
-  if (state.active && kernel && ["COMPLETE", "ERROR", "CANCEL_ACKNOWLEDGED", "CANCEL_REQUESTED"].includes(kernel)) {
-    out(`The kernel ended (${kernel}). Closing the stale session.`)
+  const closedStaleSession = state.active && kernel && ENDED_KERNELS.includes(kernel) ? kernel : undefined
+  if (closedStaleSession) {
     sessionEnd(state, now())
     state = markStopped(state)
     saveState(state)
   }
 
-  const hours = usageHoursLastWeek(now())
-  out(`GPU time used by ktether, last 7 days: ~${hours.toFixed(1)}h of ${WEEKLY_QUOTA_HOURS}h (local estimate)`)
-
-  if (!state.url) {
-    out(state.status === "pending" ? "Status: LAUNCH PENDING (run `ktether start` to resume waiting)" : "Status: STOPPED / NO ACTIVE TUNNEL")
-    return
+  const base = {
+    kernel,
+    closedStaleSession,
+    hasCredentials: username !== undefined,
+    usage: { hoursLastWeek: usageHoursLastWeek(now()), quotaHours: WEEKLY_QUOTA_HOURS },
   }
+  if (!state.url) return { ...base, state: state.status === "pending" ? "pending" : "stopped", model: state.model }
 
-  out(`Tunnel URL: ${state.url}`)
-  out(`Active Model: ${state.model ?? DEFAULT_MODEL}`)
   const health = await checkHealth(state.url, doFetch)
-  if (!health.ok) {
-    out(`Health Check: ${health.detail.toUpperCase()}`)
-    out("Try `ktether reconnect` in case the tunnel was replaced.")
-    return
-  }
-  out(`Health Check: HEALTHY (${health.latencyMs}ms)`)
-  if (state.sessionStart) out(`Uptime: ${((now() - state.sessionStart) / 60000).toFixed(1)} minutes`)
-  const breakdown = state.timings ? formatTimings(state.timings) : undefined
-  if (breakdown) out(`Boot breakdown: ${breakdown}`)
+  const known = { ...base, model: state.model ?? DEFAULT_MODEL, url: state.url }
+  if (!health.ok) return { ...known, state: "unreachable" }
 
+  const slots = await readSlots(state, doFetch)
+  return {
+    ...known,
+    state: "ready",
+    latencyMs: health.latencyMs,
+    uptimeMinutes: state.sessionStart ? (now() - state.sessionStart) / 60000 : undefined,
+    bootStages: state.timings ? bootStages(state.timings) : undefined,
+    slots,
+  }
+}
+
+async function readSlots(state: KTetherState, doFetch: typeof fetch) {
   try {
-    const resp = await doFetch(`${baseUrl(state.url)}/slots`, {
+    const resp = await doFetch(`${baseUrl(state.url!)}/slots`, {
       headers: state.apiKey ? { Authorization: `Bearer ${state.apiKey}` } : {},
       signal: AbortSignal.timeout(4000),
     })
-    if (resp.ok) {
-      const slots = (await resp.json()) as { is_processing?: boolean }[]
-      out(`Server slots: ${slots.filter((s) => s.is_processing).length} busy / ${slots.length}`)
-    }
+    if (!resp.ok) return undefined
+    const slots = (await resp.json()) as { is_processing?: boolean }[]
+    return { busy: slots.filter((slot) => slot.is_processing).length, total: slots.length }
   } catch {
     // Slot details are a nicety.
+    return undefined
   }
 }
 

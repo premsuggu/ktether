@@ -178,6 +178,28 @@ export type VoiceWebRTCTransport = { type: "webrtc"; sdp: string }
 
 export type VoiceWebSocketTransport = { type: "websocket"; url: string; token: string; expiresAt: number }
 
+export type KTetherOperation = {
+  kind: "start" | "stop" | "clean" | "reconnect"
+  startedAt: number
+  finishedAt?: number | undefined
+  error?: string | undefined
+  log: Array<string>
+}
+
+export type KTetherModel = {
+  id: string
+  name: string
+  default: boolean
+  sizeGB: number
+  context: number
+  parallel: number
+  minVramGB: number
+  toolCalling: "reliable" | "unreliable"
+  description: string
+}
+
+export type KTetherDoctorCheck = { name: string; ok: boolean; detail: string }
+
 export type IntegrationID = string
 
 export type IntegrationMethodID = string
@@ -663,6 +685,33 @@ export type ModelCost = {
 }
 
 export type VoiceTransport = VoiceWebRTCTransport | VoiceWebSocketTransport
+
+export type KTetherStatus = {
+  state: "stopped" | "pending" | "ready" | "unreachable"
+  kernel?: string | undefined
+  hasCredentials: boolean
+  closedStaleSession?: string | undefined
+  model?: string | undefined
+  url?: string | undefined
+  latencyMs?: number | undefined
+  uptimeMinutes?: number | undefined
+  bootStages?: Array<{ stage: string; seconds: number }> | undefined
+  slots?: { busy: number; total: number } | undefined
+  usage: { hoursLastWeek: number; quotaHours: number }
+  operation?: KTetherOperation | undefined
+}
+
+export type KTetherStartResponse = { data: KTetherOperation }
+
+export type KTetherStopResponse = { data: KTetherOperation }
+
+export type KTetherCleanResponse = { data: KTetherOperation }
+
+export type KTetherReconnectResponse = { data: KTetherOperation }
+
+export type KTetherModelsResponse = { data: Array<KTetherModel> }
+
+export type KTetherDoctorResponse = { data: Array<KTetherDoctorCheck> }
 
 export type IntegrationCommandMethod = {
   id: IntegrationMethodID
@@ -1948,6 +1997,8 @@ export type ProviderInfo = {
 }
 
 export type VoiceSessionResponse = { data: { transport: VoiceTransport } }
+
+export type KTetherStatusResponse = { data: KTetherStatus }
 
 export type ConnectionInfo = ConnectionCredentialInfo | ConnectionEnvInfo
 
@@ -5817,6 +5868,32 @@ export type VoiceSessionInput = {
 }
 
 export type VoiceSessionOutput = VoiceSessionResponse["data"]
+
+export type KtetherStatusOutput = KTetherStatusResponse["data"]
+
+export type KtetherModelsOutput = KTetherModelsResponse["data"]
+
+export type KtetherDoctorOutput = KTetherDoctorResponse["data"]
+
+export type KtetherStartInput = {
+  readonly model?: { readonly model?: string | undefined; readonly idleTimeoutMinutes?: number | undefined }["model"]
+  readonly idleTimeoutMinutes?: {
+    readonly model?: string | undefined
+    readonly idleTimeoutMinutes?: number | undefined
+  }["idleTimeoutMinutes"]
+}
+
+export type KtetherStartOutput = KTetherStartResponse["data"]
+
+export type KtetherStopInput = { readonly delete?: { readonly delete?: boolean | undefined }["delete"] }
+
+export type KtetherStopOutput = KTetherStopResponse["data"]
+
+export type KtetherCleanInput = { readonly confirm?: { readonly confirm?: boolean | undefined }["confirm"] }
+
+export type KtetherCleanOutput = KTetherCleanResponse["data"]
+
+export type KtetherReconnectOutput = KTetherReconnectResponse["data"]
 
 export type ProviderListInput = {
   readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]

@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test"
 import fs from "node:fs"
-import { isolateHome } from "./test-helpers"
-import { markStopped, readState, recordUsage, saveState, stateFilePath, usageHoursLastWeek } from "./state"
+import { isolateHome } from "./helpers"
+import { markStopped, readState, recordUsage, saveState, stateFilePath, usageHoursLastWeek } from "@opencode/core/ktether/state"
 
 let home: ReturnType<typeof isolateHome>
 beforeEach(() => {

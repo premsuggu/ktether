@@ -3,8 +3,8 @@ import fs from "node:fs"
 import os from "node:os"
 import path from "node:path"
 import { spawnSync } from "node:child_process"
-import { renderKernelScript } from "./bundle"
-import { createStopMessage, generateSigningKey, openEnvelope } from "./signaling"
+import { renderKernelScript } from "@opencode/core/ktether/bundle"
+import { createStopMessage, generateSigningKey, openEnvelope } from "@opencode/core/ktether/signaling"
 
 const python = ["python", "python3"].find((bin) => spawnSync(bin, ["--version"]).status === 0)
 

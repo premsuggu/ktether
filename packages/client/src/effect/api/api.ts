@@ -1423,6 +1423,102 @@ export interface VoiceApi<E = never> {
   readonly session: VoiceSessionOperation<E>
 }
 
+export type KtetherStatusOutput = {
+  readonly state: "stopped" | "pending" | "ready" | "unreachable"
+  readonly kernel?: string | undefined
+  readonly hasCredentials: boolean
+  readonly closedStaleSession?: string | undefined
+  readonly model?: string | undefined
+  readonly url?: string | undefined
+  readonly latencyMs?: number | undefined
+  readonly uptimeMinutes?: number | undefined
+  readonly bootStages?: ReadonlyArray<{ readonly stage: string; readonly seconds: number }> | undefined
+  readonly slots?: { readonly busy: number; readonly total: number } | undefined
+  readonly usage: { readonly hoursLastWeek: number; readonly quotaHours: number }
+  readonly operation?:
+    | {
+        readonly kind: "start" | "stop" | "clean" | "reconnect"
+        readonly startedAt: number
+        readonly finishedAt?: number | undefined
+        readonly error?: string | undefined
+        readonly log: ReadonlyArray<string>
+      }
+    | undefined
+}
+export type KtetherStatusOperation<E = never> = () => Effect.Effect<KtetherStatusOutput, E>
+
+export type KtetherModelsOutput = ReadonlyArray<{
+  readonly id: string
+  readonly name: string
+  readonly default: boolean
+  readonly sizeGB: number
+  readonly context: number
+  readonly parallel: number
+  readonly minVramGB: number
+  readonly toolCalling: "reliable" | "unreliable"
+  readonly description: string
+}>
+export type KtetherModelsOperation<E = never> = () => Effect.Effect<KtetherModelsOutput, E>
+
+export type KtetherDoctorOutput = ReadonlyArray<{
+  readonly name: string
+  readonly ok: boolean
+  readonly detail: string
+}>
+export type KtetherDoctorOperation<E = never> = () => Effect.Effect<KtetherDoctorOutput, E>
+
+export type KtetherStartInput = {
+  readonly model?: string | undefined
+  readonly idleTimeoutMinutes?: number | undefined
+}
+export type KtetherStartOutput = {
+  readonly kind: "start" | "stop" | "clean" | "reconnect"
+  readonly startedAt: number
+  readonly finishedAt?: number | undefined
+  readonly error?: string | undefined
+  readonly log: ReadonlyArray<string>
+}
+export type KtetherStartOperation<E = never> = (input?: KtetherStartInput) => Effect.Effect<KtetherStartOutput, E>
+
+export type KtetherStopInput = { readonly delete?: boolean | undefined }
+export type KtetherStopOutput = {
+  readonly kind: "start" | "stop" | "clean" | "reconnect"
+  readonly startedAt: number
+  readonly finishedAt?: number | undefined
+  readonly error?: string | undefined
+  readonly log: ReadonlyArray<string>
+}
+export type KtetherStopOperation<E = never> = (input?: KtetherStopInput) => Effect.Effect<KtetherStopOutput, E>
+
+export type KtetherCleanInput = { readonly confirm?: boolean | undefined }
+export type KtetherCleanOutput = {
+  readonly kind: "start" | "stop" | "clean" | "reconnect"
+  readonly startedAt: number
+  readonly finishedAt?: number | undefined
+  readonly error?: string | undefined
+  readonly log: ReadonlyArray<string>
+}
+export type KtetherCleanOperation<E = never> = (input?: KtetherCleanInput) => Effect.Effect<KtetherCleanOutput, E>
+
+export type KtetherReconnectOutput = {
+  readonly kind: "start" | "stop" | "clean" | "reconnect"
+  readonly startedAt: number
+  readonly finishedAt?: number | undefined
+  readonly error?: string | undefined
+  readonly log: ReadonlyArray<string>
+}
+export type KtetherReconnectOperation<E = never> = () => Effect.Effect<KtetherReconnectOutput, E>
+
+export interface KtetherApi<E = never> {
+  readonly status: KtetherStatusOperation<E>
+  readonly models: KtetherModelsOperation<E>
+  readonly doctor: KtetherDoctorOperation<E>
+  readonly start: KtetherStartOperation<E>
+  readonly stop: KtetherStopOperation<E>
+  readonly clean: KtetherCleanOperation<E>
+  readonly reconnect: KtetherReconnectOperation<E>
+}
+
 export type ProviderListInput = { readonly location?: { readonly directory?: string | undefined } | undefined }
 export type ProviderListOutput = { readonly location: Location.PublicRef; readonly data: ReadonlyArray<Provider.Info> }
 export type ProviderListOperation<E = never> = (input?: ProviderListInput) => Effect.Effect<ProviderListOutput, E>
@@ -2294,6 +2390,7 @@ export interface AppApi<E = never> {
   readonly model: ModelApi<E>
   readonly generate: GenerateApi<E>
   readonly voice: VoiceApi<E>
+  readonly ktether: KtetherApi<E>
   readonly provider: ProviderApi<E>
   readonly integration: IntegrationApi<E>
   readonly mcp: McpApi<E>

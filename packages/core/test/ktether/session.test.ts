@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test"
-import { latestReady, pollSignaling, SessionFailure } from "./session"
-import { generateSigningKey } from "./signaling"
-import { createFakeClock, createFakeRelay, installFakeKaggle, uninstallFakeKaggle } from "./test-helpers"
+import { latestReady, pollSignaling, SessionFailure } from "@opencode/core/ktether/session"
+import { generateSigningKey } from "@opencode/core/ktether/signaling"
+import { createFakeClock, createFakeRelay, installFakeKaggle, uninstallFakeKaggle } from "./helpers"
 
 const KEY = generateSigningKey()
 const URL1 = "https://one-two.trycloudflare.com"
@@ -62,7 +62,7 @@ describe("pollSignaling", () => {
   test("survives transient relay failures", async () => {
     const relay = createFakeRelay()
     let failures = 2
-    const flaky: typeof fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+    const flaky: typeof fetch = (async (input: string | URL | Request, init?: RequestInit) => {
       if (failures-- > 0) throw new Error("socket hang up")
       return relay.fetch(input, init)
     }) as typeof fetch
