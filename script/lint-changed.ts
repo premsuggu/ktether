@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 // Fails when a GUI package file this branch adds or edits has any oxlint problem, including warn-level rules (anti-slop):
 // a change that touches a file leaves the whole file clean. Untouched files and other packages are not checked.
-// Usage: bun script/lint-changed.ts [base-ref]   (default: merge base with upstream/dev, origin/dev, or dev)
+// Usage: bun script/lint-changed.ts [base-ref]   (default: merge base with upstream/main, origin/main, or main)
 import { $ } from "bun"
 
 type Diagnostic = {
@@ -46,7 +46,7 @@ process.exit(report.diagnostics.length > 0 ? 1 : 0)
 
 async function resolveBase(explicit: string | undefined) {
   if (explicit) return (await $`git rev-parse ${explicit}`.text()).trim()
-  const refs = ["upstream/dev", "origin/dev", "dev"]
+  const refs = ["upstream/main", "origin/main", "main"]
   const found = await Promise.all(
     refs.map(async (ref) => (await $`git rev-parse --verify --quiet ${ref}`.nothrow().quiet()).exitCode === 0),
   )

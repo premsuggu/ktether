@@ -3,14 +3,14 @@ name: test
 on:
   push:
     branches:
-      - dev
+      - main
   pull_request:
   workflow_dispatch:
 
 concurrency:
-  # Keep every run on dev so cancelled checks do not pollute the default branch
+  # Keep every run on main so cancelled checks do not pollute the default branch
   # commit history. PRs and other branches still share a group and cancel stale runs.
-  group: ${{ case(github.ref == 'refs/heads/dev', format('{0}-{1}', github.workflow, github.run_id), format('{0}-{1}', github.workflow, github.event.pull_request.number || github.ref)) }}
+  group: ${{ case(github.ref == 'refs/heads/main', format('{0}-{1}', github.workflow, github.run_id), format('{0}-{1}', github.workflow, github.event.pull_request.number || github.ref)) }}
   cancel-in-progress: true
 
 permissions:
@@ -23,7 +23,7 @@ env:
 jobs:
   affected:
     name: affected packages
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: ubuntu-latest
     outputs:
       e2e: ${{ steps.packages.outputs.app }}
     steps:
@@ -31,7 +31,7 @@ jobs:
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          # Pull requests diff against the merge's first parent; pushes diff against the previous dev head.
+          # Pull requests diff against the merge's first parent; pushes diff against the previous main head.
           fetch-depth: ${{ github.event_name == 'pull_request' && 2 || 0 }}
 
       - name: Setup Bun
@@ -60,9 +60,9 @@ jobs:
       matrix:
         settings:
           - name: linux
-            host: blacksmith-4vcpu-ubuntu-2404
+            host: ubuntu-latest
           - name: windows
-            host: blacksmith-4vcpu-windows-2025
+            host: windows-latest
     runs-on: ${{ matrix.settings.host }}
     defaults:
       run:
@@ -72,7 +72,7 @@ jobs:
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          # Pull requests diff against the merge's first parent; pushes diff against the previous dev head.
+          # Pull requests diff against the merge's first parent; pushes diff against the previous main head.
           fetch-depth: ${{ github.event_name == 'pull_request' && 2 || 0 }}
 
       - name: Setup Node
@@ -140,9 +140,9 @@ jobs:
       matrix:
         settings:
           - name: linux
-            host: blacksmith-4vcpu-ubuntu-2404
+            host: ubuntu-latest
           - name: windows
-            host: blacksmith-4vcpu-windows-2025
+            host: windows-latest
     runs-on: ${{ matrix.settings.host }}
     defaults:
       run:
@@ -152,7 +152,7 @@ jobs:
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          # Pull requests diff against the merge's first parent; pushes diff against the previous dev head.
+          # Pull requests diff against the merge's first parent; pushes diff against the previous main head.
           fetch-depth: ${{ github.event_name == 'pull_request' && 2 || 0 }}
 
       - name: Setup Bun
@@ -208,9 +208,9 @@ jobs:
       matrix:
         settings:
           - name: linux
-            host: blacksmith-4vcpu-ubuntu-2404
+            host: ubuntu-latest
           - name: windows
-            host: blacksmith-4vcpu-windows-2025
+            host: windows-latest
         # Playwright splits whole spec files across shards by test count, not duration. Every app-N
         # entry must use the same total, and the entries must cover 1..total. The service worker suite
         # reuses shard 2's production build. Each component suite runs once per OS in its own leg, so the
@@ -318,7 +318,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [linux, windows]
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: ubuntu-latest
     steps:
       - name: Check browser test results
         env:

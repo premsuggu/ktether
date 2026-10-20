@@ -173,10 +173,10 @@ Each package has its own `tsconfig.json` that does the real work. The root file 
 | Workflow | Triggers | What it runs |
 | --- | --- | --- |
 | `check.yml` | push and pull request on `dev`; manual | `bun run check` (lint plus type check). On pull requests it also runs `bun run lint:changed HEAD^1`. |
-| `test.yml` | push on `dev`, any pull request, manual | `affected` job (which packages changed), `unit` job on Linux and Windows (`bun turbo test --affected --concurrency=3`, plus the ast-grep rule tests and the client's `check:generated`), `build` job (compiled CLI smoke tests, library builds), and `e2e` jobs (Playwright against a production build, session-UI and app component tests). |
+| `test.yml` | push on `main`, any pull request, manual | `affected` job (which packages changed), `unit` job on Linux and Windows (`bun turbo test --affected --concurrency=3`, plus the ast-grep rule tests and the client's `check:generated`), `build` job (compiled CLI smoke tests, library builds), and `e2e` jobs (Playwright against a production build, session-UI and app component tests). |
 | `storybook.yml` | push and pull request on `dev`, filtered by path | Builds Storybook (`bun --cwd packages/storybook build`). |
 
-Both main workflows trigger on a branch called `dev`. See section 11 about the missing `dev` branch.
+The workflows run on GitHub's standard runners (`ubuntu-latest`, `windows-latest`) and trigger on `main`.
 
 ### `perf/` and `specs/`
 
@@ -234,7 +234,7 @@ Run all of these from the repository root.
 | `bun run typecheck` | `bun turbo typecheck --concurrency=3` | Type-checks every package through Turborepo, three at a time. |
 | `bun run check` | `bun run lint && bun run typecheck` | The canonical full verification. This is also what the pre-push hook and `check.yml` run. |
 | `bun run lint` | `oxlint && ast-grep scan -c script/ast-grep/gui-extensions/sgconfig.yml && bun script/sdk-docs.ts` | Three linters in a row: oxlint (fast JS/TS linter), the GUI-extension ast-grep rules, and the SDK doc-comment check. |
-| `bun run lint:changed` | `bun script/lint-changed.ts` | Stricter lint on GUI package files you added or edited since a base ref (default: merge base with `upstream/dev`, `origin/dev` or `dev`). |
+| `bun run lint:changed` | `bun script/lint-changed.ts` | Stricter lint on GUI package files you added or edited since a base ref (default: merge base with `upstream/main`, `origin/main` or `main`). |
 | `bun run lint:effect-patterns` | `ast-grep scan -c script/ast-grep/sgconfig.yml packages/util/src packages/core/src packages/server/src packages/protocol/src packages/cli/src` | Effect code-style rules over the backend packages. Not part of `lint`. |
 | `bun run lint:effect-simplifications` | `ast-grep scan -c script/ast-grep/effect-simplifications/sgconfig.yml --off=unused-suppression packages` | Suggestions for simplifying Effect code. CI runs it in the unit job. |
 | `bun run test:lint-rules` and `bun run test:effect-simplification-rules` | `ast-grep test -c ...` | Tests for the ast-grep rules themselves. |
@@ -295,8 +295,8 @@ summarises it faithfully; when in doubt, the file wins.
   edit the generated client files by hand.
 - Keep the runtime dependency direction described in section 3.
 - This repository does not use Changesets. Do not add `.changeset` files; follow the existing release workflow.
-- The default branch is `dev`. Base branches and worktrees on `origin/dev`, target pull requests at `dev`, and diff
-  against `origin/dev` unless told otherwise. (This checkout has no `dev` branch, only `main`; see section 11.)
+- The default branch is `main`. Base branches and worktrees on `origin/main`, target pull requests at `main`, and diff
+  against `origin/main` unless told otherwise.
 
 ### Live TUI testing
 
@@ -668,10 +668,8 @@ Collected while writing this guide, so you do not trip over them:
 
 - `script/generate.ts` and the "Check generated documentation" step in `.github/workflows/test.yml` both use
   `services/www`, a directory that does not exist. That CI step cannot succeed as written.
-- `.github/workflows/check.yml`, `test.yml` and `storybook.yml` trigger on `dev`, and `AGENTS.md` says the default
-  branch is `dev` with PRs targeting it. The repository's only branches are `main` and a working branch, with
-  `origin/main` as the sole remote branch. Until a `dev` branch exists, those triggers and `lint-changed.ts`'s
-  `origin/dev` default will not match anything.
+- `script/publish.ts` (the inherited release flow, unused so far) still checks out a `dev` branch; adapt it before
+  publishing a release.
 - `CONTRIBUTING.md` says Bun 1.3 or newer; `package.json` pins 1.4.2 and the pre-push hook enforces `^1.4.2`.
 - `package.json` `repository.url` and several `README`/`CONTRIBUTING` links point at `anomalyco/ktether`, the
   upstream organisation, while `origin` is `premsuggu/ktether`.
