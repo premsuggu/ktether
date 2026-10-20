@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test"
 import fs from "node:fs"
-import { cleanSession, getStatus, reconnectSession, runDoctor, startSession, stopSession } from "@opencode/core/ktether/lifecycle"
-import { isValidStopMessage } from "@opencode/core/ktether/signaling"
-import { readState, saveState, usageHoursLastWeek } from "@opencode/core/ktether/state"
+import { cleanSession, getStatus, reconnectSession, runDoctor, startSession, stopSession } from "@ktether/core/ktether/lifecycle"
+import { isValidStopMessage } from "@ktether/core/ktether/signaling"
+import { readState, saveState, usageHoursLastWeek } from "@ktether/core/ktether/state"
 import {
   createFakeClock,
   createFakeRelay,
@@ -199,7 +199,7 @@ describe("stopSession", () => {
     kaggle = installFakeKaggle(["QUEUED"])
     await stopSession({ delete: false }, deps())
     expect(lines.join("\n")).toContain("still queued")
-    expect(lines.join("\n")).toContain("ktether clean --yes")
+    expect(lines.join("\n")).toContain("ktether gpu clean --yes")
   })
 
   test("--delete removes only the ktether notebook, after the kernel has stopped", async () => {
@@ -229,7 +229,7 @@ describe("cleanSession", () => {
 
   test("reports when there is nothing to delete", async () => {
     uninstallFakeKaggle()
-    const { setCliRunner } = await import("@opencode/core/ktether/kaggle")
+    const { setCliRunner } = await import("@ktether/core/ktether/kaggle")
     setCliRunner(() => ({ status: 1, output: "404 Not Found" }))
     expect(await cleanSession({ yes: true }, deps())).toBe(false)
     expect(lines.join("\n")).toContain("Nothing to clean")
@@ -336,7 +336,7 @@ describe("runDoctor", () => {
   })
 
   test("reports a missing Kaggle CLI with install guidance", async () => {
-    const { setCliRunner } = await import("@opencode/core/ktether/kaggle")
+    const { setCliRunner } = await import("@ktether/core/ktether/kaggle")
     setCliRunner(() => ({ status: null, output: "", error: Object.assign(new Error("spawn kaggle ENOENT"), { code: "ENOENT" }) }))
     const checks = await runDoctor({ fetch: relay.fetch })
     expect(checks.find((c) => c.name === "Kaggle CLI")).toMatchObject({ ok: false })

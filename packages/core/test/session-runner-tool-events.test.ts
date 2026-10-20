@@ -1,27 +1,27 @@
 import { expect, test } from "bun:test"
 import { Cause, Deferred, Effect, Exit, Fiber, Schema } from "effect"
 import { eq } from "drizzle-orm"
-import { LLMEvent } from "@opencode/ai"
-import { Money } from "@opencode/schema/money"
-import { Bus } from "@opencode/core/bus"
-import { Database } from "@opencode/core/database/database"
-import { AppNodeBuilder } from "@opencode/core/effect/app-node-builder"
-import { EventTable } from "@opencode/core/event/sql"
-import { Event } from "@opencode/schema/event"
-import { Agent } from "@opencode/core/agent"
-import { SessionEvent } from "@opencode/core/session/event"
-import { SessionMessage } from "@opencode/core/session/message"
-import { Session } from "@opencode/core/session"
-import { SessionProjector } from "@opencode/core/session/projector"
-import { SessionMessageTable, SessionTable } from "@opencode/core/session/sql"
-import { Project } from "@opencode/core/project"
-import { ProjectTable } from "@opencode/core/project/sql"
-import { Model } from "@opencode/core/model"
-import { Provider } from "@opencode/core/provider"
-import { AbsolutePath, RelativePath } from "@opencode/core/schema"
-import { Snapshot } from "@opencode/core/snapshot"
-import { createLLMEventPublisher } from "@opencode/core/session/runner/publish-llm-event"
-import { LayerNode } from "@opencode/util/effect/layer-node"
+import { LLMEvent } from "@ktether/ai"
+import { Money } from "@ktether/schema/money"
+import { Bus } from "@ktether/core/bus"
+import { Database } from "@ktether/core/database/database"
+import { AppNodeBuilder } from "@ktether/core/effect/app-node-builder"
+import { EventTable } from "@ktether/core/event/sql"
+import { Event } from "@ktether/schema/event"
+import { Agent } from "@ktether/core/agent"
+import { SessionEvent } from "@ktether/core/session/event"
+import { SessionMessage } from "@ktether/core/session/message"
+import { Session } from "@ktether/core/session"
+import { SessionProjector } from "@ktether/core/session/projector"
+import { SessionMessageTable, SessionTable } from "@ktether/core/session/sql"
+import { Project } from "@ktether/core/project"
+import { ProjectTable } from "@ktether/core/project/sql"
+import { Model } from "@ktether/core/model"
+import { Provider } from "@ktether/core/provider"
+import { AbsolutePath, RelativePath } from "@ktether/core/schema"
+import { Snapshot } from "@ktether/core/snapshot"
+import { createLLMEventPublisher } from "@ktether/core/session/runner/publish-llm-event"
+import { LayerNode } from "@ktether/util/effect/layer-node"
 import { it, testEffect } from "./lib/effect"
 import { TestClock } from "effect/testing"
 
@@ -61,7 +61,7 @@ const capture = (
       agent: Agent.ID.make("build"),
       model: {
         id: Model.ID.make("model"),
-        providerID: Provider.ID.opencode,
+        providerID: Provider.ID.ktether,
       },
       providerMetadataKey,
       pendingSnapshot: options?.pendingSnapshot,
@@ -167,7 +167,7 @@ testEffect(
         sessionID,
         assistantMessageID,
         agent: Agent.defaultID,
-        model: { id: Model.ID.make("test-model"), providerID: Provider.ID.opencode },
+        model: { id: Model.ID.make("test-model"), providerID: Provider.ID.ktether },
         providerMetadataKey: "openai",
         started: 0,
       },

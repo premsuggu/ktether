@@ -1,14 +1,14 @@
 import { describe, expect, test } from "bun:test"
 import Notifications from "../../../../src/feature-plugins/system/notifications"
-import type { OpenCodeEvent, PermissionAsked } from "@opencode/client"
-import type { AttentionNotifyOptions, Context, Route, ToastOptions } from "@opencode/plugin/tui/context"
+import type { KTetherEvent, PermissionAsked } from "@ktether/client"
+import type { AttentionNotifyOptions, Context, Route, ToastOptions } from "@ktether/plugin/tui/context"
 
 type Session = { id: string; title: string; parentID?: string }
 
 async function setup(route: Route = { type: "session", sessionID: "session" }) {
   const notifications: AttentionNotifyOptions[] = []
   const toasts: ToastOptions[] = []
-  const handlers = new Map<OpenCodeEvent["type"], ((event: OpenCodeEvent) => void)[]>()
+  const handlers = new Map<KTetherEvent["type"], ((event: KTetherEvent) => void)[]>()
   const session = (id: string, title: string, parentID?: string): Session => ({
     id,
     title,
@@ -33,12 +33,12 @@ async function setup(route: Route = { type: "session", sessionID: "session" }) {
       },
     },
     data: {
-      on: <Type extends OpenCodeEvent["type"]>(
+      on: <Type extends KTetherEvent["type"]>(
         type: Type,
-        handler: (event: Extract<OpenCodeEvent, { type: Type }>) => void,
+        handler: (event: Extract<KTetherEvent, { type: Type }>) => void,
       ) => {
         const list = handlers.get(type) ?? []
-        const wrapped = handler as (event: OpenCodeEvent) => void
+        const wrapped = handler as (event: KTetherEvent) => void
         list.push(wrapped)
         handlers.set(type, list)
         return () => {
@@ -58,13 +58,13 @@ async function setup(route: Route = { type: "session", sessionID: "session" }) {
   return {
     notifications,
     toasts,
-    emit(event: OpenCodeEvent) {
+    emit(event: KTetherEvent) {
       for (const handler of handlers.get(event.type) ?? []) handler(event)
     },
   }
 }
 
-function form(id: string, sessionID = "session"): Extract<OpenCodeEvent, { type: "form.created" }>["data"]["form"] {
+function form(id: string, sessionID = "session"): Extract<KTetherEvent, { type: "form.created" }>["data"]["form"] {
   return {
     id,
     sessionID,
@@ -88,7 +88,7 @@ function durable(sessionID: string): { aggregateID: string; seq: number; version
   return { aggregateID: sessionID, seq: 0, version: 1 }
 }
 
-function executionStarted(id: string, sessionID = "session"): OpenCodeEvent {
+function executionStarted(id: string, sessionID = "session"): KTetherEvent {
   return {
     id,
     created: 0,
@@ -98,7 +98,7 @@ function executionStarted(id: string, sessionID = "session"): OpenCodeEvent {
   }
 }
 
-function executionSucceeded(id: string, sessionID = "session"): OpenCodeEvent {
+function executionSucceeded(id: string, sessionID = "session"): KTetherEvent {
   return {
     id,
     created: 0,
@@ -108,7 +108,7 @@ function executionSucceeded(id: string, sessionID = "session"): OpenCodeEvent {
   }
 }
 
-function executionFailed(id: string, sessionID = "session"): OpenCodeEvent {
+function executionFailed(id: string, sessionID = "session"): KTetherEvent {
   return {
     id,
     created: 0,

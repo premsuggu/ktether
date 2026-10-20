@@ -81,7 +81,7 @@ export async function reconnectSession(deps: Deps = {}): Promise<ReadySignal | u
   const { out, doFetch, now } = defaults(deps)
   const state = readState()
   if (!state.channelId || !state.signingKey) {
-    out("No ktether session to reconnect to. Run `ktether start`.")
+    out("No ktether session to reconnect to. Run `ktether gpu start`.")
     return undefined
   }
   const ready = await latestReady(state.channelId, state.signingKey, doFetch)
@@ -115,7 +115,7 @@ export async function startSession(input: StartInput, deps: Deps = {}): Promise<
   const { out, doFetch, sleep, now } = defaults(deps)
   const model = input.model || DEFAULT_MODEL
   const spec = AVAILABLE_MODELS[model]
-  if (!spec) throw new Error(`Invalid model '${model}'. Run 'opencode ktether models' for available options.`)
+  if (!spec) throw new Error(`Invalid model '${model}'. Run 'ktether gpu models' for available options.`)
 
   const state = readState()
   if (state.url && state.status === "ready") {
@@ -136,7 +136,7 @@ export async function startSession(input: StartInput, deps: Deps = {}): Promise<
   out("Hardware: Kaggle Dual Nvidia T4 (32 GB total VRAM)")
   out(`Idle Timeout: ${input.timeoutMinutes} minutes`)
   if (spec.toolCalling === "unreliable") {
-    out("[WARN] This model does not call tools reliably, so OpenCode's agent features will not work well with it.")
+    out("[WARN] This model does not call tools reliably, so ktether's agent features will not work well with it.")
   }
   out("")
 
@@ -213,11 +213,11 @@ export async function startSession(input: StartInput, deps: Deps = {}): Promise<
   out("")
   out("=== ktether is Ready! ===")
   out(`Public Tunnel: ${ready.tunnel_url}`)
-  out("Provider ID:   ktether")
-  out(`Model:         ktether/${model}`)
+  out("Provider ID:   kaggle")
+  out(`Model:         kaggle/${model}`)
   out("")
   out("You can now run:")
-  out(`  opencode --model ktether/${model}`)
+  out(`  ktether --model kaggle/${model}`)
   return ready
 }
 
@@ -238,7 +238,7 @@ export async function stopSession(input: { delete: boolean }, deps: Deps = {}): 
   })()
   if (creds && getKernelStatus(creds.username) === "QUEUED") {
     out("[WARN] The kernel is still queued on Kaggle and cannot be cancelled from here.")
-    out("       Run `ktether clean --yes` to delete the notebook, which also removes it from the queue.")
+    out("       Run `ktether gpu clean --yes` to delete the notebook, which also removes it from the queue.")
   }
 
   sessionEnd(state, now())

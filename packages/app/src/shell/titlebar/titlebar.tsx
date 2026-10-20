@@ -2,10 +2,10 @@ import { createEffect, createMemo, createResource, Match, Show, Switch, untrack 
 import { createStore, unwrap } from "solid-js/store"
 import { Dynamic, Portal } from "solid-js/web"
 import { useLocation, useNavigate } from "@solidjs/router"
-import { IconButton } from "@opencode/ui/icon-button"
-import { Icon } from "@opencode/ui/icon"
-import { Keybind } from "@opencode/ui/keybind"
-import { Tooltip } from "@opencode/ui/tooltip"
+import { IconButton } from "@ktether/ui/icon-button"
+import { Icon } from "@ktether/ui/icon"
+import { Keybind } from "@ktether/ui/keybind"
+import { Tooltip } from "@ktether/ui/tooltip"
 
 import { LayoutRoute, useLayout } from "@/shell/state/layout"
 import { usePlatform } from "@/runtime/platform/platform"
@@ -27,11 +27,11 @@ import { TitlebarRightMount } from "@/shell/titlebar/right-slot"
 import { MobileDrawer, MobileDrawerContent, MobileDrawerLabel, MobileDrawerTrigger } from "@/shell/mobile-drawer"
 import { sessionTabTitle } from "./tab-title"
 import { SessionTabAvatar } from "@/shell/layout/session-tab-avatar"
-import { SessionProgressIndicatorV2 } from "@opencode/session-ui/v2/session-progress-indicator-v2"
+import { SessionProgressIndicatorV2 } from "@ktether/session-ui/v2/session-progress-indicator-v2"
 import { RecentlyClosedTabsMenu } from "./recently-closed-tabs-menu"
 import { useSettingsDialog } from "@/settings/command"
 import { rootSession } from "@/shell/routes/session"
-import { TitlebarItem } from "@opencode/gui-extensions/sdk"
+import { TitlebarItem } from "@ktether/gui-extensions/sdk"
 import { useExtensionHost } from "@/runtime/extension/host"
 import { TitlebarItems, useTitlebarItems } from "@/runtime/extension/titlebar-items"
 import devIcon from "../../../../desktop/icons/dev/64x64.png"
@@ -665,7 +665,7 @@ export function Titlebar(props: { verticalTabs?: { mount?: HTMLElement } }) {
                                 class="flex h-7 shrink-0 items-center gap-2 rounded-[6px] px-2 text-[13px] leading-4 text-v2-text-text-faint hover:bg-v2-background-bg-layer-02 focus-visible:outline-none focus-visible:bg-v2-background-bg-layer-02"
                                 onClick={() => {
                                   setMobileTabs("open", false)
-                                  platform.openExternal("https://opencode.ai/desktop-feedback")
+                                  platform.openExternal("https://github.com/premsuggu/ktether")
                                 }}
                               >
                                 <Icon name="help" size="small" />
@@ -782,7 +782,7 @@ function ChannelIndicator(props: { horizontal?: boolean; sidebar?: boolean }) {
   const language = useLanguage()
   const platform = usePlatform()
   const host = useExtensionHost()
-  const channel = import.meta.env.VITE_OPENCODE_CHANNEL
+  const channel = import.meta.env.VITE_KTETHER_CHANNEL
 
   if (!channel || channel === "prod") return null
 

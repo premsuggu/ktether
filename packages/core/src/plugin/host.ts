@@ -1,10 +1,10 @@
 export * as PluginHost from "./host.js"
 
-import { Plugin } from "@opencode/plugin/effect"
-import type { IntegrationMethodRegistration } from "@opencode/plugin/effect/integration"
-import { EventManifest } from "@opencode/schema/event-manifest"
-import type { Event } from "@opencode/schema/event"
-import { ServerConfig } from "@opencode/schema/mcp"
+import { Plugin } from "@ktether/plugin/effect"
+import type { IntegrationMethodRegistration } from "@ktether/plugin/effect/integration"
+import { EventManifest } from "@ktether/schema/event-manifest"
+import type { Event } from "@ktether/schema/event"
+import { ServerConfig } from "@ktether/schema/mcp"
 import { App } from "../app.js"
 import { Effect, Schema, Stream } from "effect"
 import { Agent } from "../agent.js"
@@ -35,7 +35,7 @@ import { Generate } from "../generate.js"
 import { Permission } from "../permission.js"
 import { PluginHooks } from "./hooks.js"
 import type { Interface } from "../plugin.js"
-import { LayerNode } from "@opencode/util/effect/layer-node"
+import { LayerNode } from "@ktether/util/effect/layer-node"
 
 const mutable = <T>(value: T) => value as DeepMutable<T>
 type RpcEvent = Event.Payload & {

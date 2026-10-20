@@ -1,5 +1,5 @@
-import { OpenCode } from "@opencode/client"
-import { Service } from "@opencode/client/effect/service"
+import { KTether } from "@ktether/client"
+import { Service } from "@ktether/client/effect/service"
 import { Effect, Option } from "effect"
 import { EOL } from "node:os"
 import { Commands } from "../commands"
@@ -13,7 +13,7 @@ export default Runtime.handler(
       server: Option.getOrUndefined(input.server),
       standalone: input.standalone,
     })
-    const client = OpenCode.make({
+    const client = KTether.make({
       baseUrl: server.endpoint.url,
       headers: Service.headers(server.endpoint),
     })

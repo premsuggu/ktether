@@ -34,7 +34,7 @@ export function rewrite<ID extends string>(
   if (target.package !== undefined || replacement !== input.specifier) target.package = replacement
   // Without `provider`, the native compatible package reports every AI SDK-mapped host as `openai-compatible`.
   const identity =
-    replacement === "@opencode/ai/providers/openai-compatible" && !Provider.builtinPackages.has(input.specifier)
+    replacement === "@ktether/ai/providers/openai-compatible" && !Provider.builtinPackages.has(input.specifier)
       ? { provider: input.canonical ?? input.providerID }
       : {}
   target.settings = target.settings === undefined ? undefined : { ...translated.settings, ...identity }
@@ -56,9 +56,9 @@ export function rewrite<ID extends string>(
 // AI SDK package names that config files and the models catalog may still use, and the native package that serves
 // each. Anything else is not a ktether provider.
 const PACKAGES: Readonly<Record<string, string>> = {
-  "@ai-sdk/openai": "@opencode/ai/providers/openai",
-  "@ai-sdk/openai-compatible": "@opencode/ai/providers/openai-compatible",
-  "@ai-sdk/xai": "@opencode/ai/providers/xai",
+  "@ai-sdk/openai": "@ktether/ai/providers/openai",
+  "@ai-sdk/openai-compatible": "@ktether/ai/providers/openai-compatible",
+  "@ai-sdk/xai": "@ktether/ai/providers/xai",
 }
 
 export function native(npm: string, _context: Context & { readonly settings?: Provider.Settings }): string | undefined {

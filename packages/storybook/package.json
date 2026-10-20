@@ -1,6 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
-  "name": "@opencode/storybook",
+  "name": "@ktether/storybook",
   "private": true,
   "type": "module",
   "scripts": {
@@ -8,9 +8,9 @@
     "build": "storybook build"
   },
   "devDependencies": {
-    "@opencode/client": "workspace:*",
-    "@opencode/session-ui": "workspace:*",
-    "@opencode/ui": "workspace:*",
+    "@ktether/client": "workspace:*",
+    "@ktether/session-ui": "workspace:*",
+    "@ktether/ui": "workspace:*",
     "@playwright/test": "catalog:",
     "@solidjs/meta": "catalog:",
     "@storybook/addon-a11y": "10.4.4",

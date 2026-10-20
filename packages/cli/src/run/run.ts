@@ -1,12 +1,12 @@
-import { Service, type Endpoint } from "@opencode/client/effect/service"
-import { OpenCode, type SessionMessageAssistantTool } from "@opencode/client/promise"
-import { FSUtil } from "@opencode/util/fs-util"
+import { Service, type Endpoint } from "@ktether/client/effect/service"
+import { KTether, type SessionMessageAssistantTool } from "@ktether/client/promise"
+import { FSUtil } from "@ktether/util/fs-util"
 import { open } from "node:fs/promises"
 import path from "node:path"
 import { readStdin } from "../util/io"
 import { ServerConnection } from "../services/server-connection"
 import { parseSessionTargetModel, resolveSessionTarget } from "../session-target"
-import { toolInlineInfo } from "@opencode/tui/mini/tool"
+import { toolInlineInfo } from "@ktether/tui/mini/tool"
 import { runNonInteractivePrompt } from "./noninteractive"
 import { UI } from "./ui"
 import { Env } from "../env"
@@ -81,7 +81,7 @@ async function run(input: RunCommandInput, options: ExecutionOptions) {
 }
 
 async function execute(input: RunCommandInput, prepared: Prepared, endpoint: Endpoint, options: ExecutionOptions) {
-  const client = OpenCode.make({
+  const client = KTether.make({
     baseUrl: endpoint.url,
     headers: Service.headers(endpoint),
     // Bun's default five-minute deadline terminates the event stream used by long-running sessions.

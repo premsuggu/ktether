@@ -10,10 +10,10 @@ import { AuthOptions, type ProviderAuthOption } from "../route/auth-options.js"
 import type { ProviderPackage } from "../provider-package.js"
 import type { OpenAIProviderOptionsInput } from "./openai-options.js"
 
-export const id = ProviderID.make("ktether")
+export const id = ProviderID.make("kaggle")
 
 function readPersistedEndpoint(): { url?: string; apiKey?: string } {
-  const statePath = path.join(os.homedir(), ".local", "state", "opencode", "ktether.json")
+  const statePath = path.join(os.homedir(), ".local", "state", "ktether", "session.json")
   if (fs.existsSync(statePath)) {
     try {
       const data = JSON.parse(fs.readFileSync(statePath, "utf-8"))
@@ -43,7 +43,7 @@ export type Settings = ProviderPackage.Settings &
 export const routes = [OpenAICompatibleChat.route]
 
 export const configure = (input: LanguageModelOptions = {}) => {
-  const provider = input.provider ?? "ktether"
+  const provider = input.provider ?? "kaggle"
   const persisted = readPersistedEndpoint()
   const rawBaseURL = input.baseURL ?? process.env.KTETHER_URL ?? persisted.url ?? "http://127.0.0.1:8080/v1"
   const trimmedBaseURL = rawBaseURL.replace(/\/+$/, "")

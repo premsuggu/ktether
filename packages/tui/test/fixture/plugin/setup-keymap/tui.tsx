@@ -1,4 +1,4 @@
-import { Plugin } from "@opencode/plugin/tui"
+import { Plugin } from "@ktether/plugin/tui"
 import { batch, createSignal } from "solid-js"
 
 const generation = "generation 1"

@@ -35,7 +35,7 @@ const server = Effect.gen(function* () {
   const call = (method: "GET" | "POST", route: string, body?: unknown) =>
     Effect.promise(() =>
       handler(
-        new Request(`http://opencode.local${route}`, {
+        new Request(`http://ktether.local${route}`, {
           method,
           headers: { "content-type": "application/json" },
           body: body === undefined ? undefined : JSON.stringify(body),

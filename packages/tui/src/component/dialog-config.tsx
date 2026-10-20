@@ -23,7 +23,7 @@ export const settings: Setting[] = [
     title: "Theme",
     category: "Appearance",
     path: ["theme", "name"],
-    default: "opencode",
+    default: "ktether",
     keywords: ["color scheme", "colors"],
   },
   {

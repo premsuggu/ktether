@@ -1,6 +1,6 @@
 import { Schema } from "effect"
-import { withStatics } from "@opencode/schema/schema"
-import { Tool } from "@opencode/schema/tool"
+import { withStatics } from "@ktether/schema/schema"
+import { Tool } from "@ktether/schema/tool"
 import {
   CacheHint,
   CachePolicy,

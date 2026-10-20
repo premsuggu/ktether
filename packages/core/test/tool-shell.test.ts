@@ -4,40 +4,40 @@ import os from "os"
 import path from "path"
 import { describe, expect } from "bun:test"
 import { Cause, Deferred, Duration, Effect, Exit, Fiber, Layer, Queue, Scope, Stream } from "effect"
-import { Money } from "@opencode/schema/money"
-import { AppNodeBuilder } from "@opencode/core/effect/app-node-builder"
-import { LayerNode } from "@opencode/util/effect/layer-node"
-import { makeGlobalNode, makeLocationNode } from "@opencode/util/effect/app-node"
-import { filesystem } from "@opencode/util/effect/app-node-platform"
-import { Database } from "@opencode/core/database/database"
-import { Bus } from "@opencode/core/bus"
-import { Config } from "@opencode/core/config"
-import { Environment } from "@opencode/core/environment/index"
-import { FSUtil } from "@opencode/util/fs-util"
-import { Global } from "@opencode/util/global"
-import { Location } from "@opencode/core/location"
-import { FileAccess } from "@opencode/core/file-access"
-import { LocationServiceMap } from "@opencode/core/location-service-map"
-import { Model } from "@opencode/core/model"
-import { Provider } from "@opencode/core/provider"
-import { AbsolutePath } from "@opencode/core/schema"
-import { Agent } from "@opencode/core/agent"
-import { Job } from "@opencode/core/job"
-import { Session } from "@opencode/core/session"
-import { SessionEvent } from "@opencode/core/session/event"
-import { SessionExecution } from "@opencode/core/session/execution"
-import { SessionMessage } from "@opencode/core/session/message"
-import { SessionStore } from "@opencode/core/session/store"
-import { Permission } from "@opencode/core/permission"
-import { PermissionSaved } from "@opencode/core/permission/saved"
-import { Plugin } from "@opencode/core/plugin"
-import { PluginSupervisor } from "@opencode/core/plugin/supervisor"
-import { Shell } from "@opencode/core/shell"
-import { ShellSelect } from "@opencode/core/shell/select"
-import { ID } from "@opencode/schema/shell"
-import { ShellTool } from "@opencode/core/tool/plugin/shell"
-import { ToolOutput } from "@opencode/core/tool-output"
-import { Tool } from "@opencode/core/tool"
+import { Money } from "@ktether/schema/money"
+import { AppNodeBuilder } from "@ktether/core/effect/app-node-builder"
+import { LayerNode } from "@ktether/util/effect/layer-node"
+import { makeGlobalNode, makeLocationNode } from "@ktether/util/effect/app-node"
+import { filesystem } from "@ktether/util/effect/app-node-platform"
+import { Database } from "@ktether/core/database/database"
+import { Bus } from "@ktether/core/bus"
+import { Config } from "@ktether/core/config"
+import { Environment } from "@ktether/core/environment/index"
+import { FSUtil } from "@ktether/util/fs-util"
+import { Global } from "@ktether/util/global"
+import { Location } from "@ktether/core/location"
+import { FileAccess } from "@ktether/core/file-access"
+import { LocationServiceMap } from "@ktether/core/location-service-map"
+import { Model } from "@ktether/core/model"
+import { Provider } from "@ktether/core/provider"
+import { AbsolutePath } from "@ktether/core/schema"
+import { Agent } from "@ktether/core/agent"
+import { Job } from "@ktether/core/job"
+import { Session } from "@ktether/core/session"
+import { SessionEvent } from "@ktether/core/session/event"
+import { SessionExecution } from "@ktether/core/session/execution"
+import { SessionMessage } from "@ktether/core/session/message"
+import { SessionStore } from "@ktether/core/session/store"
+import { Permission } from "@ktether/core/permission"
+import { PermissionSaved } from "@ktether/core/permission/saved"
+import { Plugin } from "@ktether/core/plugin"
+import { PluginSupervisor } from "@ktether/core/plugin/supervisor"
+import { Shell } from "@ktether/core/shell"
+import { ShellSelect } from "@ktether/core/shell/select"
+import { ID } from "@ktether/schema/shell"
+import { ShellTool } from "@ktether/core/tool/plugin/shell"
+import { ToolOutput } from "@ktether/core/tool-output"
+import { Tool } from "@ktether/core/tool"
 import { tmpdir, tmpdirScoped } from "./fixture/tmpdir"
 import { tempGlobalLayer } from "./fixture/global"
 import { offlineModels } from "./fixture/models"
@@ -236,7 +236,7 @@ const withScanner = <A, E, R>(
         yield* Effect.promise(() => Promise.all([fs.mkdir(fixture.active), fs.mkdir(fixture.outside)]))
         yield* Effect.promise(() =>
           Bun.write(
-            path.join(fixture.active, "opencode.json"),
+            path.join(fixture.active, "ktether.json"),
             JSON.stringify({ experimental: { portable_shell_scanner: portable } }),
           ),
         )
@@ -938,11 +938,11 @@ describe("ShellTool", () => {
               const sessions = yield* Session.Service
               yield* sessions.environment({
                 sessionID,
-                variables: { OPENCODE_SESSION_ENV_TEST: "from-session" },
+                variables: { KTETHER_SESSION_ENV_TEST: "from-session" },
               })
               const command = isWindows
-                ? "[Console]::Out.Write($env:OPENCODE_SESSION_ENV_TEST)"
-                : 'printf %s "$OPENCODE_SESSION_ENV_TEST"'
+                ? "[Console]::Out.Write($env:KTETHER_SESSION_ENV_TEST)"
+                : 'printf %s "$KTETHER_SESSION_ENV_TEST"'
 
               const settled = yield* executeTool(registry, call({ command }))
 
@@ -968,15 +968,15 @@ describe("ShellTool", () => {
               const sessions = yield* Session.Service
               yield* sessions.environment({
                 sessionID,
-                variables: { AGENT: "0", OPENCODE: "0", AI_AGENT: "", OPENCODE_SESSION_ID: "stale" },
+                variables: { AGENT: "0", KTETHER: "0", AI_AGENT: "", KTETHER_SESSION_ID: "stale" },
               })
               const command = isWindows
-                ? '[Console]::Out.Write("$env:AGENT|$env:OPENCODE|$env:AI_AGENT|$env:OPENCODE_SESSION_ID")'
-                : 'printf %s "$AGENT|$OPENCODE|$AI_AGENT|$OPENCODE_SESSION_ID"'
+                ? '[Console]::Out.Write("$env:AGENT|$env:KTETHER|$env:AI_AGENT|$env:KTETHER_SESSION_ID")'
+                : 'printf %s "$AGENT|$KTETHER|$AI_AGENT|$KTETHER_SESSION_ID"'
               const settled = yield* executeTool(registry, call({ command }))
 
               expect(settled.status).toBe("completed")
-              expect(settled.content?.[0]).toEqual({ type: "text", text: `1|1|opencode|${sessionID}` })
+              expect(settled.content?.[0]).toEqual({ type: "text", text: `1|1|ktether|${sessionID}` })
             }),
           )
         },
@@ -1259,7 +1259,7 @@ describe("ShellTool", () => {
               reset()
               yield* Effect.promise(() =>
                 Bun.write(
-                  path.join(tmp.path, "opencode.json"),
+                  path.join(tmp.path, "ktether.json"),
                   JSON.stringify({ experimental: { portable_shell_scanner: portable } }),
                 ),
               )
@@ -1307,7 +1307,7 @@ describe("ShellTool", () => {
           name: `test/shell-plugins-${channel}`,
           layer: Layer.effectDiscard(
             registerToolPlugin(ShellTool.Plugin, {
-              app: { name: "opencode", version: "test", channel },
+              app: { name: "ktether", version: "test", channel },
             }),
           ),
           deps: [
@@ -1330,7 +1330,7 @@ describe("ShellTool", () => {
               if (configured !== undefined)
                 yield* Effect.promise(() =>
                   Bun.write(
-                    path.join(tmp.path, "opencode.json"),
+                    path.join(tmp.path, "ktether.json"),
                     JSON.stringify({ experimental: { portable_shell_scanner: configured } }),
                   ),
                 )
@@ -1379,7 +1379,7 @@ describe("ShellTool", () => {
                   reset()
                   yield* Effect.promise(() =>
                     Bun.write(
-                      path.join(tmp.path, "opencode.json"),
+                      path.join(tmp.path, "ktether.json"),
                       JSON.stringify({ experimental: { portable_shell_scanner: portable } }),
                     ),
                   )
@@ -1479,7 +1479,7 @@ describe("ShellTool", () => {
         return Effect.gen(function* () {
           yield* Effect.promise(() =>
             Bun.write(
-              path.join(tmp.path, "opencode.json"),
+              path.join(tmp.path, "ktether.json"),
               JSON.stringify({ tool_output: { max_lines: 2, max_bytes: 1_000 } }),
             ),
           )

@@ -1,16 +1,16 @@
 import { describe, expect } from "bun:test"
-import { LLM, LanguageModel, Message } from "@opencode/ai"
-import { compileRequest } from "@opencode/ai/route/client"
+import { LLM, LanguageModel, Message } from "@ktether/ai"
+import { compileRequest } from "@ktether/ai/route/client"
 import { ConfigProvider, Effect } from "effect"
 import { Headers } from "effect/http"
-import { AISDKNative } from "@opencode/core/aisdk-native"
-import { Credential } from "@opencode/core/credential"
-import { Integration } from "@opencode/core/integration"
-import { Compatibility, ID, Info, Model, VariantID } from "@opencode/core/model"
-import { Provider } from "@opencode/core/provider"
-import { Variant } from "@opencode/core/variant"
-import { ModelResolver } from "@opencode/core/model-resolver"
-import { AISDK } from "@opencode/core/aisdk"
+import { AISDKNative } from "@ktether/core/aisdk-native"
+import { Credential } from "@ktether/core/credential"
+import { Integration } from "@ktether/core/integration"
+import { Compatibility, ID, Info, Model, VariantID } from "@ktether/core/model"
+import { Provider } from "@ktether/core/provider"
+import { Variant } from "@ktether/core/variant"
+import { ModelResolver } from "@ktether/core/model-resolver"
+import { AISDK } from "@ktether/core/aisdk"
 import { it } from "./lib/effect"
 
 interface ModelOptions {
@@ -277,7 +277,7 @@ describe("ModelResolver", () => {
 
   it.effect("sends xAI Responses effort variants with reasoning summaries", () =>
     Effect.gen(function* () {
-      const base = model("@opencode/ai/providers/xai", { providerID: Provider.ID.make("xai"), modelID: "grok-4.6" })
+      const base = model("@ktether/ai/providers/xai", { providerID: Provider.ID.make("xai"), modelID: "grok-4.6" })
       const catalog = Info.make({
         ...base,
         variants: Variant.resolve(base, [{ type: "effort", values: ["low", "high"] }]),
@@ -409,7 +409,7 @@ describe("ModelResolver", () => {
   it.effect("applies plugin-projected OpenAI endpoint and headers", () =>
     Effect.gen(function* () {
       const resolved = yield* ModelResolver.fromCatalogModel(
-        model("@opencode/ai/providers/openai", {
+        model("@ktether/ai/providers/openai", {
           settings: { baseURL: "https://chatgpt.com/backend-api/codex" },
           headers: { "chatgpt-account-id": "acct_123" },
           body: {},
@@ -459,7 +459,7 @@ describe("ModelResolver", () => {
   it.effect("does not route native OpenAI-compatible packages to the codex backend", () =>
     Effect.gen(function* () {
       const resolved = yield* ModelResolver.fromCatalogModel(
-        model("@opencode/ai/providers/openai-compatible", {
+        model("@ktether/ai/providers/openai-compatible", {
           settings: { baseURL: "https://compatible.example/v1" },
         }),
         Credential.OAuth.make({
@@ -532,7 +532,7 @@ describe("ModelResolver", () => {
         }),
       )
       const resolved = yield* ModelResolver.fromCatalogModel(
-        model("@opencode/ai/providers/custom", {
+        model("@ktether/ai/providers/custom", {
           settings: { region: "test" },
           headers: { "x-package": "header" },
           body: { custom: true },
@@ -540,7 +540,7 @@ describe("ModelResolver", () => {
         undefined,
         {
           loadPackage: (specifier) => {
-            expect(specifier).toBe("@opencode/ai/providers/custom")
+            expect(specifier).toBe("@ktether/ai/providers/custom")
             return Effect.succeed({
               model: (modelID, settings) => {
                 expect(modelID).toBe("api-test-model")
@@ -575,14 +575,14 @@ describe("ModelResolver", () => {
         expires: Date.now() + 60_000,
       })
       const packages = [
-        ["@opencode/ai/providers/google-vertex", "accessToken"],
-        ["@opencode/ai/providers/google-vertex/gemini", "accessToken"],
-        ["@opencode/ai/providers/google-vertex/interactions", "accessToken"],
-        ["@opencode/ai/providers/google-vertex/chat", "accessToken"],
-        ["@opencode/ai/providers/google-vertex/responses", "accessToken"],
-        ["@opencode/ai/providers/google-vertex/messages", "accessToken"],
-        ["@opencode/ai/providers/anthropic", "authToken"],
-        ["@opencode/ai/providers/anthropic-compatible", "authToken"],
+        ["@ktether/ai/providers/google-vertex", "accessToken"],
+        ["@ktether/ai/providers/google-vertex/gemini", "accessToken"],
+        ["@ktether/ai/providers/google-vertex/interactions", "accessToken"],
+        ["@ktether/ai/providers/google-vertex/chat", "accessToken"],
+        ["@ktether/ai/providers/google-vertex/responses", "accessToken"],
+        ["@ktether/ai/providers/google-vertex/messages", "accessToken"],
+        ["@ktether/ai/providers/anthropic", "authToken"],
+        ["@ktether/ai/providers/anthropic-compatible", "authToken"],
       ] as const
 
       yield* Effect.forEach(packages, ([specifier, key]) =>
@@ -702,7 +702,7 @@ describe("ModelResolver", () => {
 
   it.effect("distinguishes unexpected constructor failures from configuration errors", () =>
     Effect.gen(function* () {
-      const failure = yield* ModelResolver.fromCatalogModel(model("@opencode/ai/providers/custom"), undefined, {
+      const failure = yield* ModelResolver.fromCatalogModel(model("@ktether/ai/providers/custom"), undefined, {
         loadPackage: () =>
           Effect.succeed({
             model: () => {
@@ -721,7 +721,7 @@ describe("ModelResolver", () => {
 
   it.effect("reports package load and AISDK initialization failures with their causes", () =>
     Effect.gen(function* () {
-      const load = yield* ModelResolver.fromCatalogModel(model("@opencode/ai/providers/custom"), undefined, {
+      const load = yield* ModelResolver.fromCatalogModel(model("@ktether/ai/providers/custom"), undefined, {
         loadPackage: (specifier) =>
           Effect.fail(
             new Provider.LoadError({ package: specifier, cause: new Error(`Provider package ${specifier} is broken`) }),
@@ -730,7 +730,7 @@ describe("ModelResolver", () => {
       expect(load).toMatchObject({
         _tag: "SessionRunnerModel.ModelInitializationError",
         phase: "load",
-        detail: "Provider package @opencode/ai/providers/custom is broken",
+        detail: "Provider package @ktether/ai/providers/custom is broken",
       })
 
       const init = yield* ModelResolver.fromCatalogModel(model(Provider.aisdk("@ai-sdk/perplexity")), undefined, {
@@ -774,7 +774,7 @@ describe("ModelResolver", () => {
   it.effect("reports whether a catalog model declares a provider package", () =>
     Effect.sync(() => {
       expect(ModelResolver.hasPackage(model(Provider.aisdk("@ai-sdk/openai")))).toBe(true)
-      expect(ModelResolver.hasPackage(model("@opencode/ai/providers/custom"))).toBe(true)
+      expect(ModelResolver.hasPackage(model("@ktether/ai/providers/custom"))).toBe(true)
       expect(ModelResolver.hasPackage(model(undefined))).toBe(false)
     }),
   )

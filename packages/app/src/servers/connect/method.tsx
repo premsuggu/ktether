@@ -1,4 +1,4 @@
-import { Button } from "@opencode/ui/button"
+import { Button } from "@ktether/ui/button"
 import { useLanguage } from "@/runtime/i18n/language"
 
 export type ConnectMethod = "link" | "password"

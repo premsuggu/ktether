@@ -23,23 +23,23 @@ import stripAnsi from "strip-ansi"
 import { createTwoFilesPatch, diffLines } from "diff"
 import { Dynamic } from "solid-js/web"
 import { type SessionSummary, useData } from "../context"
-import { useFileComponent } from "@opencode/ui/context/file"
-import { type UiI18n, useI18n } from "@opencode/ui/context/i18n"
+import { useFileComponent } from "@ktether/ui/context/file"
+import { type UiI18n, useI18n } from "@ktether/ui/context/i18n"
 import { BasicTool, GenericTool } from "../components/basic-tool"
-import { FileIcon } from "@opencode/ui/file-icon"
-import { Icon } from "@opencode/ui/icon"
+import { FileIcon } from "@ktether/ui/file-icon"
+import { Icon } from "@ktether/ui/icon"
 import { ToolErrorCard } from "../components/tool-error-card"
-import { DiffChanges } from "@opencode/ui/diff-changes"
+import { DiffChanges } from "@ktether/ui/diff-changes"
 import { Markdown } from "../components/markdown"
 import { createMarkdownImages } from "../components/markdown-image"
 import { createImagePreview } from "../components/image-preview"
 import { useMarkdown } from "../context/markdown"
-import { getDirectory, getFilename } from "@opencode/util/path"
-import { checksum } from "@opencode/util/encode"
-import { Tooltip } from "@opencode/ui/tooltip"
-import { IconButton } from "@opencode/ui/icon-button"
-import { TextShimmer } from "@opencode/ui/text-shimmer"
-import { AnimatedNumber } from "@opencode/ui/animated-number"
+import { getDirectory, getFilename } from "@ktether/util/path"
+import { checksum } from "@ktether/util/encode"
+import { Tooltip } from "@ktether/ui/tooltip"
+import { IconButton } from "@ktether/ui/icon-button"
+import { TextShimmer } from "@ktether/ui/text-shimmer"
+import { AnimatedNumber } from "@ktether/ui/animated-number"
 import { changedFileDiff, patchFileGroups } from "../components/apply-patch-file"
 import { animate } from "motion"
 import { SessionProgressIndicatorV2 } from "../v2/components/session-progress-indicator-v2"
@@ -48,7 +48,7 @@ import type {
   SessionMessageAssistantReasoning,
   SessionMessageAssistantTool,
   SessionMessageShell,
-} from "@opencode/client/promise"
+} from "@ktether/client/promise"
 import {
   currentToolError,
   currentToolGroupedRead,
@@ -305,7 +305,7 @@ function agentColor(value: string | undefined, themeColors: ReadonlyMap<string, 
 
 const webSearchProviderNames = new Map([
   ["tinyfish", "TinyFish"],
-  ["opencode", "OpenCode"],
+  ["ktether", "ktether"],
 ])
 
 function webSearchProviderLabel(provider: string | undefined, i18n: ReturnType<typeof useI18n>) {
@@ -698,7 +698,7 @@ export function CurrentContextToolGroup(props: {
                       }),
                     )
 
-                    const marker = "__OPENCODE_LOADED_SKILL__"
+                    const marker = "__KTETHER_LOADED_SKILL__"
 
                     const loaded = createMemo(() =>
                       i18n.plural("ui.tool.loadedSkills", skills().length, { name: marker }),
@@ -1496,7 +1496,7 @@ ToolRegistry.register({
       }),
     )
 
-    const marker = "__OPENCODE_LOADED_PATH__"
+    const marker = "__KTETHER_LOADED_PATH__"
     const parts = createMemo(() => i18n.t("ui.tool.loadedFile", { path: marker }).split(marker))
 
     return (
@@ -2411,7 +2411,7 @@ ToolRegistry.register({
     const i18n = useI18n()
     const name = createMemo(() => skillToolName(toolInput(props.input), toolMetadata(props.metadata)))
     const running = createMemo(() => props.status === "streaming" || props.status === "running")
-    const marker = "__OPENCODE_LOADED_SKILL__"
+    const marker = "__KTETHER_LOADED_SKILL__"
     const parts = createMemo(() => i18n.t("ui.tool.loadedSkill", { name: marker }).split(marker))
 
     return (

@@ -1,7 +1,7 @@
 import { Effect, Layer } from "effect"
-import { makeGlobalNode } from "@opencode/util/effect/app-node"
-import { Credential } from "@opencode/core/credential"
-import { WellKnown } from "@opencode/core/wellknown"
+import { makeGlobalNode } from "@ktether/util/effect/app-node"
+import { Credential } from "@ktether/core/credential"
+import { WellKnown } from "@ktether/core/wellknown"
 
 export const emptyCredentialNode = makeGlobalNode({
   service: Credential.Service,

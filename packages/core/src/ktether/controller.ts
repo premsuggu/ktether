@@ -38,7 +38,7 @@ export class OperationInProgressError extends Error {
 export class UnknownModelError extends Error {
   readonly model: string
   constructor(model: string) {
-    super(`Unknown model '${model}'. Run 'ktether models' for the available models.`)
+    super(`Unknown model '${model}'. Run 'ktether gpu models' for the available models.`)
     this.model = model
   }
 }

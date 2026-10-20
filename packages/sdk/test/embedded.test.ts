@@ -1,20 +1,20 @@
 import fs from "fs/promises"
 import path from "path"
 import { expect } from "bun:test"
-import { LanguageModel, LLMClient } from "@opencode/ai"
-import { OpenAIChat } from "@opencode/ai/protocols"
-import { TestLLM } from "@opencode/ai/testing"
-import { llmClient } from "@opencode/core/effect/app-node-platform"
-import { makeMemoryDriver } from "@opencode/core/environment/index"
-import { SessionRunnerModel } from "@opencode/core/session/runner/model"
-import { WorkspaceDriver } from "@opencode/core/workspace/driver"
-import { Plugin } from "@opencode/plugin/effect"
+import { LanguageModel, LLMClient } from "@ktether/ai"
+import { OpenAIChat } from "@ktether/ai/protocols"
+import { TestLLM } from "@ktether/ai/testing"
+import { llmClient } from "@ktether/core/effect/app-node-platform"
+import { makeMemoryDriver } from "@ktether/core/environment/index"
+import { SessionRunnerModel } from "@ktether/core/session/runner/model"
+import { WorkspaceDriver } from "@ktether/core/workspace/driver"
+import { Plugin } from "@ktether/plugin/effect"
 import { makeDurableObjectStorage } from "../../core/test/fixture/durable-object-storage"
-import { OpenCodeWorkerd } from "../src/effect/workerd"
+import { KTetherWorkerd } from "../src/effect/workerd"
 import { Deferred, Effect, Fiber, Latch, Layer, Option, Stream } from "effect"
 import { testEffect } from "../../core/test/lib/effect"
 import { tmpdir } from "../../core/test/fixture/tmpdir"
-import type { OpenCodeEvent } from "../src/effect"
+import type { KTetherEvent } from "../src/effect"
 
 const it = testEffect(Layer.empty)
 type Sdk = typeof import("../src/effect")
@@ -39,12 +39,12 @@ const location = (fixture: Fixture) =>
 
 for (const selection of ["explicit", "default"] as const) {
   it.live(`generate.text uses configured providers with ${selection} model selection`, () =>
-    withEmbedded("opencode-embedded-generate-", (fixture) =>
+    withEmbedded("ktether-embedded-generate-", (fixture) =>
       Effect.gen(function* () {
         const llm = yield* TestLLM.Test.pipe(
           Effect.provide(TestLLM.testLayer({ fallback: TestLLM.text("ready", "answer") })),
         )
-        const opencode = yield* fixture.sdk.OpenCode.create(
+        const ktether = yield* fixture.sdk.KTether.create(
           {
             config: {
               directory: fixture.directory,
@@ -68,7 +68,7 @@ for (const selection of ["explicit", "default"] as const) {
           },
         )
 
-        const result = yield* opencode.generate.text({
+        const result = yield* ktether.generate.text({
           prompt: "Say ready",
           ...(selection === "explicit"
             ? {
@@ -90,7 +90,7 @@ for (const selection of ["explicit", "default"] as const) {
 }
 
 it.live("seeds host plugins from CreateOptions and waits for delayed model plugins without self-deadlock", () =>
-  withEmbedded("opencode-embedded-seeded-plugin-", (fixture) =>
+  withEmbedded("ktether-embedded-seeded-plugin-", (fixture) =>
     Effect.gen(function* () {
       const llm = yield* TestLLM.Test.pipe(
         Effect.provide(TestLLM.testLayer({ fallback: TestLLM.text("ready", "answer") })),
@@ -107,7 +107,7 @@ it.live("seeds host plugins from CreateOptions and waits for delayed model plugi
               providers.update(fixture.sdk.Provider.ID.make("seeded"), (provider) => {
                 provider.name = "Seeded Provider"
                 provider.activation = "enabled"
-                provider.package = "@opencode/ai/providers/openai-compatible"
+                provider.package = "@ktether/ai/providers/openai-compatible"
                 provider.settings = { baseURL: "https://provider.example/v1", apiKey: "secret" }
               })
               providers.models.update(
@@ -120,7 +120,7 @@ it.live("seeds host plugins from CreateOptions and waits for delayed model plugi
             })
           }).pipe(Effect.orDie),
       })
-      const opencode = yield* fixture.sdk.OpenCode.create(
+      const ktether = yield* fixture.sdk.KTether.create(
         {
           config: {
             directory: fixture.directory,
@@ -137,7 +137,7 @@ it.live("seeds host plugins from CreateOptions and waits for delayed model plugi
       )
 
       const [defaultModel, generated] = yield* Effect.all(
-        [opencode.model.default({ location: location(fixture) }), opencode.generate.text({ prompt: "Say ready" })],
+        [ktether.model.default({ location: location(fixture) }), ktether.generate.text({ prompt: "Say ready" })],
         { concurrency: "unbounded" },
       )
 
@@ -152,10 +152,10 @@ it.live("seeds host plugins from CreateOptions and waits for delayed model plugi
   ),
 )
 
-it.live("OpenCodeWorkerd seeds plugins before cold model resolution", () =>
-  withEmbedded("opencode-workerd-seeded-plugin-", (fixture) =>
+it.live("KTetherWorkerd seeds plugins before cold model resolution", () =>
+  withEmbedded("ktether-workerd-seeded-plugin-", (fixture) =>
     Effect.gen(function* () {
-      const opencode = yield* OpenCodeWorkerd.create({
+      const ktether = yield* KTetherWorkerd.create({
         storage: makeDurableObjectStorage(),
         models: { fetch: false },
         config: { model: "workerd-seeded/fictional-chat" },
@@ -170,7 +170,7 @@ it.live("OpenCodeWorkerd seeds plugins before cold model resolution", () =>
                   providers.update(fixture.sdk.Provider.ID.make("workerd-seeded"), (provider) => {
                     provider.name = "Workerd Seeded"
                     provider.activation = "enabled"
-                    provider.package = "@opencode/ai/providers/openai-compatible"
+                    provider.package = "@ktether/ai/providers/openai-compatible"
                     provider.settings = { baseURL: "https://provider.example/v1", apiKey: "secret" }
                   })
                   providers.models.update(
@@ -184,7 +184,7 @@ it.live("OpenCodeWorkerd seeds plugins before cold model resolution", () =>
         ],
       })
 
-      const selected = yield* opencode.model.default({
+      const selected = yield* ktether.model.default({
         location: fixture.sdk.Location.Ref.make({ directory: fixture.sdk.AbsolutePath.make("/workspace") }),
       })
       expect(selected.data).toMatchObject({
@@ -198,49 +198,49 @@ it.live("OpenCodeWorkerd seeds plugins before cold model resolution", () =>
 it.live(
   "embedded client uses the real router and handlers",
   () =>
-    withEmbedded("opencode-embedded-", (fixture) =>
+    withEmbedded("ktether-embedded-", (fixture) =>
       Effect.gen(function* () {
-        const opencode = yield* fixture.sdk.OpenCode.create({ events: { persist: true } })
+        const ktether = yield* fixture.sdk.KTether.create({ events: { persist: true } })
         const id = sessionID(fixture)
         const model = fixture.sdk.Model.Ref.make({
           id: fixture.sdk.Model.ID.make("embedded"),
           providerID: fixture.sdk.Provider.ID.make("test"),
         })
 
-        const created = yield* opencode.sessions.create({
+        const created = yield* ktether.sessions.create({
           id,
           agent: fixture.sdk.Agent.ID.make("build"),
           location: location(fixture),
         })
-        yield* opencode.sessions.switchModel({ sessionID: id, model })
-        const selected = yield* opencode.sessions.get({ sessionID: id })
-        const page = yield* opencode.sessions.list({ directory: fixture.sdk.AbsolutePath.make(fixture.directory) })
-        const active = yield* opencode.sessions.active()
-        const admitted = yield* opencode.sessions.prompt({
+        yield* ktether.sessions.switchModel({ sessionID: id, model })
+        const selected = yield* ktether.sessions.get({ sessionID: id })
+        const page = yield* ktether.sessions.list({ directory: fixture.sdk.AbsolutePath.make(fixture.directory) })
+        const active = yield* ktether.sessions.active()
+        const admitted = yield* ktether.sessions.prompt({
           sessionID: id,
           text: "Do not run",
           resume: false,
         })
-        const context = yield* opencode.sessions.context({ sessionID: id })
-        const pendingAfterAdmit = yield* opencode.sessions.inbox.list({ sessionID: id })
-        yield* opencode.sessions.instructions.entry.put({ sessionID: id, key: "deploy-target", value: "production" })
-        yield* opencode.sessions.instructions.entry.put({ sessionID: id, key: "flags", value: { beta: true } })
-        const contextEntries = yield* opencode.sessions.instructions.entry.list({ sessionID: id })
-        yield* opencode.sessions.instructions.entry.remove({ sessionID: id, key: "flags" })
-        const remainingContextEntries = yield* opencode.sessions.instructions.entry.list({ sessionID: id })
-        const wake = yield* opencode.sessions.prompt({
+        const context = yield* ktether.sessions.context({ sessionID: id })
+        const pendingAfterAdmit = yield* ktether.sessions.inbox.list({ sessionID: id })
+        yield* ktether.sessions.instructions.entry.put({ sessionID: id, key: "deploy-target", value: "production" })
+        yield* ktether.sessions.instructions.entry.put({ sessionID: id, key: "flags", value: { beta: true } })
+        const contextEntries = yield* ktether.sessions.instructions.entry.list({ sessionID: id })
+        yield* ktether.sessions.instructions.entry.remove({ sessionID: id, key: "flags" })
+        const remainingContextEntries = yield* ktether.sessions.instructions.entry.list({ sessionID: id })
+        const wake = yield* ktether.sessions.prompt({
           sessionID: id,
           text: "Promote this input",
         })
-        const prompted = yield* opencode.sessions.log({ sessionID: id, follow: true }).pipe(
+        const prompted = yield* ktether.sessions.log({ sessionID: id, follow: true }).pipe(
           Stream.filter((event) => event.type === "session.inbox.delivered" && event.data.inboxID === wake.id),
           Stream.runHead,
           Effect.timeout("10 seconds"),
           Effect.map(Option.getOrThrow),
         )
-        const wakeContext = yield* opencode.sessions.context({ sessionID: id })
-        const pendingAfterPromote = yield* opencode.sessions.inbox.list({ sessionID: id })
-        const event = yield* opencode.sessions.log({ sessionID: id }).pipe(
+        const wakeContext = yield* ktether.sessions.context({ sessionID: id })
+        const pendingAfterPromote = yield* ktether.sessions.inbox.list({ sessionID: id })
+        const event = yield* ktether.sessions.log({ sessionID: id }).pipe(
           Stream.filter((item) => item.type === "session.model.selected"),
           Stream.take(1),
           Stream.runHead,
@@ -249,22 +249,22 @@ it.live(
         const modelMessage = Option.fromNullishOr(context.find((message) => message.type === "model-switched")).pipe(
           Option.getOrThrow,
         )
-        const message = yield* opencode.sessions.message.get({ sessionID: id, messageID: modelMessage.id })
-        yield* opencode.sessions.interrupt({ sessionID: id })
-        const other = yield* opencode.sessions.create({ location: location(fixture) })
+        const message = yield* ktether.sessions.message.get({ sessionID: id, messageID: modelMessage.id })
+        yield* ktether.sessions.interrupt({ sessionID: id })
+        const other = yield* ktether.sessions.create({ location: location(fixture) })
         const missingSessionID = fixture.sdk.Session.ID.create()
         const missing = yield* Effect.all(
           [
-            opencode.sessions.log({ sessionID: missingSessionID }).pipe(Stream.runHead, Effect.flip),
-            opencode.sessions.interrupt({ sessionID: missingSessionID }).pipe(Effect.flip),
-            opencode.sessions.message.get({ sessionID: missingSessionID, messageID: modelMessage.id }).pipe(Effect.flip),
-            opencode.sessions.instructions.entry.list({ sessionID: missingSessionID }).pipe(Effect.flip),
-            opencode.sessions.inbox.list({ sessionID: missingSessionID }).pipe(Effect.flip),
+            ktether.sessions.log({ sessionID: missingSessionID }).pipe(Stream.runHead, Effect.flip),
+            ktether.sessions.interrupt({ sessionID: missingSessionID }).pipe(Effect.flip),
+            ktether.sessions.message.get({ sessionID: missingSessionID, messageID: modelMessage.id }).pipe(Effect.flip),
+            ktether.sessions.instructions.entry.list({ sessionID: missingSessionID }).pipe(Effect.flip),
+            ktether.sessions.inbox.list({ sessionID: missingSessionID }).pipe(Effect.flip),
           ],
           { concurrency: "unbounded" },
         )
         const missingMessage = yield* Effect.flip(
-          opencode.sessions.message.get({
+          ktether.sessions.message.get({
             sessionID: other.id,
             messageID: modelMessage.id,
           }),
@@ -304,11 +304,11 @@ it.live(
 )
 
 it.live("embedded client exposes plugin-backed web search", () =>
-  withEmbedded("opencode-embedded-websearch-", (fixture) =>
+  withEmbedded("ktether-embedded-websearch-", (fixture) =>
     Effect.gen(function* () {
-      const opencode = yield* fixture.sdk.OpenCode.create()
+      const ktether = yield* fixture.sdk.KTether.create()
       const providerID = fixture.sdk.WebSearch.ID.make("embedded-websearch")
-      yield* opencode.plugin({
+      yield* ktether.plugin({
         id: `embedded-websearch-${crypto.randomUUID()}`,
         effect: (ctx) =>
           ctx.websearch.transform((editor) => {
@@ -321,15 +321,15 @@ it.live("embedded client exposes plugin-backed web search", () =>
           }),
       })
 
-      const result = yield* opencode.websearch.query({
-        query: "opencode",
+      const result = yield* ktether.websearch.query({
+        query: "ktether",
         providerID,
         location: location(fixture),
       })
 
       expect(result.data).toEqual({
         providerID,
-        results: [{ url: "https://example.com", content: "Found opencode", time: {} }],
+        results: [{ url: "https://example.com", content: "Found ktether", time: {} }],
       })
     }),
   ),
@@ -338,14 +338,14 @@ it.live("embedded client exposes plugin-backed web search", () =>
 it.live(
   "Location-owned runner events reach the ready global client",
   () =>
-    withEmbedded("opencode-embedded-events-", (fixture) =>
+    withEmbedded("ktether-embedded-events-", (fixture) =>
       Effect.gen(function* () {
-        const opencode = yield* fixture.sdk.OpenCode.create()
+        const ktether = yield* fixture.sdk.KTether.create()
         const id = sessionID(fixture)
         const connected = yield* Latch.make(false)
-        const prompted = yield* Deferred.make<Extract<OpenCodeEvent, { type: "session.inbox.delivered" }>>()
+        const prompted = yield* Deferred.make<Extract<KTetherEvent, { type: "session.inbox.delivered" }>>()
 
-        yield* opencode.events.subscribe().pipe(
+        yield* ktether.events.subscribe().pipe(
           Stream.runForEach((event) =>
             event.type === "server.connected"
               ? connected.open
@@ -356,8 +356,8 @@ it.live(
           Effect.forkScoped,
         )
         yield* connected.await
-        yield* opencode.sessions.create({ id, location: location(fixture) })
-        yield* opencode.sessions.prompt({
+        yield* ktether.sessions.create({ id, location: location(fixture) })
+        yield* ktether.sessions.prompt({
           sessionID: id,
           text: "Observe this input",
         })
@@ -372,17 +372,17 @@ it.live(
 it.live(
   "independent embedded hosts do not share live notifications",
   () =>
-    withEmbedded("opencode-embedded-hosts-", (fixture) =>
+    withEmbedded("ktether-embedded-hosts-", (fixture) =>
       Effect.gen(function* () {
-        const first = yield* fixture.sdk.OpenCode.create()
-        const second = yield* fixture.sdk.OpenCode.create()
+        const first = yield* fixture.sdk.KTether.create()
+        const second = yield* fixture.sdk.KTether.create()
         const id = sessionID(fixture)
         const firstReady = yield* Latch.make(false)
         const secondReady = yield* Latch.make(false)
         const firstEvent = yield* Latch.make(false)
         const secondEvent = yield* Latch.make(false)
         const observe = (ready: Latch.Latch, event: Latch.Latch) =>
-          Stream.runForEach((notification: OpenCodeEvent) =>
+          Stream.runForEach((notification: KTetherEvent) =>
             notification.type === "server.connected"
               ? ready.open
               : notification.type === "session.agent.selected" && notification.data.sessionID === id
@@ -404,18 +404,18 @@ it.live(
 )
 
 it.live("embedded client is available as a Layer service", () =>
-  withEmbedded("opencode-embedded-layer-", (fixture) => {
+  withEmbedded("ktether-embedded-layer-", (fixture) => {
     const id = sessionID(fixture)
     return Effect.gen(function* () {
-      const opencode = yield* fixture.sdk.OpenCode.Service
-      const created = yield* opencode.sessions.create({ id, location: location(fixture) })
+      const ktether = yield* fixture.sdk.KTether.Service
+      const created = yield* ktether.sessions.create({ id, location: location(fixture) })
       expect(created.id).toBe(id)
-    }).pipe(Effect.provide(fixture.sdk.OpenCode.layer()))
+    }).pipe(Effect.provide(fixture.sdk.KTether.layer()))
   }),
 )
 
 it.live("configures workspace providers through the SDK facade", () =>
-  withEmbedded("opencode-embedded-workspace-", (fixture) =>
+  withEmbedded("ktether-embedded-workspace-", (fixture) =>
     Effect.gen(function* () {
       const calls: Array<{ readonly operation: string; readonly workspaceID: string }> = []
       const driver = WorkspaceDriver.make({
@@ -433,15 +433,15 @@ it.live("configures workspace providers through the SDK facade", () =>
           return Effect.void
         },
       })
-      const opencode = yield* fixture.sdk.OpenCode.create({ workspaceProviders: { fake: driver } })
+      const ktether = yield* fixture.sdk.KTether.create({ workspaceProviders: { fake: driver } })
       const requestedID = fixture.sdk.Workspace.ID.create()
-      const workspaceID = yield* opencode.workspace.create({ id: requestedID, provider: "fake" })
+      const workspaceID = yield* ktether.workspace.create({ id: requestedID, provider: "fake" })
 
       expect(workspaceID).toBe(requestedID)
-      expect(yield* opencode.workspace.create({ id: requestedID, provider: "fake" })).toBe(requestedID)
+      expect(yield* ktether.workspace.create({ id: requestedID, provider: "fake" })).toBe(requestedID)
       expect(calls).toEqual([])
 
-      const workspace = yield* opencode.workspace.provision({ workspaceID })
+      const workspace = yield* ktether.workspace.provision({ workspaceID })
 
       expect(workspace.provider).toBe("fake")
       expect(workspace.binding).toEqual({ externalID: workspace.id })
@@ -451,12 +451,12 @@ it.live("configures workspace providers through the SDK facade", () =>
         directory: fixture.sdk.AbsolutePath.make("/"),
         workspaceID: workspace.id,
       })
-      const session = yield* opencode.sessions.create({ location: workspaceLocation })
+      const session = yield* ktether.sessions.create({ location: workspaceLocation })
       expect(session.location.workspaceID).toBe(workspace.id)
 
-      expect(yield* opencode.workspace.destroy({ workspaceID: workspace.id })).toEqual({ destroyed: true })
+      expect(yield* ktether.workspace.destroy({ workspaceID: workspace.id })).toEqual({ destroyed: true })
       expect(calls.map((call) => call.operation)).toEqual(["create", "destroy"])
-      expect(yield* opencode.workspace.destroy({ workspaceID: workspace.id })).toEqual({ destroyed: false })
+      expect(yield* ktether.workspace.destroy({ workspaceID: workspace.id })).toEqual({ destroyed: false })
       expect(calls.map((call) => call.operation)).toEqual(["create", "destroy"])
     }),
   ),
@@ -504,7 +504,7 @@ const workspaceModelScenario = (fixture: Fixture, policy: "eager" | "lazy") =>
     })
     const configDirectory = path.join(fixture.directory, "config")
     yield* Effect.promise(() => fs.mkdir(configDirectory))
-    const opencode = yield* fixture.sdk.OpenCode.create(
+    const ktether = yield* fixture.sdk.KTether.create(
       {
         config: { directory: configDirectory, project: false, content: "{}" },
         workspaceProviders: { fake: driver },
@@ -513,10 +513,10 @@ const workspaceModelScenario = (fixture: Fixture, policy: "eager" | "lazy") =>
         overrides: [llmClient.replace(client), SessionRunnerModel.node.replace(models)],
       },
     )
-    const workspaceID = yield* opencode.workspace.create({ provider: "fake" })
+    const workspaceID = yield* ktether.workspace.create({ provider: "fake" })
     const provisioning =
       policy === "eager"
-        ? yield* opencode.workspace.provision({ workspaceID }).pipe(Effect.forkScoped({ startImmediately: true }))
+        ? yield* ktether.workspace.provision({ workspaceID }).pipe(Effect.forkScoped({ startImmediately: true }))
         : undefined
     if (provisioning) {
       yield* Deferred.await(createStarted).pipe(
@@ -524,13 +524,13 @@ const workspaceModelScenario = (fixture: Fixture, policy: "eager" | "lazy") =>
       )
     }
 
-    const session = yield* opencode.sessions.create({
+    const session = yield* ktether.sessions.create({
       location: fixture.sdk.Location.Ref.make({
         directory: fixture.sdk.AbsolutePath.make(fixture.directory),
         workspaceID,
       }),
     })
-    yield* opencode.sessions.prompt({ sessionID: session.id, text: "Answer without using tools" })
+    yield* ktether.sessions.prompt({ sessionID: session.id, text: "Answer without using tools" })
     yield* Deferred.await(modelStarted).pipe(
       Effect.timeoutOrElse({ duration: "8 seconds", orElse: () => Effect.die("model stream did not start") }),
     )
@@ -548,20 +548,20 @@ const workspaceModelScenario = (fixture: Fixture, policy: "eager" | "lazy") =>
 
 it.live(
   "starts model execution while eager workspace provisioning is blocked",
-  () => withEmbedded("opencode-embedded-workspace-eager-", (fixture) => workspaceModelScenario(fixture, "eager")),
+  () => withEmbedded("ktether-embedded-workspace-eager-", (fixture) => workspaceModelScenario(fixture, "eager")),
   15_000,
 )
 
 it.live(
   "starts model execution without provisioning a lazy workspace",
-  () => withEmbedded("opencode-embedded-workspace-lazy-", (fixture) => workspaceModelScenario(fixture, "lazy")),
+  () => withEmbedded("ktether-embedded-workspace-lazy-", (fixture) => workspaceModelScenario(fixture, "lazy")),
   15_000,
 )
 
 it.live(
   "blocks the model-selected first tool on lazy provisioning",
   () =>
-    withEmbedded("opencode-embedded-workspace-tool-", (fixture) =>
+    withEmbedded("ktether-embedded-workspace-tool-", (fixture) =>
       Effect.gen(function* () {
         const calls: string[] = []
         const createStarted = yield* Deferred.make<void>()
@@ -605,7 +605,7 @@ it.live(
         })
         const configDirectory = path.join(fixture.directory, "config")
         yield* Effect.promise(() => fs.mkdir(configDirectory))
-        const opencode = yield* fixture.sdk.OpenCode.create(
+        const ktether = yield* fixture.sdk.KTether.create(
           {
             config: { directory: configDirectory, project: false, content: "{}" },
             workspaceProviders: { fake: driver },
@@ -617,8 +617,8 @@ it.live(
             ],
           },
         )
-        const workspaceID = yield* opencode.workspace.create({ provider: "fake" })
-        const session = yield* opencode.sessions.create({
+        const workspaceID = yield* ktether.workspace.create({ provider: "fake" })
+        const session = yield* ktether.sessions.create({
           location: fixture.sdk.Location.Ref.make({
             directory: fixture.sdk.AbsolutePath.make(fixture.directory),
             workspaceID,
@@ -626,7 +626,7 @@ it.live(
         })
         expect(calls).toEqual([])
 
-        yield* opencode.sessions.prompt({ sessionID: session.id, text: "Run echo" })
+        yield* ktether.sessions.prompt({ sessionID: session.id, text: "Run echo" })
         // The model-selected shell tool is the first execution-plane demand: it alone
         // starts provisioning and blocks inside the tool call until the provider is ready.
         yield* Deferred.await(createStarted).pipe(
@@ -635,7 +635,7 @@ it.live(
         expect(calls).toEqual(["create"])
 
         yield* Deferred.succeed(createRelease, undefined)
-        yield* opencode.sessions.wait({ sessionID: session.id })
+        yield* ktether.sessions.wait({ sessionID: session.id })
         // Provisioning settled, the workspace connected, and the turn completed. The
         // memory driver rejects the actual spawn, which surfaces to the model as an
         // ordinary tool error before the final text response.
@@ -647,10 +647,10 @@ it.live(
 )
 
 it.live("preserves unknown workspace provider errors", () =>
-  withEmbedded("opencode-embedded-workspace-provider-", (fixture) =>
+  withEmbedded("ktether-embedded-workspace-provider-", (fixture) =>
     Effect.gen(function* () {
-      const opencode = yield* fixture.sdk.OpenCode.create()
-      const error = yield* opencode.workspace.create({ provider: "missing" }).pipe(Effect.flip)
+      const ktether = yield* fixture.sdk.KTether.create()
+      const error = yield* ktether.workspace.create({ provider: "missing" }).pipe(Effect.flip)
       expect(error).toEqual(new WorkspaceDriver.ProviderNotFound({ provider: "missing" }))
     }),
   ),

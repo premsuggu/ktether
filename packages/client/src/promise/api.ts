@@ -1,6 +1,6 @@
-import type { OpenCode } from "./client.js"
+import type { KTether } from "./client.js"
 
-type Client = ReturnType<typeof OpenCode.make>
+type Client = ReturnType<typeof KTether.make>
 
 export type { RpcApi, RpcCallOptions, RpcClient, RpcEventPayload } from "./rpc.js"
 

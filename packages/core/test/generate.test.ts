@@ -10,17 +10,17 @@ import {
   QuotaExceededError,
   RateLimitError,
   TransportError,
-} from "@opencode/ai"
-import { RequestExecutor } from "@opencode/ai/route"
-import { OpenAIChat } from "@opencode/ai/protocols"
-import { TestLLM } from "@opencode/ai/testing"
-import { AISDK } from "@opencode/core/aisdk"
-import { Generate } from "@opencode/core/generate"
-import { Integration } from "@opencode/core/integration"
-import { ModelResolver } from "@opencode/core/model-resolver"
-import { ID, Info, Model, Ref } from "@opencode/core/model"
-import { Provider } from "@opencode/core/provider"
-import { Npm } from "@opencode/util/npm"
+} from "@ktether/ai"
+import { RequestExecutor } from "@ktether/ai/route"
+import { OpenAIChat } from "@ktether/ai/protocols"
+import { TestLLM } from "@ktether/ai/testing"
+import { AISDK } from "@ktether/core/aisdk"
+import { Generate } from "@ktether/core/generate"
+import { Integration } from "@ktether/core/integration"
+import { ModelResolver } from "@ktether/core/model-resolver"
+import { ID, Info, Model, Ref } from "@ktether/core/model"
+import { Provider } from "@ktether/core/provider"
+import { Npm } from "@ktether/util/npm"
 import { Effect, Exit, Fiber, Layer } from "effect"
 import { TestClock } from "effect/testing"
 import { HttpClient, HttpClientResponse } from "effect/http"
@@ -200,7 +200,7 @@ testEffect(Layer.empty).effect("attributes each stateless completion without cre
       HttpClient.HttpClient,
       HttpClient.make((request) =>
         Effect.sync(() => {
-          const session = request.headers["x-opencode-session"]
+          const session = request.headers["x-ktether-session"]
           if (!session)
             return HttpClientResponse.fromWeb(
               request,

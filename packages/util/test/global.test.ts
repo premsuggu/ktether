@@ -8,7 +8,7 @@ import { Global } from "../src/global.js"
 
 describe("global", () => {
   test("importing the module does not create directories", () => {
-    const root = fs.mkdtempSync(path.join(os.tmpdir(), "opencode-global-import-"))
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), "ktether-global-import-"))
     const directories = ["data", "cache", "config", "state", "tmp"].map((directory) => path.join(root, directory))
     const module = pathToFileURL(path.join(import.meta.dir, "../src/global.ts")).href
     const result = Bun.spawnSync({
@@ -27,12 +27,12 @@ describe("global", () => {
     })
 
     expect(result.exitCode, result.stderr.toString()).toBe(0)
-    directories.forEach((directory) => expect(fs.existsSync(path.join(directory, "opencode"))).toBe(false))
+    directories.forEach((directory) => expect(fs.existsSync(path.join(directory, "ktether"))).toBe(false))
     fs.rmSync(root, { recursive: true, force: true })
   })
 
   test("building layerWith creates service directories and preserves an explicit tmp", async () => {
-    const root = fs.mkdtempSync(path.join(os.tmpdir(), "opencode-global-layer-"))
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), "ktether-global-layer-"))
     const directories = {
       data: path.join(root, "data"),
       config: path.join(root, "config"),
@@ -51,7 +51,7 @@ describe("global", () => {
   })
 
   test("building a layer with default tmp creates and canonicalizes it", () => {
-    const root = fs.mkdtempSync(path.join(os.tmpdir(), "opencode-global-layer-"))
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), "ktether-global-layer-"))
     const directories = ["data", "cache", "config", "state", "tmp"].map((directory) => path.join(root, directory))
     const module = pathToFileURL(path.join(import.meta.dir, "../src/global.ts")).href
     const result = Bun.spawnSync({
@@ -83,15 +83,15 @@ describe("global", () => {
     expect(result.exitCode, result.stderr.toString()).toBe(0)
     // The layer canonicalizes through the native realpath, which on Windows also expands 8.3 short
     // names such as RUNNER~1 that the JavaScript realpathSync leaves in place.
-    expect(result.stdout.toString()).toBe(fs.realpathSync.native(path.join(directories[4], "opencode")))
+    expect(result.stdout.toString()).toBe(fs.realpathSync.native(path.join(directories[4], "ktether")))
     const created = [
-      path.join(directories[0], "opencode"),
-      path.join(directories[1], "opencode", "bin"),
-      path.join(directories[2], "opencode"),
-      path.join(directories[3], "opencode"),
-      path.join(directories[0], "opencode", "log"),
-      path.join(directories[0], "opencode", "repos"),
-      path.join(directories[4], "opencode"),
+      path.join(directories[0], "ktether"),
+      path.join(directories[1], "ktether", "bin"),
+      path.join(directories[2], "ktether"),
+      path.join(directories[3], "ktether"),
+      path.join(directories[0], "ktether", "log"),
+      path.join(directories[0], "ktether", "repos"),
+      path.join(directories[4], "ktether"),
     ]
     created.forEach((directory) => expect(fs.statSync(directory).isDirectory()).toBe(true))
     fs.rmSync(root, { recursive: true, force: true })

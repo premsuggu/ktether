@@ -1,8 +1,8 @@
 import { expect, test } from "bun:test"
 import { createTestRenderer } from "@opentui/core/testing"
 import { Effect, FileSystem } from "effect"
-import { Global } from "@opencode/util/global"
-import type { SessionMessageInfo } from "@opencode/client"
+import { Global } from "@ktether/util/global"
+import type { SessionMessageInfo } from "@ktether/client"
 import { createEventStream, createFetch, directory, json } from "./fixture/tui-client"
 import { tmpdir } from "./fixture/fixture"
 

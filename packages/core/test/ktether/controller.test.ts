@@ -4,9 +4,9 @@ import {
   OperationInProgressError,
   UnknownModelError,
   type Controller,
-} from "@opencode/core/ktether/controller"
-import { DEFAULT_MODEL } from "@opencode/core/ktether/registry"
-import { readState, saveState } from "@opencode/core/ktether/state"
+} from "@ktether/core/ktether/controller"
+import { DEFAULT_MODEL } from "@ktether/core/ktether/registry"
+import { readState, saveState } from "@ktether/core/ktether/state"
 import {
   answeringKernel,
   createFakeClock,

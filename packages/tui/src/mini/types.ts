@@ -1,4 +1,4 @@
-// Shared type vocabulary for the direct interactive mode (`opencode mini`).
+// Shared type vocabulary for the direct interactive mode (`ktether mini`).
 //
 // Direct mode uses a split-footer terminal layout: immutable scrollback for the
 // session transcript, and a mutable footer for prompt input, status, and
@@ -14,16 +14,16 @@
 import type {
   FormAnswer,
   FormInfo,
-  OpenCodeClient,
+  KTetherClient,
   LocationGetOutput,
   LocationRef,
   PermissionRequest,
   ReferenceListOutput,
   SessionMessageAssistantTool,
-} from "@opencode/client/promise"
+} from "@ktether/client/promise"
 import type { Config } from "../config"
 import type { CliRenderer } from "@opentui/core"
-import type { SessionInbox } from "@opencode/schema/session-inbox"
+import type { SessionInbox } from "@ktether/schema/session-inbox"
 
 export type RunFilePart = {
   type: "file"
@@ -109,7 +109,7 @@ export type RunAgent = {
 export type RunReference = ReferenceListOutput["data"][number]
 
 export type RunInput = {
-  sdk: OpenCodeClient
+  sdk: KTetherClient
   location: LocationGetOutput
   agent: string | undefined
   model: PromptModel | undefined
@@ -378,7 +378,7 @@ export type FooterEvent =
       state: FooterSubagentState
     }
 
-export type PermissionReply = Parameters<OpenCodeClient["permission"]["reply"]>[0]
+export type PermissionReply = Parameters<KTetherClient["permission"]["reply"]>[0]
 
 export type FormReply = {
   sessionID: string

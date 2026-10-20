@@ -1,11 +1,11 @@
-import { useFilteredList } from "@opencode/ui/hooks"
-import { getDirectory, getFilename } from "@opencode/util/path"
+import { useFilteredList } from "@ktether/ui/hooks"
+import { getDirectory, getFilename } from "@ktether/util/path"
 import { createSignal, For, onMount, Show, splitProps, type JSX } from "solid-js"
-import { Button } from "@opencode/ui/button"
-import { FileIcon } from "@opencode/ui/file-icon"
-import { Icon } from "@opencode/ui/icon"
+import { Button } from "@ktether/ui/button"
+import { FileIcon } from "@ktether/ui/file-icon"
+import { Icon } from "@ktether/ui/icon"
 import { installLineCommentStyles } from "./line-comment-styles"
-import { useI18n } from "@opencode/ui/context/i18n"
+import { useI18n } from "@ktether/ui/context/i18n"
 
 installLineCommentStyles()
 

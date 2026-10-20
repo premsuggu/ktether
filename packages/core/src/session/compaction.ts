@@ -13,11 +13,11 @@ import {
   type ToolEntry,
   UnknownProviderError,
   type Usage,
-} from "@opencode/ai"
-import type { StreamOptions } from "@opencode/ai/route"
-import type { SessionCompactionResult } from "@opencode/plugin/effect/session"
-import type { SessionError } from "@opencode/schema/session-error"
-import { makeLocationNode } from "@opencode/util/effect/app-node"
+} from "@ktether/ai"
+import type { StreamOptions } from "@ktether/ai/route"
+import type { SessionCompactionResult } from "@ktether/plugin/effect/session"
+import type { SessionError } from "@ktether/schema/session-error"
+import { makeLocationNode } from "@ktether/util/effect/app-node"
 import { Context, Effect, Layer, Result, Stream } from "effect"
 import { Agent } from "../agent.js"
 import { Bus } from "../bus.js"
@@ -66,7 +66,7 @@ export interface Interface extends State.Transformable<Editor> {
   readonly compact: (trigger: Trigger) => Effect.Effect<Outcome>
 }
 
-export class Service extends Context.Service<Service, Interface>()("@opencode/SessionCompaction") {}
+export class Service extends Context.Service<Service, Interface>()("@ktether/SessionCompaction") {}
 
 /** A summary fills `text` and `recent`; a native compaction fills `providerContext`. */
 type Result = {

@@ -1,9 +1,9 @@
 export * as Plugin from "./plugin.js"
-export { Event, ID, Info, Source, State } from "@opencode/schema/plugin"
+export { Event, ID, Info, Source, State } from "@ktether/schema/plugin"
 
-import { Plugin } from "@opencode/schema/plugin"
-import { Node } from "@opencode/util/effect/app-node"
-import { LayerNode } from "@opencode/util/effect/layer-node"
+import { Plugin } from "@ktether/schema/plugin"
+import { Node } from "@ktether/util/effect/app-node"
+import { LayerNode } from "@ktether/util/effect/layer-node"
 import type { PersistentPty } from "./persistent-pty.js"
 import { Cause, Context, Effect, Exit, Latch, Layer, Logger, Queue, References, Scope, Semaphore } from "effect"
 import { Bus } from "./bus.js"

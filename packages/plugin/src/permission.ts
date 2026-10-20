@@ -1,5 +1,5 @@
-import { Agent } from "@opencode/schema/agent"
-import { Permission } from "@opencode/schema/permission"
+import { Agent } from "@ktether/schema/agent"
+import { Permission } from "@ktether/schema/permission"
 import { Schema } from "effect"
 
 export const AssertInput = Schema.Struct({

@@ -12,24 +12,24 @@ import {
 import { createStore } from "solid-js/store"
 import { createMediaQuery } from "@solid-primitives/media"
 import { useData } from "../context"
-import { useDialog } from "@opencode/ui/context/dialog"
-import { useI18n } from "@opencode/ui/context/i18n"
+import { useDialog } from "@ktether/ui/context/dialog"
+import { useI18n } from "@ktether/ui/context/i18n"
 import { Markdown } from "../components/markdown"
-import { ImagePreview } from "@opencode/ui/image-preview"
-import { getFilename } from "@opencode/util/path"
+import { ImagePreview } from "@ktether/ui/image-preview"
+import { getFilename } from "@ktether/util/path"
 import { AttachmentCard } from "./attachment-card"
 import { CommentCard } from "./comment-card"
 import { TimelineSeparator } from "../components/timeline-separator"
-import { Tooltip } from "@opencode/ui/tooltip"
-import { IconButton } from "@opencode/ui/icon-button"
-import { Menu } from "@opencode/ui/menu"
-import { Icon } from "@opencode/ui/icon"
-import { Button } from "@opencode/ui/button"
-import { TextReveal } from "@opencode/ui/text-reveal"
-import { TextShimmer } from "@opencode/ui/text-shimmer"
+import { Tooltip } from "@ktether/ui/tooltip"
+import { IconButton } from "@ktether/ui/icon-button"
+import { Menu } from "@ktether/ui/menu"
+import { Icon } from "@ktether/ui/icon"
+import { Button } from "@ktether/ui/button"
+import { TextReveal } from "@ktether/ui/text-reveal"
+import { TextShimmer } from "@ktether/ui/text-shimmer"
 import { BasicTool } from "../components/basic-tool"
 import { reasoningHeading } from "../timeline/projection"
-import { Card } from "@opencode/ui/card"
+import { Card } from "@ktether/ui/card"
 import type {
   PromptAgentAttachment,
   PromptFileAttachment,
@@ -37,7 +37,7 @@ import type {
   SessionMessageAssistantReasoning,
   SessionMessageCompaction,
   SessionMessageUser,
-} from "@opencode/client/promise"
+} from "@ktether/client/promise"
 import type { SessionUserActions, SessionUserAttachmentReference, SessionUserComment } from "../actions"
 import { attached, typeLabel } from "../components/message-file"
 

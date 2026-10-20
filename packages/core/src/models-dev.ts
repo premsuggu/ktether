@@ -1,13 +1,13 @@
 import { Cause, Context, Duration, Effect, Layer, Option, Schedule, Schema, Semaphore } from "effect"
 import { HttpClient, HttpClientRequest } from "effect/http"
-import { ModelsDev } from "@opencode/schema/models-dev"
-import { Money } from "@opencode/schema/money"
+import { ModelsDev } from "@ktether/schema/models-dev"
+import { Money } from "@ktether/schema/money"
 import { App } from "./app.js"
-import { Hash } from "@opencode/util/hash"
-import { FSUtil } from "@opencode/util/fs-util"
+import { Hash } from "@ktether/util/hash"
+import { FSUtil } from "@ktether/util/fs-util"
 import { Bus } from "./bus.js"
-import { makeGlobalNode } from "@opencode/util/effect/app-node"
-import { httpClient } from "@opencode/util/effect/app-node-platform"
+import { makeGlobalNode } from "@ktether/util/effect/app-node"
+import { httpClient } from "@ktether/util/effect/app-node-platform"
 import { Model } from "./model.js"
 import { AISDKNative } from "./aisdk-native.js"
 import { Provider } from "./provider.js"
@@ -103,7 +103,7 @@ function normalize(input: Record<string, SourceProvider>): readonly Snapshot[] {
       name: item.name,
       activation: "auto",
       package: packageName,
-      ...(item.api && packageName !== "@opencode/ai/providers/cloudflare-workers-ai"
+      ...(item.api && packageName !== "@ktether/ai/providers/cloudflare-workers-ai"
         ? { settings: { baseURL: item.api } }
         : {}),
     } satisfies Provider.Info
@@ -218,7 +218,7 @@ function modelInfo(
   // Per model, so it never merges into a model that overrides to a different package.
   const settings = {
     ...(model.provider?.api ? { baseURL: model.provider.api } : {}),
-    ...(resolved === "@opencode/ai/providers/openai-compatible" ? { provider: providerID } : {}),
+    ...(resolved === "@ktether/ai/providers/openai-compatible" ? { provider: providerID } : {}),
   }
   return {
     id,
@@ -250,7 +250,7 @@ function modelInfo(
   }
 }
 
-export { Event } from "@opencode/schema/models-dev"
+export { Event } from "@ktether/schema/models-dev"
 
 export interface Interface {
   readonly get: () => Effect.Effect<readonly Snapshot[]>
@@ -265,7 +265,7 @@ export const Options = Schema.Struct({
 })
 export type Options = typeof Options.Type
 
-export class Service extends Context.Service<Service, Interface>()("@opencode/ModelsDev") {}
+export class Service extends Context.Service<Service, Interface>()("@ktether/ModelsDev") {}
 
 const CatalogJson = Schema.fromJsonString(Schema.Record(Schema.String, Schema.Unknown))
 const decodeCatalog = (text: string) =>
@@ -281,7 +281,7 @@ const Cache = Schema.Struct({
 // option) names one. `.invalid` never resolves, so this placeholder cannot reach a real host by mistake.
 const defaultSource = "https://models.invalid"
 
-// Bundled snapshot of https://models.opencode.ai/api.json, committed at
+// Bundled snapshot of https://models.invalid/api.json, committed at
 // packages/core/src/models-dev/snapshot.txt and refreshed via
 // hand. Decoded and normalized once per
 // isolate: the snapshot is a multi-MB module-level constant and one isolate can

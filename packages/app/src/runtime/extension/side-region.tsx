@@ -6,21 +6,21 @@ import { isSortable } from "@dnd-kit/solid/sortable"
 import { Accessibility, AutoScroller, Feedback, PointerActivationConstraints } from "@dnd-kit/dom"
 import { RestrictToHorizontalAxis } from "@dnd-kit/abstract/modifiers"
 import { RestrictToElement } from "@dnd-kit/dom/modifiers"
-import { Tabs } from "@opencode/ui/tabs"
-import { IconButton } from "@opencode/ui/icon-button"
-import { Icon } from "@opencode/ui/icon"
-import { ResizeHandle } from "@opencode/ui/resize-handle"
-import { Mark } from "@opencode/ui/logo"
-import { Keybind } from "@opencode/ui/keybind"
-import { Tooltip } from "@opencode/ui/tooltip"
-import { Menu } from "@opencode/ui/menu"
+import { Tabs } from "@ktether/ui/tabs"
+import { IconButton } from "@ktether/ui/icon-button"
+import { Icon } from "@ktether/ui/icon"
+import { ResizeHandle } from "@ktether/ui/resize-handle"
+import { Mark } from "@ktether/ui/logo"
+import { Keybind } from "@ktether/ui/keybind"
+import { Tooltip } from "@ktether/ui/tooltip"
+import { Menu } from "@ktether/ui/menu"
 import {
   MenuItem,
   type MountedSession,
   type SessionScreen,
   type PanelSidebar,
   type SessionPanelMenuItem,
-} from "@opencode/gui-extensions/sdk"
+} from "@ktether/gui-extensions/sdk"
 import { useCommand } from "@/shell/commands/command"
 import { useLanguage } from "@/runtime/i18n/language"
 import { useLayout } from "@/shell/state/layout"

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
-import { Message, ToolResultPart, Media } from "@opencode/ai"
-import { boundImages, unsupportedParts } from "@opencode/core/session/model-request"
+import { Message, ToolResultPart, Media } from "@ktether/ai"
+import { boundImages, unsupportedParts } from "@ktether/core/session/model-request"
 
 const capabilities = (input: string[]) => ({ tools: true, input, output: ["text"] })
 

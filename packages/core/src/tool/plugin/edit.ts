@@ -6,10 +6,10 @@
  */
 export * as EditTool from "./edit.js"
 
-import type { Context } from "@opencode/plugin/effect/plugin"
-import { ToolFailure } from "@opencode/ai"
-import { FileDiff } from "@opencode/schema/file-diff"
-import { Bom } from "@opencode/util/bom"
+import type { Context } from "@ktether/plugin/effect/plugin"
+import { ToolFailure } from "@ktether/ai"
+import { FileDiff } from "@ktether/schema/file-diff"
+import { Bom } from "@ktether/util/bom"
 import { Effect, Schema } from "effect"
 import { Environment } from "../../environment/index.js"
 import { FileMutation } from "../../file-mutation.js"
@@ -205,7 +205,7 @@ const countBefore = (positions: number[], offset: number) => {
 // TODO: Add LSP notification and diagnostics after LSP runtime exists.
 
 export const Plugin = {
-  id: "opencode.tool.edit",
+  id: "ktether.tool.edit",
   effect: Effect.fn("EditTool.Plugin")(function* (ctx: Context) {
     const access = yield* FileAccess.Service
     const fileMutation = yield* FileMutation.Service

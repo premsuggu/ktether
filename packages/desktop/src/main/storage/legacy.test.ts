@@ -23,7 +23,7 @@ afterEach(() => {
 })
 
 function tempRoot() {
-  const root = mkdtempSync(path.join(tmpdir(), "opencode-legacy-store-"))
+  const root = mkdtempSync(path.join(tmpdir(), "ktether-legacy-store-"))
   roots.push(root)
 
   return root
@@ -48,10 +48,10 @@ describe("legacy store import", () => {
   test("copies every namespace into state and removes the files", async () => {
     const root = tempRoot()
     const database = openDatabase(":memory:")
-    writeStore(root, "opencode.global.dat", JSON.stringify({ model: "m", layout: { sidebar: 1 } }))
-    writeStore(root, "opencode.window.w1.dat", JSON.stringify({ tabs: "[]" }))
+    writeStore(root, "ktether.global.dat", JSON.stringify({ model: "m", layout: { sidebar: 1 } }))
+    writeStore(root, "ktether.window.w1.dat", JSON.stringify({ tabs: "[]" }))
     writeStore(root, "default.dat", JSON.stringify({ "settings.v3": "{}" }))
-    writeStore(root, "opencode.settings", JSON.stringify({ keep: true }))
+    writeStore(root, "ktether.settings", JSON.stringify({ keep: true }))
     writeStore(root, "unrelated.txt", "x")
 
     const result = await run(database.db, root)
@@ -59,51 +59,51 @@ describe("legacy store import", () => {
     expect(result.imported).toBe(4)
     expect(rows(database.db)).toEqual([
       { name: "default.dat", key: "settings.v3", value: "{}" },
-      { name: "opencode.global.dat", key: "layout", value: '{"sidebar":1}' },
-      { name: "opencode.global.dat", key: "model", value: "m" },
-      { name: "opencode.window.w1.dat", key: "tabs", value: "[]" },
+      { name: "ktether.global.dat", key: "layout", value: '{"sidebar":1}' },
+      { name: "ktether.global.dat", key: "model", value: "m" },
+      { name: "ktether.window.w1.dat", key: "tabs", value: "[]" },
     ])
-    expect(listing(root)).toEqual(["opencode.settings", "unrelated.txt"])
+    expect(listing(root)).toEqual(["ktether.settings", "unrelated.txt"])
   })
 
   test("does not overwrite state that already exists", async () => {
     const root = tempRoot()
     const database = openDatabase(":memory:")
-    database.db.run(sql`INSERT INTO state VALUES ('opencode.global.dat', 'model', 'new', 0)`)
-    writeStore(root, "opencode.global.dat", JSON.stringify({ model: "old" }))
+    database.db.run(sql`INSERT INTO state VALUES ('ktether.global.dat', 'model', 'new', 0)`)
+    writeStore(root, "ktether.global.dat", JSON.stringify({ model: "old" }))
 
     await run(database.db, root)
 
-    expect(rows(database.db)).toEqual([{ name: "opencode.global.dat", key: "model", value: "new" }])
+    expect(rows(database.db)).toEqual([{ name: "ktether.global.dat", key: "model", value: "new" }])
     expect(listing(root)).toEqual([])
   })
 
   test("leaves unreadable files in place", async () => {
     const root = tempRoot()
     const database = openDatabase(":memory:")
-    writeStore(root, "opencode.global.dat", "{not json")
-    writeStore(root, "opencode.workspace.x.dat", JSON.stringify({ terminal: "{}" }))
+    writeStore(root, "ktether.global.dat", "{not json")
+    writeStore(root, "ktether.workspace.x.dat", JSON.stringify({ terminal: "{}" }))
 
     const result = await run(database.db, root)
 
     expect(result.imported).toBe(1)
-    expect(listing(root)).toEqual(["opencode.global.dat"])
+    expect(listing(root)).toEqual(["ktether.global.dat"])
   })
 
   test("applies draft retention: skips empty, stale, and excess draft files", async () => {
     const root = tempRoot()
     const database = openDatabase(":memory:")
-    writeStore(root, "opencode.draft.empty.dat", "{}")
+    writeStore(root, "ktether.draft.empty.dat", "{}")
     writeStore(
       root,
-      "opencode.draft.stale.dat",
+      "ktether.draft.stale.dat",
       JSON.stringify({ "draft:prompt": "old" }),
       new Date(now.getTime() - 31 * day),
     )
     Array.from({ length: 102 }).forEach((_, index) =>
       writeStore(
         root,
-        `opencode.draft.${index}.dat`,
+        `ktether.draft.${index}.dat`,
         JSON.stringify({ "draft:prompt": `${index}` }),
         new Date(now.getTime() - index * 1_000),
       ),
@@ -113,12 +113,12 @@ describe("legacy store import", () => {
 
     expect(result.imported).toBe(100)
     const names = rows(database.db).map((row) => row.name)
-    expect(names).toContain("opencode.draft.0.dat")
-    expect(names).toContain("opencode.draft.99.dat")
-    expect(names).not.toContain("opencode.draft.100.dat")
-    expect(names).not.toContain("opencode.draft.101.dat")
-    expect(names).not.toContain("opencode.draft.stale.dat")
-    expect(names).not.toContain("opencode.draft.empty.dat")
+    expect(names).toContain("ktether.draft.0.dat")
+    expect(names).toContain("ktether.draft.99.dat")
+    expect(names).not.toContain("ktether.draft.100.dat")
+    expect(names).not.toContain("ktether.draft.101.dat")
+    expect(names).not.toContain("ktether.draft.stale.dat")
+    expect(names).not.toContain("ktether.draft.empty.dat")
     expect(listing(root)).toEqual([])
   })
 })

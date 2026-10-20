@@ -6,7 +6,7 @@ interface JsonSchema {
   readonly properties?: Readonly<Record<string, JsonSchema>>
 }
 
-// V1 and V2 read the same opencode.json, and V2 normalizes V1 fields at load time, so the published schema accepts
+// V1 and V2 read the same ktether.json, and V2 normalizes V1 fields at load time, so the published schema accepts
 // both. The V2 shape is generated from Config.Info; V1 is frozen in config-v1.json, the last schema the V1 runtime
 // published. Fields only V1 understands are marked deprecated.
 export async function generate() {
@@ -20,7 +20,7 @@ export async function generate() {
 
   return {
     $schema: "https://json-schema.org/draft/2020-12/schema",
-    $id: "https://opencode.ai/config.json",
+    $id: "https://raw.githubusercontent.com/premsuggu/ktether/main/schema/config.json",
     type: "object",
     properties: merge(describe(current.properties ?? {}), previous.properties ?? {}),
     additionalProperties: false,

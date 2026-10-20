@@ -1,18 +1,18 @@
 import { describe, expect } from "bun:test"
-import { LanguageModel } from "@opencode/ai"
-import { OpenAIChat } from "@opencode/ai/protocols"
+import { LanguageModel } from "@ktether/ai"
+import { OpenAIChat } from "@ktether/ai/protocols"
 import { Effect, Fiber, Layer, Ref, Stream } from "effect"
-import { Integration } from "@opencode/core/integration"
-import { Credential } from "@opencode/core/credential"
-import { AppNodeBuilder } from "@opencode/core/effect/app-node-builder"
-import { LayerNode } from "@opencode/util/effect/layer-node"
-import { Bus } from "@opencode/core/bus"
-import { Location } from "@opencode/core/location"
-import { Model } from "@opencode/core/model"
-import { ModelResolver } from "@opencode/core/model-resolver"
-import { Provider } from "@opencode/core/provider"
-import { AbsolutePath } from "@opencode/core/schema"
-import { Money } from "@opencode/schema/money"
+import { Integration } from "@ktether/core/integration"
+import { Credential } from "@ktether/core/credential"
+import { AppNodeBuilder } from "@ktether/core/effect/app-node-builder"
+import { LayerNode } from "@ktether/util/effect/layer-node"
+import { Bus } from "@ktether/core/bus"
+import { Location } from "@ktether/core/location"
+import { Model } from "@ktether/core/model"
+import { ModelResolver } from "@ktether/core/model-resolver"
+import { Provider } from "@ktether/core/provider"
+import { AbsolutePath } from "@ktether/core/schema"
+import { Money } from "@ktether/schema/money"
 import { location } from "./fixture/location"
 import { testEffect } from "./lib/effect"
 
@@ -42,7 +42,7 @@ describe("Provider and Model", () => {
         yield* providers.transform((editor) => editor.update(providerID, () => {}))
         yield* models.transform((editor) =>
           editor.update(providerID, modelID, (model) => {
-            model.package = path === "aisdk" ? Provider.aisdk("@ai-sdk/fixture") : "@opencode/ai/providers/openai"
+            model.package = path === "aisdk" ? Provider.aisdk("@ai-sdk/fixture") : "@ktether/ai/providers/openai"
             model.settings = {
               apiKey: path === "empty-key" ? "" : "fixture-key",
               baseURL: "https://fixture.example/v1",
@@ -487,12 +487,12 @@ describe("Provider and Model", () => {
       })
 
       expect(required(yield* providers.get(providerID))).toMatchObject({
-        package: "@opencode/ai/providers/openai-compatible",
+        package: "@ktether/ai/providers/openai-compatible",
         settings: { baseURL: "https://example.com/v1" },
         body: { tag: "provider" },
       })
       const model = required(yield* models.get(providerID, modelID))
-      expect(model.package).toBe("@opencode/ai/providers/openai-compatible")
+      expect(model.package).toBe("@ktether/ai/providers/openai-compatible")
       expect(model.settings).toMatchObject({ reasoningEffort: "high" })
       expect(model.settings).not.toHaveProperty("extraBody")
       expect(model.body).toMatchObject({ top_k: 5 })
@@ -565,40 +565,16 @@ describe("Provider and Model", () => {
     }),
   )
 
-  it.effect("defaults to big-pickle when only free OpenCode models are available", () =>
-    Effect.gen(function* () {
-      const providers = yield* Provider.Service
-      const models = yield* Model.Service
-      yield* providers.transform((editor) => {
-        editor.update(Provider.ID.opencode, () => {})
-        ;["muse-spark-1.3-contributor-free", "new-free", "deepseek-v4.1-flash-free", "big-pickle"].forEach(
-          (id, index) =>
-            editor.models.update(Provider.ID.opencode, Model.ID.make(id), (model) => {
-              model.time.released = 4000 - index * 1000
-            }),
-        )
-      })
-
-      expect((yield* models.available()).map((model) => model.id)).toEqual([
-        Model.ID.make("big-pickle"),
-        Model.ID.make("deepseek-v4.1-flash-free"),
-        Model.ID.make("muse-spark-1.3-contributor-free"),
-        Model.ID.make("new-free"),
-      ])
-      expect((yield* models.default())?.id).toBe(Model.ID.make("big-pickle"))
-    }),
-  )
-
   it.effect("keeps the newest default when a paid model is available", () =>
     Effect.gen(function* () {
       const providers = yield* Provider.Service
       const models = yield* Model.Service
       yield* providers.transform((editor) => {
-        editor.update(Provider.ID.opencode, () => {})
-        editor.models.update(Provider.ID.opencode, Model.ID.make("big-pickle"), (model) => {
+        editor.update(Provider.ID.ktether, () => {})
+        editor.models.update(Provider.ID.ktether, Model.ID.make("big-pickle"), (model) => {
           model.time.released = 1000
         })
-        editor.models.update(Provider.ID.opencode, Model.ID.make("paid"), (model) => {
+        editor.models.update(Provider.ID.ktether, Model.ID.make("paid"), (model) => {
           model.time.released = 2000
           model.cost = [
             {

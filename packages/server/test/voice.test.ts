@@ -1,8 +1,8 @@
 import fs from "node:fs/promises"
 import path from "node:path"
 import { expect } from "bun:test"
-import { Voice } from "@opencode/core/voice"
-import { makeLocationNode } from "@opencode/util/effect/app-node"
+import { Voice } from "@ktether/core/voice"
+import { makeLocationNode } from "@ktether/util/effect/app-node"
 import { Effect, Layer } from "effect"
 import { tmpdir } from "../../core/test/fixture/tmpdir"
 import { it } from "../../core/test/lib/effect"
@@ -36,7 +36,7 @@ const voice = makeLocationNode({
 
 it.live("routes POST /api/experimental/voice/session and maps errors", () =>
   Effect.gen(function* () {
-    const tmp = yield* Effect.acquireDisposable(Effect.promise(() => tmpdir("opencode-voice-endpoint-")))
+    const tmp = yield* Effect.acquireDisposable(Effect.promise(() => tmpdir("ktether-voice-endpoint-")))
     const global = path.join(tmp.path, "global")
     yield* Effect.promise(() => fs.mkdir(global))
     const handler = yield* ServerFetch.make(
@@ -51,7 +51,7 @@ it.live("routes POST /api/experimental/voice/session and maps errors", () =>
     const post = (body: unknown) =>
       Effect.promise(() =>
         handler(
-          new Request("http://opencode.local/api/experimental/voice/session", {
+          new Request("http://ktether.local/api/experimental/voice/session", {
             method: "POST",
             headers: { "content-type": "application/json" },
             body: JSON.stringify(body),

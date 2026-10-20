@@ -1,13 +1,13 @@
 import { expect, test } from "bun:test"
 import { createComputed, createRoot } from "solid-js"
-import { OpenCode } from "@opencode/client/promise"
-import { createData } from "@opencode/client/solid"
+import { KTether } from "@ktether/client/promise"
+import { createData } from "@ktether/client/solid"
 
 test("publishes an initial message page, its index, and its cursor together", async () => {
   const observed: { ids: string[]; more: boolean; text: string | undefined }[] = []
 
-  const api = OpenCode.make({
-    baseUrl: "http://opencode.local",
+  const api = KTether.make({
+    baseUrl: "http://ktether.local",
     fetch: async () =>
       Response.json({
         data: [{ id: "msg_page", type: "user", text: "History", time: { created: 1 } }],

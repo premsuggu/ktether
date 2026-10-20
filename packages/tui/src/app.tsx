@@ -1,11 +1,11 @@
 import { existsSync } from "fs"
 import path from "path"
 import { render, useRenderer, useTerminalDimensions } from "@opentui/solid"
-import { registerOpencodeSpinner } from "./component/register-spinner"
+import { registerKTetherSpinner } from "./component/register-spinner"
 import { Effect, Latch } from "effect"
-import { Service, type Endpoint } from "@opencode/client/effect/service"
-import { OpenCode, type SessionInfo } from "@opencode/client"
-import { Global } from "@opencode/util/global"
+import { Service, type Endpoint } from "@ktether/client/effect/service"
+import { KTether, type SessionInfo } from "@ktether/client"
+import { Global } from "@ktether/util/global"
 import { ClipboardProvider, useClipboard } from "./context/clipboard"
 import { LogProvider, type LogSink } from "./context/log"
 import { ExitProvider, useExit } from "./context/exit"
@@ -87,10 +87,10 @@ import { PromptHistoryProvider } from "./prompt/history"
 import { FrecencyProvider } from "./prompt/frecency"
 import { PromptStashProvider } from "./prompt/stash"
 import { Toast, ToastProvider, useToast } from "./ui/toast"
-import { isFallbackTitle } from "@opencode/util/session-title-fallback"
+import { isFallbackTitle } from "@ktether/util/session-title-fallback"
 import * as Model from "./util/model"
 import { ArgsProvider, useArgs, type Args } from "./context/args"
-import { openUrl } from "@opencode/util/open"
+import { openUrl } from "@ktether/util/open"
 import { PromptRefProvider, usePromptRef } from "./context/prompt"
 import { Config, ConfigProvider, useConfig } from "./config"
 import { newSessionLocation } from "./config/new-session-location"
@@ -111,7 +111,7 @@ import { PanelProvider, usePanel } from "./context/panel"
 import { SessionFrame } from "./component/session-frame"
 import { createTuiClipboard } from "./clipboard"
 
-registerOpencodeSpinner()
+registerKTetherSpinner()
 
 const appGlobalBindingCommands = ["session.list", "session.new", "open.menu"] as const
 
@@ -160,13 +160,13 @@ const appBindingCommands = [
   "variant.cycle",
   "variant.list",
   "provider.connect",
-  "opencode.settings",
-  "opencode.status",
-  "opencode.update",
+  "ktether.settings",
+  "ktether.status",
+  "ktether.update",
   "server.pair",
   "service.restart",
   "location.reload",
-  "opencode.debug",
+  "ktether.debug",
   "theme.switch",
   "theme.switch_mode",
   "theme.mode.lock",
@@ -215,7 +215,7 @@ export const run = Effect.fn("Tui.run")(function* (input: TuiInput) {
     terminalSuspend: process.platform !== "win32",
   })
   const options = { baseUrl: input.server.endpoint.url, headers: Service.headers(input.server.endpoint) }
-  const api = OpenCode.make(options)
+  const api = KTether.make(options)
   const location = yield* Effect.tryPromise(() => api.file.list({ location: { directory: process.cwd() } })).pipe(
     Effect.map((response) => response.location),
     Effect.catch(() => Effect.tryPromise(() => api.location.get())),
@@ -229,7 +229,7 @@ export const run = Effect.fn("Tui.run")(function* (input: TuiInput) {
         reconnect: async (signal: AbortSignal) => {
           const endpoint = await managed.reconnect(signal)
           const next = { baseUrl: endpoint.url, headers: Service.headers(endpoint) }
-          return { api: OpenCode.make(next), url: endpoint.url }
+          return { api: KTether.make(next), url: endpoint.url }
         },
         restart: managed.restart,
       }
@@ -257,8 +257,8 @@ export const run = Effect.fn("Tui.run")(function* (input: TuiInput) {
             Effect.sync(() => destroyRenderer(renderer)),
           )
         }
-        if (process.env.OPENCODE_DRIVE) {
-          const { Drive } = yield* Effect.promise(() => import("@opencode/simulation/frontend"))
+        if (process.env.KTETHER_DRIVE) {
+          const { Drive } = yield* Effect.promise(() => import("@ktether/simulation/frontend"))
           return yield* Drive.create(options, input.app.version)
         }
         return yield* Effect.acquireRelease(
@@ -341,21 +341,21 @@ export const run = Effect.fn("Tui.run")(function* (input: TuiInput) {
                             >
                               <TuiStartupProvider
                                 value={{
-                                  initialRoute: process.env.OPENCODE_STORY
+                                  initialRoute: process.env.KTETHER_STORY
                                     ? {
                                         type: "plugin",
-                                        id: "opencode.storybook",
+                                        id: "ktether.storybook",
                                         name: "storybook",
-                                        // OPENCODE_STORY=1 opens the index; any other value opens that story.
+                                        // KTETHER_STORY=1 opens the index; any other value opens that story.
                                         data:
-                                          process.env.OPENCODE_STORY === "1"
+                                          process.env.KTETHER_STORY === "1"
                                             ? undefined
-                                            : { story: process.env.OPENCODE_STORY },
+                                            : { story: process.env.KTETHER_STORY },
                                       }
-                                    : process.env.OPENCODE_ROUTE
-                                      ? JSON.parse(process.env.OPENCODE_ROUTE)
+                                    : process.env.KTETHER_ROUTE
+                                      ? JSON.parse(process.env.KTETHER_ROUTE)
                                       : undefined,
-                                  skipInitialLoading: Boolean(process.env.OPENCODE_FAST_BOOT),
+                                  skipInitialLoading: Boolean(process.env.KTETHER_FAST_BOOT),
                                 }}
                               >
                                 <ClipboardProvider value={clipboard}>
@@ -608,14 +608,14 @@ function App() {
     if (!terminalTitleEnabled()) return
 
     if (route.data.type === "home") {
-      renderer.setTerminalTitle("OpenCode")
+      renderer.setTerminalTitle("ktether")
       return
     }
 
     if (route.data.type === "session") {
       const title = session?.title
       if (!title || isFallbackTitle(title)) {
-        renderer.setTerminalTitle("OpenCode")
+        renderer.setTerminalTitle("ktether")
         return
       }
 
@@ -702,7 +702,7 @@ function App() {
     if (config.data.highlights === false) return
     if (route.data.type !== "home" || dialog.stack.length > 0 || promptRef.current?.current.text) return
     if (args.prompt || args.continue || args.sessionID || args.newSessionID) return
-    if (process.env.OPENCODE_DRIVE || process.env.OPENCODE_STORY || process.env.OPENCODE_ROUTE) return
+    if (process.env.KTETHER_DRIVE || process.env.KTETHER_STORY || process.env.KTETHER_ROUTE) return
     void claim(storage, {
       version: app.version,
       count: items.length,
@@ -990,7 +990,7 @@ function App() {
       ...(app.highlights?.length
         ? [
             {
-              name: "opencode.highlights",
+              name: "ktether.highlights",
               title: "Show release highlights",
               slash: { name: "highlights" },
               run: () => dialog.replace(() => <DialogHighlights version={app.version} items={app.highlights ?? []} />),
@@ -999,7 +999,7 @@ function App() {
           ]
         : []),
       {
-        name: "opencode.settings",
+        name: "ktether.settings",
         title: "Open settings",
         suggested: true,
         slash: { name: "settings" },
@@ -1009,7 +1009,7 @@ function App() {
         category: "System",
       },
       {
-        name: "opencode.status",
+        name: "ktether.status",
         title: "View status",
         slash: { name: "status" },
         run: () => {
@@ -1018,7 +1018,7 @@ function App() {
         category: "System",
       },
       {
-        name: "ktether.status",
+        name: "ktether.gpu.status",
         title: "Kaggle GPU status",
         slash: { name: "ktether" },
         run: () => {
@@ -1027,7 +1027,7 @@ function App() {
         category: "System",
       },
       {
-        name: "ktether.start",
+        name: "ktether.gpu.start",
         title: "Start Kaggle GPU",
         slash: { name: "ktether-start" },
         run: () => {
@@ -1039,7 +1039,7 @@ function App() {
         category: "System",
       },
       {
-        name: "ktether.stop",
+        name: "ktether.gpu.stop",
         title: "Stop Kaggle GPU",
         slash: { name: "ktether-stop" },
         run: () => {
@@ -1053,8 +1053,8 @@ function App() {
       ...(updater.open
         ? [
             {
-              name: "opencode.update",
-              title: "Update OpenCode",
+              name: "ktether.update",
+              title: "Update ktether",
               slash: { name: "update" },
               run: () => updater.open?.("manual"),
               category: "System",
@@ -1108,7 +1108,7 @@ function App() {
         category: "System",
       },
       {
-        name: "opencode.debug",
+        name: "ktether.debug",
         title: "View debug info",
         slash: { name: "debug" },
         run: () => {
@@ -1160,7 +1160,7 @@ function App() {
         name: "docs.open",
         title: "Open docs",
         run: () => {
-          openUrl("https://opencode.ai/docs").catch(() => {})
+          openUrl("https://github.com/premsuggu/ktether/tree/main/docs").catch(() => {})
           dialog.clear()
         },
         category: "System",
@@ -1460,7 +1460,7 @@ function App() {
           <PaneResizeHandle resize={tabsResize} left={tabsResize.size() - 1} />
         </Show>
       </box>
-      <Show when={devtools() && !(route.data.type === "plugin" && route.data.id === "opencode.stats")}>
+      <Show when={devtools() && !(route.data.type === "plugin" && route.data.id === "ktether.stats")}>
         <DevToolsBar />
       </Show>
       <Show when={!startup.skipInitialLoading}>

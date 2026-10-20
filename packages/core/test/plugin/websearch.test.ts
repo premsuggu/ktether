@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect } from "bun:test"
 import { Effect } from "effect"
-import { Integration } from "@opencode/core/integration"
-import { WebSearch } from "@opencode/core/websearch"
-import { WebSearchExa } from "@opencode/core/plugin/websearch/exa"
-import { WebSearchFirecrawl } from "@opencode/core/plugin/websearch/firecrawl"
-import { WebSearchParallel } from "@opencode/core/plugin/websearch/parallel"
-import { WebSearchTavily } from "@opencode/core/plugin/websearch/tavily"
-import { WebSearchTinyFish } from "@opencode/core/plugin/websearch/tinyfish"
+import { Integration } from "@ktether/core/integration"
+import { WebSearch } from "@ktether/core/websearch"
+import { WebSearchExa } from "@ktether/core/plugin/websearch/exa"
+import { WebSearchFirecrawl } from "@ktether/core/plugin/websearch/firecrawl"
+import { WebSearchParallel } from "@ktether/core/plugin/websearch/parallel"
+import { WebSearchTavily } from "@ktether/core/plugin/websearch/tavily"
+import { WebSearchTinyFish } from "@ktether/core/plugin/websearch/tinyfish"
 import { host, integrationHost, webSearchHost } from "./host"
 import {
   requests,
@@ -265,7 +265,7 @@ describe("built-in web search providers", () => {
       )
       expect(requests[0]).toMatchObject({
         url: WebSearchTavily.endpoint,
-        headers: { "x-client-name": "opencode2", "x-tavily-access-mode": "keyless" },
+        headers: { "x-client-name": "ktether2", "x-tavily-access-mode": "keyless" },
         body: {
           query: "effect typescript",
           search_depth: "basic",
@@ -281,7 +281,7 @@ describe("built-in web search providers", () => {
       })
       yield* websearch.query(query)
       expect(requests[1]).toMatchObject({
-        headers: { authorization: "Bearer tavily-secret", "x-client-name": "opencode2" },
+        headers: { authorization: "Bearer tavily-secret", "x-client-name": "ktether2" },
       })
       expect(requests[1]?.headers["x-tavily-access-mode"]).toBeUndefined()
     }),

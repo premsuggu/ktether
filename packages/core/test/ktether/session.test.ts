@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test"
-import { latestReady, pollSignaling, SessionFailure } from "@opencode/core/ktether/session"
-import { generateSigningKey } from "@opencode/core/ktether/signaling"
+import { latestReady, pollSignaling, SessionFailure } from "@ktether/core/ktether/session"
+import { generateSigningKey } from "@ktether/core/ktether/signaling"
 import { createFakeClock, createFakeRelay, installFakeKaggle, uninstallFakeKaggle } from "./helpers"
 
 const KEY = generateSigningKey()

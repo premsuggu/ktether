@@ -1,6 +1,6 @@
 import { createMemo, type JSX } from "solid-js"
-import { Button } from "@opencode/ui/button"
-import { Switch } from "@opencode/ui/switch"
+import { Button } from "@ktether/ui/button"
+import { Switch } from "@ktether/ui/switch"
 import { useExtension } from "../sdk"
 import { updaterAction } from "./action"
 import type { UpdaterState } from "./contract"

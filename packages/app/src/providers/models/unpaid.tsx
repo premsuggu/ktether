@@ -1,10 +1,10 @@
-import { DialogBody, DialogHeader, DialogTitle, Dialog } from "@opencode/ui/dialog"
-import { Badge } from "@opencode/ui/badge"
-import { Icon } from "@opencode/ui/icon"
+import { DialogBody, DialogHeader, DialogTitle, Dialog } from "@ktether/ui/dialog"
+import { Badge } from "@ktether/ui/badge"
+import { Icon } from "@ktether/ui/icon"
 import { ProviderModelIcon } from "@/providers/models/provider-group"
-import { Tooltip } from "@opencode/ui/tooltip"
-import { useDialog } from "@opencode/ui/context/dialog"
-import { useTheme } from "@opencode/ui/theme"
+import { Tooltip } from "@ktether/ui/tooltip"
+import { useDialog } from "@ktether/ui/context/dialog"
+import { useTheme } from "@ktether/ui/theme"
 import { createMemo, onCleanup, onMount, type Component, For, Show } from "solid-js"
 import { useLocal, type ModelSelection } from "@/providers/models/selection"
 import { isFreeModel } from "@/providers/models/models"
@@ -15,7 +15,7 @@ import { ModelTooltip } from "./tooltip"
 
 type ModelState = ModelSelection
 
-const featuredProviders = ["opencode-go", "opencode", "openai", "anthropic", "google", "github-copilot"]
+const featuredProviders = ["ktether-go", "ktether", "openai", "anthropic", "google", "github-copilot"]
 
 const displayModelName = (name: string) => name.replace(/\s+(?:\(free\)|free)$/i, "")
 
@@ -36,7 +36,7 @@ export const DialogSelectModelUnpaid: Component<{ model?: ModelState }> = (props
   })
 
   const providerName = (provider: { id: string; name: string }) =>
-    provider.id === "opencode" ? language.t("provider.connect.opencode.name") : provider.name
+    provider.id === "ktether" ? language.t("provider.connect.ktether.name") : provider.name
 
   const freeModels = createMemo(() => model.list().filter(isFreeModel))
 
@@ -162,12 +162,12 @@ export const DialogSelectModelUnpaid: Component<{ model?: ModelState }> = (props
                       />
                       <span class="flex min-w-0 flex-col">
                         <span class="truncate">{providerName(provider)}</span>
-                        <Show when={provider.id === "opencode" || provider.id === "opencode-go"}>
+                        <Show when={provider.id === "ktether" || provider.id === "ktether-go"}>
                           <span class="truncate font-[440] text-v2-text-text-muted">
                             {language.t(
-                              provider.id === "opencode"
-                                ? "dialog.provider.opencode.tagline"
-                                : "dialog.provider.opencodeGo.tagline",
+                              provider.id === "ktether"
+                                ? "dialog.provider.ktether.tagline"
+                                : "dialog.provider.ktetherGo.tagline",
                             )}
                           </span>
                         </Show>

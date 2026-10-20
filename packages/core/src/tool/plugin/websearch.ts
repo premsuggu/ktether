@@ -1,8 +1,8 @@
 export * as WebSearchTool from "./websearch.js"
 
-import type { Context } from "@opencode/plugin/effect/plugin"
-import type { SessionHooks } from "@opencode/plugin/effect/session"
-import { ToolFailure } from "@opencode/ai"
+import type { Context } from "@ktether/plugin/effect/plugin"
+import type { SessionHooks } from "@ktether/plugin/effect/session"
+import { ToolFailure } from "@ktether/ai"
 import { Effect, Schema, Semaphore } from "effect"
 import { HttpClientError } from "effect/http"
 import { Form } from "../../form.js"
@@ -30,7 +30,7 @@ const Output = Schema.Struct({
   results: Schema.Array(WebSearch.Result),
 })
 export const Plugin = {
-  id: "opencode.tool.websearch",
+  id: "ktether.tool.websearch",
   effect: Effect.fn("WebSearchTool.Plugin")(function* (ctx: Context) {
     const permission = yield* Permission.Service
     const forms = yield* Form.Service
@@ -79,7 +79,7 @@ export const Plugin = {
                           fields: [
                             {
                               key: "choice",
-                              description: "Allow OpenCode to search the web for up-to-date information?",
+                              description: "Allow ktether to search the web for up-to-date information?",
                               type: "string",
                               required: true,
                               custom: false,

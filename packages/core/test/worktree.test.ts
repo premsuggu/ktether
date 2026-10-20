@@ -4,28 +4,28 @@ import fs from "fs/promises"
 import path from "path"
 import { and, eq, isNull } from "drizzle-orm"
 import { Context, Effect, Exit, Fiber, Layer, Queue, Scope, Stream } from "effect"
-import { AppNodeBuilder } from "@opencode/core/effect/app-node-builder"
-import { LayerNode } from "@opencode/util/effect/layer-node"
-import { AbsolutePath } from "@opencode/core/schema"
-import { Git } from "@opencode/core/git"
-import { Database } from "@opencode/core/database/database"
-import { Bus } from "@opencode/core/bus"
-import { Project } from "@opencode/core/project"
-import { ProjectTable } from "@opencode/core/project/sql"
-import { Worktree } from "@opencode/core/worktree"
-import { WorktreeStrategies } from "@opencode/core/worktree/strategies"
-import { WorktreeDirectory } from "@opencode/core/worktree/directory"
-import { WorktreeTable } from "@opencode/core/worktree/sql"
-import { WorktreeGit } from "@opencode/core/worktree/git"
-import { Location } from "@opencode/core/location"
-import { Global } from "@opencode/util/global"
-import { FSUtil } from "@opencode/util/fs-util"
-import { Config } from "@opencode/core/config"
-import { ConfigWorktreePlugin } from "@opencode/core/config/plugin/worktree"
-import { ConfigNormalize } from "@opencode/core/config/normalize"
-import { Document, Event, Info } from "@opencode/schema/config"
-import { EventManifest } from "@opencode/schema/event-manifest"
-import { Workspace } from "@opencode/schema/workspace"
+import { AppNodeBuilder } from "@ktether/core/effect/app-node-builder"
+import { LayerNode } from "@ktether/util/effect/layer-node"
+import { AbsolutePath } from "@ktether/core/schema"
+import { Git } from "@ktether/core/git"
+import { Database } from "@ktether/core/database/database"
+import { Bus } from "@ktether/core/bus"
+import { Project } from "@ktether/core/project"
+import { ProjectTable } from "@ktether/core/project/sql"
+import { Worktree } from "@ktether/core/worktree"
+import { WorktreeStrategies } from "@ktether/core/worktree/strategies"
+import { WorktreeDirectory } from "@ktether/core/worktree/directory"
+import { WorktreeTable } from "@ktether/core/worktree/sql"
+import { WorktreeGit } from "@ktether/core/worktree/git"
+import { Location } from "@ktether/core/location"
+import { Global } from "@ktether/util/global"
+import { FSUtil } from "@ktether/util/fs-util"
+import { Config } from "@ktether/core/config"
+import { ConfigWorktreePlugin } from "@ktether/core/config/plugin/worktree"
+import { ConfigNormalize } from "@ktether/core/config/normalize"
+import { Document, Event, Info } from "@ktether/schema/config"
+import { EventManifest } from "@ktether/schema/event-manifest"
+import { Workspace } from "@ktether/schema/workspace"
 import { host } from "./plugin/host"
 import { initRepo } from "./fixture/git"
 import { tmpdir } from "./fixture/tmpdir"
@@ -283,7 +283,7 @@ describe("Worktree", () => {
         .set({
           commands: {
             start:
-              "bun -e \"await Bun.write('setup.json', JSON.stringify([process.env.OPENCODE_WORKTREE_BASE, process.env.OPENCODE_WORKTREE_PATH, process.cwd()]))\"",
+              "bun -e \"await Bun.write('setup.json', JSON.stringify([process.env.KTETHER_WORKTREE_BASE, process.env.KTETHER_WORKTREE_PATH, process.cwd()]))\"",
           },
         })
         .where(eq(ProjectTable.id, input.projectID))
@@ -317,7 +317,7 @@ describe("Worktree", () => {
         await $`git remote add origin git@github.com:owner/repo.git`.cwd(main).quiet()
         await $`git clone --no-hardlinks ${main} ${clone}`.quiet()
         await $`git remote set-url origin https://github.com/owner/repo.git`.cwd(clone).quiet()
-        await $`git -c user.name=Test -c user.email=test@opencode.test -c commit.gpgsign=false commit --allow-empty -m clone`
+        await $`git -c user.name=Test -c user.email=test@ktether.test -c commit.gpgsign=false commit --allow-empty -m clone`
           .cwd(clone)
           .quiet()
       })
@@ -332,7 +332,7 @@ describe("Worktree", () => {
       yield* config.setEntries([
         new Document({
           type: "document",
-          path: abs(path.join(root.path, "global/opencode.json")),
+          path: abs(path.join(root.path, "global/ktether.json")),
           info: new Info({ worktree: { directory: ".lane/trees" } }),
         }),
       ])
@@ -341,7 +341,7 @@ describe("Worktree", () => {
         projectID: initial.id,
         commands: {
           start:
-            "bun -e \"await Bun.write('setup.json', JSON.stringify([process.env.OPENCODE_WORKTREE_BASE, process.env.OPENCODE_WORKTREE_PATH, process.cwd()]))\"",
+            "bun -e \"await Bun.write('setup.json', JSON.stringify([process.env.KTETHER_WORKTREE_BASE, process.env.KTETHER_WORKTREE_PATH, process.cwd()]))\"",
         },
       })
 
@@ -898,12 +898,12 @@ describe("Worktree", () => {
       const documents = [
         new Document({
           type: "document",
-          path: abs(path.join(input.root.path, "opencode.json")),
+          path: abs(path.join(input.root.path, "ktether.json")),
           info: new Info({ worktree: { directory: "outer" } }),
         }),
         new Document({
           type: "document",
-          path: abs(path.join(input.root.path, "nested/opencode.json")),
+          path: abs(path.join(input.root.path, "nested/ktether.json")),
           info: new Info({ worktree: { directory: "copies" } }),
         }),
       ]
@@ -954,7 +954,7 @@ describe("Worktree", () => {
         yield* config.setEntries([
           new Document({
             type: "document",
-            path: abs(path.join(home, ".config/opencode/opencode.json")),
+            path: abs(path.join(home, ".config/ktether/ktether.json")),
             info: new Info({ worktree: { directory } }),
           }),
         ])

@@ -1,10 +1,10 @@
-export { CallID, Error } from "@opencode/schema/tool"
-export type { Metadata, Options, Result } from "@opencode/schema/tool"
+export { CallID, Error } from "@ktether/schema/tool"
+export type { Metadata, Options, Result } from "@ktether/schema/tool"
 
-import { Tool } from "@opencode/schema/tool"
-import type { Agent } from "@opencode/schema/agent"
-import type { Session } from "@opencode/schema/session"
-import type { SessionMessage } from "@opencode/schema/session-message"
+import { Tool } from "@ktether/schema/tool"
+import type { Agent } from "@ktether/schema/agent"
+import type { Session } from "@ktether/schema/session"
+import type { SessionMessage } from "@ktether/schema/session-message"
 import type { Types } from "effect"
 import type { Hooks, Transform } from "./registration.js"
 

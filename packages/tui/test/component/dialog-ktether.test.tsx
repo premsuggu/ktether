@@ -157,7 +157,8 @@ test("marks a failed operation and offers reconnect for an unreachable tunnel", 
   try {
     await view.app.waitForFrame((frame) => frame.includes("Unreachable"))
     const frame = view.app.captureCharFrame()
-    expect(frame).toContain("ktether reconnect")
+    // The hint wraps inside the dialog, so compare the text with its line breaks collapsed.
+    expect(frame.replace(/\s+/g, " ")).toContain("ktether gpu reconnect")
     expect(frame).toContain("stop failed")
     expect(frame).not.toContain("Uptime")
   } finally {

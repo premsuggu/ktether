@@ -1,4 +1,4 @@
-import { Plugin } from "@opencode/plugin/tui"
+import { Plugin } from "@ktether/plugin/tui"
 import { useTerminalDimensions } from "@opentui/solid"
 import { createSignal, For, type JSX } from "solid-js"
 import { StoryFooter } from "./footer"
@@ -136,7 +136,7 @@ function StorybookIndex(props: { context: Plugin.Context }) {
 }
 
 export default Plugin.define({
-  id: "opencode.storybook",
+  id: "ktether.storybook",
   setup(context) {
     context.ui.router.register({
       name: "storybook",

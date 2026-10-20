@@ -1,15 +1,15 @@
 import { describe, expect, test } from "bun:test"
-import { Message, Media } from "@opencode/ai"
-import { Model } from "@opencode/core/model"
-import { Provider } from "@opencode/core/provider"
-import { SessionMessage } from "@opencode/core/session/message"
-import { AgentAttachment, Base64, FileAttachment, SkillAttachment } from "@opencode/schema/prompt"
-import { Skill } from "@opencode/schema/skill"
-import { toLLMMessages } from "@opencode/core/session/runner/to-llm-message"
-import { Agent } from "@opencode/core/agent"
-import { Shell } from "@opencode/schema/shell"
-import { Location } from "@opencode/schema/location"
-import { AbsolutePath } from "@opencode/schema/schema"
+import { Message, Media } from "@ktether/ai"
+import { Model } from "@ktether/core/model"
+import { Provider } from "@ktether/core/provider"
+import { SessionMessage } from "@ktether/core/session/message"
+import { AgentAttachment, Base64, FileAttachment, SkillAttachment } from "@ktether/schema/prompt"
+import { Skill } from "@ktether/schema/skill"
+import { toLLMMessages } from "@ktether/core/session/runner/to-llm-message"
+import { Agent } from "@ktether/core/agent"
+import { Shell } from "@ktether/schema/shell"
+import { Location } from "@ktether/schema/location"
+import { AbsolutePath } from "@ktether/schema/schema"
 import { DateTime } from "effect"
 import path from "path"
 import { pathToFileURL } from "url"
@@ -907,15 +907,15 @@ Earlier work
     ])
   })
 
-  test("replays flat state under an OpenCode hosted model's route key", () => {
-    const opencode = Model.Ref.make({ id: Model.ID.make("claude-fable-5"), providerID: Provider.ID.opencode })
+  test("replays flat state under an ktether hosted model's route key", () => {
+    const ktether = Model.Ref.make({ id: Model.ID.make("claude-fable-5"), providerID: Provider.ID.ktether })
     const messages = toLLMMessages(
       [
         SessionMessage.Assistant.make({
-          id: id("assistant-opencode-reasoning"),
+          id: id("assistant-ktether-reasoning"),
           type: "assistant",
           agent: build,
-          model: opencode,
+          model: ktether,
           content: [
             SessionMessage.AssistantReasoning.make({
               type: "reasoning",
@@ -926,7 +926,7 @@ Earlier work
           time: { created, completed: created },
         }),
       ],
-      opencode,
+      ktether,
       "anthropic",
     )
 

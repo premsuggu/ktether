@@ -68,15 +68,15 @@ if (import.meta.env.VITE_SENTRY_DSN) {
     integrations: (integrations) => {
       return integrations.filter(
         (i) =>
-          i.name !== "Breadcrumbs" && !(import.meta.env.OPENCODE_CHANNEL === "prod" && i.name === "GlobalHandlers"),
+          i.name !== "Breadcrumbs" && !(import.meta.env.KTETHER_CHANNEL === "prod" && i.name === "GlobalHandlers"),
       )
     },
   })
 }
 
-if (root instanceof HTMLElement && root.dataset.opencodeMounted === undefined) {
+if (root instanceof HTMLElement && root.dataset.ktetherMounted === undefined) {
   // Lazy chunks can import the entry chunk back under a distinct URL, so claim the root before async startup.
-  root.dataset.opencodeMounted = ""
+  root.dataset.ktetherMounted = ""
   void loadInitialLocale().then((locale) => {
     const auth = authFromToken(new URLSearchParams(location.search).get("auth_token"))
     clearAuthToken()

@@ -1,23 +1,23 @@
 import { EOL } from "node:os"
 import path from "node:path"
 import { Effect } from "effect"
-import { OpenCode, type PluginInfo } from "@opencode/client"
-import { Service } from "@opencode/client/effect/service"
+import { KTether, type PluginInfo } from "@ktether/client"
+import { Service } from "@ktether/client/effect/service"
 import { Commands } from "../../commands"
 import { Runtime } from "../../../framework/runtime"
 import { ServerConnection } from "../../../services/server-connection"
 import { Config } from "../../../config"
-import { Global } from "@opencode/util/global"
-import { Npm } from "@opencode/util/npm"
-import { Host } from "@opencode/plugin/host"
+import { Global } from "@ktether/util/global"
+import { Npm } from "@ktether/util/npm"
+import { Host } from "@ktether/plugin/host"
 import { fileURLToPath } from "node:url"
-import { discoverPluginTargets, localPluginDirectories, localSource } from "@opencode/tui/plugin/discovery"
+import { discoverPluginTargets, localPluginDirectories, localSource } from "@ktether/tui/plugin/discovery"
 
 export default Runtime.handler(
   Commands.commands.plugin.commands.list,
   Effect.fn("cli.plugin.list")(function* (input) {
     const { endpoint } = yield* ServerConnection.resolve()
-    const client = OpenCode.make({ baseUrl: endpoint.url, headers: Service.headers(endpoint) })
+    const client = KTether.make({ baseUrl: endpoint.url, headers: Service.headers(endpoint) })
     const response = yield* Effect.promise(() => client.plugin.list({ location: { directory: process.cwd() } }))
     const config = yield* Config.Service
     const global = yield* Global.Service
@@ -29,7 +29,7 @@ export default Runtime.handler(
     const configured = yield* Effect.forEach([...(info.plugins ?? []), ...discovered], (entry) =>
       Effect.gen(function* () {
         const target = typeof entry === "string" ? entry : entry.package
-        if (target.startsWith("-") || target === "*" || target.endsWith(".*") || target.startsWith("opencode."))
+        if (target.startsWith("-") || target === "*" || target.endsWith(".*") || target.startsWith("ktether."))
           return []
         const local = localSource(target, path.dirname(config.path))
         if (local) {

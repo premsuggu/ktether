@@ -1,9 +1,9 @@
 import type { PromptResponse, SessionUpdate } from "@agentclientprotocol/sdk"
-import type { OpenCodeEvent } from "@opencode/client/effect"
-import type { Session } from "@opencode/schema/session"
-import type { SessionError } from "@opencode/schema/session-error"
-import type { SessionMessage } from "@opencode/schema/session-message"
-import { TokenUsage } from "@opencode/schema/token-usage"
+import type { KTetherEvent } from "@ktether/client/effect"
+import type { Session } from "@ktether/schema/session"
+import type { SessionError } from "@ktether/schema/session-error"
+import type { SessionMessage } from "@ktether/schema/session-message"
+import { TokenUsage } from "@ktether/schema/token-usage"
 import { ACPChild } from "./child"
 import { ACPCompaction } from "./compaction"
 import { ACPError } from "./error"
@@ -16,7 +16,7 @@ import {
   type ToolInput,
 } from "./tool"
 
-const RetryMeta = "opencode/retry"
+const RetryMeta = "ktether/retry"
 
 export type TurnStart = { readonly type: "input" | "compaction"; readonly id: SessionMessage.ID }
 
@@ -58,9 +58,9 @@ export type TurnState = {
   readonly executionError?: { readonly type: string; readonly message: string }
 }
 
-type PermissionEvent = Extract<OpenCodeEvent, { type: "permission.asked" }>
-type FormEvent = Extract<OpenCodeEvent, { type: "form.created" }>
-type CreatedEvent = Extract<OpenCodeEvent, { type: "session.created" }>
+type PermissionEvent = Extract<KTetherEvent, { type: "permission.asked" }>
+type FormEvent = Extract<KTetherEvent, { type: "form.created" }>
+type CreatedEvent = Extract<KTetherEvent, { type: "session.created" }>
 
 export type Output =
   | { readonly _tag: "SessionUpdate"; readonly update: SessionUpdate; readonly diff?: DiffSource }
@@ -90,7 +90,7 @@ export const initial: TurnState = {
   asks: new Set(),
 }
 
-export function fold(state: TurnState, event: OpenCodeEvent, ctx: TurnContext): Folded {
+export function fold(state: TurnState, event: KTetherEvent, ctx: TurnContext): Folded {
   if (event.type === "session.created") return childCreated(state, event, ctx)
 
   const sessionID = sessionIDFromEvent(event)
@@ -129,7 +129,7 @@ export function fold(state: TurnState, event: OpenCodeEvent, ctx: TurnContext): 
   return child ? childEvent(state, event, ctx, child) : rootEvent(state, event, ctx)
 }
 
-export function fromTrackedChild(state: TurnState, event: OpenCodeEvent) {
+export function fromTrackedChild(state: TurnState, event: KTetherEvent) {
   const sessionID = event.type === "session.created" ? event.data.parentID : sessionIDFromEvent(event)
   return sessionID !== undefined && state.children.has(sessionID)
 }
@@ -139,7 +139,7 @@ export function failure(state: TurnState) {
   if (error?.type === "provider.auth") return new ACPError.AuthRequiredError()
   if (error && error.type !== "aborted" && error.type !== "provider.content-filter") {
     return new ACPError.ServiceFailureError({
-      safeMessage: error.message || "OpenCode prompt failed",
+      safeMessage: error.message || "ktether prompt failed",
       service: "session",
       errorName: error.type,
     })
@@ -213,7 +213,7 @@ function childCreated(state: TurnState, event: CreatedEvent, ctx: TurnContext): 
   }
 }
 
-function rootEvent(state: TurnState, event: OpenCodeEvent, ctx: TurnContext): Folded {
+function rootEvent(state: TurnState, event: KTetherEvent, ctx: TurnContext): Folded {
   switch (event.type) {
     case "session.step.started":
       return sessionEvent({ ...state, stepError: undefined }, event, ctx, undefined)
@@ -234,7 +234,7 @@ function rootEvent(state: TurnState, event: OpenCodeEvent, ctx: TurnContext): Fo
   }
 }
 
-function childEvent(state: TurnState, event: OpenCodeEvent, ctx: TurnContext, child: ACPChild.Session): Folded {
+function childEvent(state: TurnState, event: KTetherEvent, ctx: TurnContext, child: ACPChild.Session): Folded {
   switch (event.type) {
     case "session.execution.started":
       return { state, outputs: childStatus(ctx, child, { type: "status", status: "running" }) }
@@ -251,7 +251,7 @@ function childEvent(state: TurnState, event: OpenCodeEvent, ctx: TurnContext, ch
 
 function sessionEvent(
   state: TurnState,
-  event: OpenCodeEvent,
+  event: KTetherEvent,
   ctx: TurnContext,
   child: ACPChild.Session | undefined,
 ): Folded {
@@ -457,7 +457,7 @@ function without<K, V>(map: ReadonlyMap<K, V>, key: K) {
   return next
 }
 
-function sessionIDFromEvent(event: OpenCodeEvent) {
+function sessionIDFromEvent(event: KTetherEvent) {
   if ("sessionID" in event.data && typeof event.data.sessionID === "string") return event.data.sessionID
   if (event.type === "form.created") return event.data.form.sessionID
   return undefined

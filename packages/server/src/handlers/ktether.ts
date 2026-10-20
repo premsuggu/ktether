@@ -3,9 +3,9 @@ import {
   OperationInProgressError,
   UnknownModelError,
   type Operation,
-} from "@opencode/core/ktether/controller"
-import { DEFAULT_MODEL } from "@opencode/core/ktether/registry"
-import { ConflictError, InvalidRequestError } from "@opencode/protocol/errors"
+} from "@ktether/core/ktether/controller"
+import { DEFAULT_MODEL } from "@ktether/core/ktether/registry"
+import { ConflictError, InvalidRequestError } from "@ktether/protocol/errors"
 import { Effect } from "effect"
 import { HttpApiBuilder } from "effect/http-api"
 import { Api } from "../api"

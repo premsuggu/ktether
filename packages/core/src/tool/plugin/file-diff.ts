@@ -1,4 +1,4 @@
-import { FileDiff } from "@opencode/schema/file-diff"
+import { FileDiff } from "@ktether/schema/file-diff"
 import { createTwoFilesPatch, diffLines } from "diff"
 
 export function fileDiff(

@@ -1,34 +1,34 @@
 import { expect, test } from "bun:test"
-import { EnvironmentDriver } from "@opencode/core/environment/driver"
-import { EnvironmentFiles } from "@opencode/core/environment/files"
-import { Location as CoreLocation } from "@opencode/core/location"
-import { WorkspaceDriver } from "@opencode/core/workspace/driver"
-import { SessionInbox as CoreSessionInbox } from "@opencode/core/session/inbox"
-import { SessionMessage as CoreSessionMessage } from "@opencode/core/session/message"
-import { Agent } from "@opencode/schema/agent"
-import { Config } from "@opencode/schema/config"
-import { Event } from "@opencode/schema/event"
-import { Location } from "@opencode/schema/location"
-import { Model } from "@opencode/schema/model"
-import { Project } from "@opencode/schema/project"
-import { Provider } from "@opencode/schema/provider"
-import { WebSearch } from "@opencode/schema/websearch"
-import { Session } from "@opencode/schema/session"
-import { SessionInbox } from "@opencode/schema/session-inbox"
-import { SessionMessage } from "@opencode/schema/session-message"
-import { Workspace } from "@opencode/schema/workspace"
-import { Worktree } from "@opencode/schema/worktree"
-import { Api } from "@opencode/server/api"
-import { ClientApi, groupNames, promiseOmitEndpoints } from "@opencode/protocol/client"
-import { compile, emitPromise } from "@opencode/httpapi-codegen"
+import { EnvironmentDriver } from "@ktether/core/environment/driver"
+import { EnvironmentFiles } from "@ktether/core/environment/files"
+import { Location as CoreLocation } from "@ktether/core/location"
+import { WorkspaceDriver } from "@ktether/core/workspace/driver"
+import { SessionInbox as CoreSessionInbox } from "@ktether/core/session/inbox"
+import { SessionMessage as CoreSessionMessage } from "@ktether/core/session/message"
+import { Agent } from "@ktether/schema/agent"
+import { Config } from "@ktether/schema/config"
+import { Event } from "@ktether/schema/event"
+import { Location } from "@ktether/schema/location"
+import { Model } from "@ktether/schema/model"
+import { Project } from "@ktether/schema/project"
+import { Provider } from "@ktether/schema/provider"
+import { WebSearch } from "@ktether/schema/websearch"
+import { Session } from "@ktether/schema/session"
+import { SessionInbox } from "@ktether/schema/session-inbox"
+import { SessionMessage } from "@ktether/schema/session-message"
+import { Workspace } from "@ktether/schema/workspace"
+import { Worktree } from "@ktether/schema/worktree"
+import { Api } from "@ktether/server/api"
+import { ClientApi, groupNames, promiseOmitEndpoints } from "@ktether/protocol/client"
+import { compile, emitPromise } from "@ktether/httpapi-codegen"
 
 const SDK = await import("../src/index")
 const SDKEffect = await import("../src/effect")
-const CoreAgent = await import("@opencode/core/agent")
-const CoreModel = await import("@opencode/core/model")
-const CoreProject = await import("@opencode/core/project")
-const CoreSession = await import("@opencode/core/session")
-const CoreWorktree = await import("@opencode/core/worktree")
+const CoreAgent = await import("@ktether/core/agent")
+const CoreModel = await import("@ktether/core/model")
+const CoreProject = await import("@ktether/core/project")
+const CoreSession = await import("@ktether/core/session")
+const CoreWorktree = await import("@ktether/core/worktree")
 
 test("re-exports canonical contracts directly from Schema", () => {
   expect(SDK.Agent).toBe(Agent)
@@ -49,9 +49,9 @@ test("re-exports canonical contracts directly from Schema", () => {
     "Event",
     "FileSystem",
     "Integration",
+    "KTether",
     "Location",
     "Model",
-    "OpenCode",
     "Permission",
     "PermissionSaved",
     "Project",
@@ -103,7 +103,7 @@ test("client and Server contracts generate identically", () => {
   expect(emitPromise(client)).toEqual(emitPromise(server))
 })
 
-test("re-exports workspace and environment driver contracts from @opencode/sdk/effect", () => {
+test("re-exports workspace and environment driver contracts from @ktether/sdk/effect", () => {
   expect(SDKEffect.WorkspaceDriver).toBe(WorkspaceDriver)
   expect(SDKEffect.EnvironmentDriver).toBe(EnvironmentDriver)
   expect(SDKEffect.EnvironmentFiles).toBe(EnvironmentFiles)

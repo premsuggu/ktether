@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=ktether
+Exec=/opt/ktether/ai.ktether.desktop %U
+Terminal=false
+Type=Application
+Icon=ai.ktether.desktop
+StartupWMClass=ai.ktether.desktop
+NoDisplay=true
+Comment=Open source AI coding agent
+Categories=Development;

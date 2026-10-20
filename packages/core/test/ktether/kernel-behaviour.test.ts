@@ -3,7 +3,7 @@ import fs from "node:fs"
 import os from "node:os"
 import path from "node:path"
 import { spawnSync } from "node:child_process"
-import { renderKernelScript } from "@opencode/core/ktether/bundle"
+import { renderKernelScript } from "@ktether/core/ktether/bundle"
 
 const python = ["python", "python3"].find((bin) => spawnSync(bin, ["--version"]).status === 0)
 

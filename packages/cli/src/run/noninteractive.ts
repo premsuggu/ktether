@@ -2,15 +2,15 @@ import type {
   EventSubscribeOutput,
   JsonValue,
   LocationRef,
-  OpenCodeClient,
+  KTetherClient,
   SessionMessageAssistantTool,
   SessionMessageInfo,
   ToolContent,
-} from "@opencode/client/promise"
-import { SessionMessage } from "@opencode/schema/session-message"
+} from "@ktether/client/promise"
+import { SessionMessage } from "@ktether/schema/session-message"
 import { EOL } from "node:os"
 import { readFile } from "node:fs/promises"
-import { nonEmptyToolContent, toolOutputText, type MiniToolPart } from "@opencode/tui/mini/tool"
+import { nonEmptyToolContent, toolOutputText, type MiniToolPart } from "@ktether/tui/mini/tool"
 import { UI } from "./ui"
 
 type Model = {
@@ -25,7 +25,7 @@ type File = {
 }
 
 type Input = {
-  client: OpenCodeClient
+  client: KTetherClient
   sessionID: string
   location: LocationRef
   message: string
@@ -797,7 +797,7 @@ function formRequestOptions(location: LocationRef | undefined): [] | [{ headers:
   return [
     {
       headers: {
-        "x-opencode-directory": encodeURIComponent(location.directory),
+        "x-ktether-directory": encodeURIComponent(location.directory),
       },
     },
   ]

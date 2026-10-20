@@ -9,10 +9,10 @@ import {
   Provider,
   Reference,
   Skill,
-} from "@opencode/plugin/effect"
-import { Tool } from "@opencode/schema/tool"
+} from "@ktether/plugin/effect"
+import { Tool } from "@ktether/schema/tool"
 
-const key = Symbol.for("opencode.plugin.v2.effect")
+const key = Symbol.for("ktether.plugin.v2.effect")
 ;(globalThis as typeof globalThis & { [key]?: unknown })[key] = {
   Agent,
   Command,

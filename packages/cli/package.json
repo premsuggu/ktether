@@ -1,12 +1,12 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
-  "name": "@opencode/cli",
+  "name": "@ktether/cli",
   "version": "2.0.32",
   "type": "module",
   "license": "MIT",
   "bin": {
-    "opencode": "./bin/opencode.cjs",
-    "opencode2": "./bin/opencode2.cjs"
+    "ktether": "./bin/ktether.cjs",
+    "ktether2": "./bin/ktether2.cjs"
   },
   "files": [
     "bin"
@@ -28,13 +28,13 @@
     "@clack/core": "1.0.0-alpha.1",
     "@clack/prompts": "1.0.0-alpha.1",
     "@effect/platform-node": "catalog:",
-    "@opencode/client": "workspace:*",
-    "@opencode/plugin": "workspace:*",
+    "@ktether/client": "workspace:*",
+    "@ktether/plugin": "workspace:*",
     "@opencode-ai/pty": "0.2.0",
-    "@opencode/schema": "workspace:*",
-    "@opencode/server": "workspace:*",
-    "@opencode/tui": "workspace:*",
-    "@opencode/util": "workspace:*",
+    "@ktether/schema": "workspace:*",
+    "@ktether/server": "workspace:*",
+    "@ktether/tui": "workspace:*",
+    "@ktether/util": "workspace:*",
     "@opentui/core": "catalog:",
     "@opentui/solid": "catalog:",
     "@opentunnel/client": "0.4.0",
@@ -53,8 +53,8 @@
     "ws": "8.21.0"
   },
   "devDependencies": {
-    "@opencode/script": "workspace:*",
-    "@opencode/protocol": "workspace:*",
+    "@ktether/script": "workspace:*",
+    "@ktether/protocol": "workspace:*",
     "@tsconfig/bun": "catalog:",
     "@types/bun": "catalog:",
     "@typescript/native": "catalog:",

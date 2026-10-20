@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import { Script } from "@opencode/script"
+import { Script } from "@ktether/script"
 
 await import("./prebuild")
 

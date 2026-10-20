@@ -1,13 +1,13 @@
 export * as ManagedPolicy from "./managed-policy.js"
 
-import { Document, type Entry } from "@opencode/schema/config"
+import { Document, type Entry } from "@ktether/schema/config"
 import { isDeepStrictEqual } from "node:util"
 import { Wildcard } from "./util/wildcard.js"
-import { ConfigPolicy } from "@opencode/schema/config/policy"
+import { ConfigPolicy } from "@ktether/schema/config/policy"
 import { Context, Effect, Layer, PubSub, Stream } from "effect"
-import { makeGlobalNode } from "@opencode/util/effect/app-node"
+import { makeGlobalNode } from "@ktether/util/effect/app-node"
 
-/** Policy statements the connected OpenCode Console compiled for whoever it authenticated. */
+/** Policy statements the connected ktether Console compiled for whoever it authenticated. */
 export interface State {
   readonly statements: ReadonlyArray<ConfigPolicy.Info>
   /** Organization name for denial messages, when the connection knows it. */
@@ -22,7 +22,7 @@ export interface Interface {
   readonly set: (state: State) => Effect.Effect<void>
 }
 
-export class Service extends Context.Service<Service, Interface>()("@opencode/ManagedPolicy") {}
+export class Service extends Context.Service<Service, Interface>()("@ktether/ManagedPolicy") {}
 
 export const layer = Layer.effect(
   Service,

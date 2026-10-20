@@ -1,5 +1,5 @@
-import { getFilename } from "@opencode/util/path"
-import type { ProjectUpdateInput } from "@opencode/client/promise"
+import { getFilename } from "@ktether/util/path"
+import type { ProjectUpdateInput } from "@ktether/client/promise"
 import { createMemo } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useGlobal } from "@/runtime/server/runtime"

@@ -1,13 +1,13 @@
-import { useDialog } from "@opencode/ui/context/dialog"
-import { Button } from "@opencode/ui/button"
-import { Dialog, DialogBody, DialogFooter, DialogHeader, DialogTitle } from "@opencode/ui/dialog"
-import { Divider } from "@opencode/ui/divider"
-import { Loader } from "@opencode/ui/loader"
-import { RadioGroup, RadioItem } from "@opencode/ui/radio"
-import { TextInput } from "@opencode/ui/text-input"
+import { useDialog } from "@ktether/ui/context/dialog"
+import { Button } from "@ktether/ui/button"
+import { Dialog, DialogBody, DialogFooter, DialogHeader, DialogTitle } from "@ktether/ui/dialog"
+import { Divider } from "@ktether/ui/divider"
+import { Loader } from "@ktether/ui/loader"
+import { RadioGroup, RadioItem } from "@ktether/ui/radio"
+import { TextInput } from "@ktether/ui/text-input"
 import { createMemo, For, Show } from "solid-js"
 import { createStore } from "solid-js/store"
-import { showToast } from "@opencode/ui/toast"
+import { showToast } from "@ktether/ui/toast"
 import { useExtension, type Context, type IpcClient } from "../sdk"
 import type { Wsl, WslServersState } from "./contract"
 import { useWslAddServerProbes } from "./probes"
@@ -357,8 +357,8 @@ function useWslAddServerController(props: DialogWslServerProps) {
 
     if (!distro || !action) return
 
-    if (action === "install-opencode") {
-      await run(() => api().installOpencode({ name: distro }))
+    if (action === "install-ktether") {
+      await run(() => api().installKTether({ name: distro }))
 
       return
     }
@@ -483,7 +483,7 @@ function unavailable(error: string): WslServersState {
     installed: [],
     online: [],
     distroProbes: {},
-    opencodeChecks: {},
+    ktetherChecks: {},
     pendingRestart: false,
     servers: [],
     job: null,

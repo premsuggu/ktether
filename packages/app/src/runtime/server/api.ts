@@ -1,9 +1,9 @@
-import { OpenCode, type OpenCodeClient } from "@opencode/client/promise"
+import { KTether, type KTetherClient } from "@ktether/client/promise"
 import type { ServerConnection } from "@/runtime/server/registry"
 import { decode64 } from "@/runtime/persistence/base64"
 
 export function authTokenFromCredentials(input: { password: string }) {
-  return btoa(`opencode:${input.password}`)
+  return btoa(`ktether:${input.password}`)
 }
 
 export function authFromToken(token: string | null) {
@@ -22,8 +22,8 @@ export function authFromToken(token: string | null) {
 export function createApiForServer(input: {
   server: ServerConnection.HttpBase
   fetch?: typeof globalThis.fetch
-}): OpenCodeClient {
-  return OpenCode.make({
+}): KTetherClient {
+  return KTether.make({
     baseUrl: input.server.url,
     fetch: input.fetch,
     headers: input.server.password
@@ -36,4 +36,4 @@ export function createApiForServer(input: {
   })
 }
 
-export type ServerApi = OpenCodeClient
+export type ServerApi = KTetherClient
