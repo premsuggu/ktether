@@ -82,6 +82,8 @@ const Handlers = Runtime.handlers(Commands, {
     start: () => import("./commands/handlers/ktether/start"),
     stop: () => import("./commands/handlers/ktether/stop"),
     clean: () => import("./commands/handlers/ktether/clean"),
+    reconnect: () => import("./commands/handlers/ktether/reconnect"),
+    doctor: () => import("./commands/handlers/ktether/doctor"),
     status: () => import("./commands/handlers/ktether/status"),
     models: () => import("./commands/handlers/ktether/models"),
   },

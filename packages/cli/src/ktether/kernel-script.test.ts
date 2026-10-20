@@ -3,7 +3,7 @@ import fs from "node:fs"
 import os from "node:os"
 import path from "node:path"
 import { spawnSync } from "node:child_process"
-import { getKaggleServerScript } from "./service"
+import { renderKernelScript } from "./bundle"
 import { createStopMessage, generateSigningKey, openEnvelope } from "./signaling"
 
 const python = ["python", "python3"].find((bin) => spawnSync(bin, ["--version"]).status === 0)
@@ -14,7 +14,7 @@ describe.skipIf(!python)("generated kernel script", () => {
   const key = generateSigningKey()
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "ktether-kernel-test-"))
   const scriptPath = path.join(dir, "server.py")
-  fs.writeFileSync(scriptPath, getKaggleServerScript({ channel_id: "kt_test", signing_key: key }), "utf-8")
+  fs.writeFileSync(scriptPath, renderKernelScript({ channel_id: "kt_test", signing_key: key }), "utf-8")
 
   const driver = `
 import importlib.util, json, sys

@@ -555,8 +555,8 @@ const Root = Spec.make(typeof OPENCODE_CLI_NAME === "string" ? OPENCODE_CLI_NAME
           params: {
             model: Flag.String("model").pipe(
               Flag.withAlias("m"),
-              Flag.withDescription("Model to serve on Kaggle GPU (default: qwen2.5-coder-14b)"),
-              Flag.withDefault("qwen2.5-coder-14b"),
+              Flag.withDescription("Model to serve on Kaggle GPU (default: qwen3.6-27b)"),
+              Flag.withDefault("qwen3.6-27b"),
             ),
             timeout: Flag.Int("timeout").pipe(
               Flag.withAlias("t"),
@@ -586,6 +586,12 @@ const Root = Spec.make(typeof OPENCODE_CLI_NAME === "string" ? OPENCODE_CLI_NAME
         }),
         Spec.make("status", {
           description: "Check the status and latency of the Kaggle GPU backend",
+        }),
+        Spec.make("reconnect", {
+          description: "Re-attach to a running session whose tunnel was replaced",
+        }),
+        Spec.make("doctor", {
+          description: "Check that the Kaggle CLI, credentials and network are ready for ktether",
         }),
         Spec.make("models", {
           description: "List available models for Kaggle GPU",
