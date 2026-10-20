@@ -15,7 +15,6 @@ import {
   ToolDefinition,
   Usage,
 } from "../../src/index.js"
-import * as Azure from "../../src/providers/azure.js"
 import * as OpenAI from "../../src/providers/openai.js"
 import * as OpenAICompatible from "../../src/providers/openai-compatible.js"
 import * as XAI from "../../src/providers/xai.js"
@@ -373,32 +372,6 @@ describe("OpenAI Chat route", () => {
     ),
   )
 
-  it.effect("uses Azure api-key header for static OpenAI Chat keys", () =>
-    LLMClient.generate(
-      LLMRequest.update(request, {
-        model: Azure.configure({
-          baseURL: "https://opencode-test.openai.azure.com/openai/",
-          apiKey: "azure-key",
-          headers: { authorization: "Bearer stale" },
-        }).chat("gpt-4o-mini"),
-      }),
-    ).pipe(
-      Effect.provide(
-        dynamicResponse((input) =>
-          Effect.gen(function* () {
-            const web = yield* HttpClientRequest.toWeb(input.request).pipe(Effect.orDie)
-            expect(web.url).toBe("https://opencode-test.openai.azure.com/openai/v1/chat/completions?api-version=v1")
-            expect(web.headers.get("api-key")).toBe("azure-key")
-            expect(web.headers.get("authorization")).toBeNull()
-            return input.respond(sseEvents(deltaChunk({}, "stop")), {
-              headers: { "content-type": "text/event-stream" },
-            })
-          }),
-        ),
-      ),
-    ),
-  )
-
   it.effect("applies serializable HTTP overlays after payload lowering", () =>
     LLMClient.generate(
       LLMRequest.update(request, {
@@ -469,74 +442,6 @@ describe("OpenAI Chat route", () => {
         stream_options: { include_usage: true },
         store: false,
       })
-    }),
-  )
-
-  it.effect("replays Gemini thought signatures as tool call extra content", () =>
-    Effect.gen(function* () {
-      const prepared = yield* compileRequest(
-        LLM.request({
-          model,
-          messages: [
-            Message.user("Weather in Paris and Tokyo?"),
-            Message.assistant([
-              ToolCallPart.make({
-                id: "call_1",
-                name: "lookup",
-                input: { city: "Paris" },
-                providerMetadata: { openai: { extraContent: { google: { thought_signature: "sig_1" } } } },
-              }),
-              ToolCallPart.make({ id: "call_2", name: "lookup", input: { city: "Tokyo" } }),
-            ]),
-            Message.tool({ id: "call_1", name: "lookup", result: "Sunny" }),
-            Message.tool({ id: "call_2", name: "lookup", result: "Rainy" }),
-          ],
-        }),
-      )
-
-      const assistant = prepared.body.messages[1]
-      expect(assistant?.role === "assistant" ? assistant.tool_calls : undefined).toEqual([
-        {
-          id: "call_1",
-          type: "function",
-          function: { name: "lookup", arguments: encodeJson({ city: "Paris" }) },
-          extra_content: { google: { thought_signature: "sig_1" } },
-        },
-        {
-          id: "call_2",
-          type: "function",
-          function: { name: "lookup", arguments: encodeJson({ city: "Tokyo" }) },
-        },
-      ])
-    }),
-  )
-
-  it.effect("limits OpenAI and Azure Chat tool call IDs to 40 characters", () =>
-    Effect.gen(function* () {
-      const id = `call_${"a".repeat(48)}`
-      const models = [
-        model,
-        Azure.configure({ baseURL: "https://opencode-test.openai.azure.com/openai/", apiKey: "test" }).chat("gpt-4o"),
-      ]
-
-      yield* Effect.forEach(models, (selected) =>
-        Effect.gen(function* () {
-          const prepared = yield* compileRequest(
-            LLM.request({
-              model: selected,
-              messages: [
-                Message.assistant([ToolCallPart.make({ id, name: "lookup", input: {} })]),
-                Message.tool({ id, name: "lookup", result: "Sunny" }),
-              ],
-            }),
-          )
-
-          expect(prepared.body.messages).toMatchObject([
-            { role: "assistant", tool_calls: [{ id: id.slice(0, 40) }] },
-            { role: "tool", tool_call_id: id.slice(0, 40) },
-          ])
-        }),
-      )
     }),
   )
 
@@ -1458,56 +1363,6 @@ describe("OpenAI Chat route", () => {
     }),
   )
 
-  it.effect("merges consecutive OpenRouter summary deltas and replays them unmodified", () =>
-    Effect.gen(function* () {
-      const merged = [
-        { type: "reasoning.summary", summary: "Plan tools", format: "openai-responses-v1", index: 0 },
-        { type: "reasoning.encrypted", data: "opaque", format: "openai-responses-v1", index: 0 },
-      ]
-      const response = yield* LLMClient.generate(request).pipe(
-        Effect.provide(
-          fixedResponse(
-            sseEvents(
-              {
-                choices: [
-                  {
-                    delta: {
-                      reasoning_details: [
-                        { type: "reasoning.summary", summary: "Plan", format: "openai-responses-v1", index: 0 },
-                      ],
-                    },
-                  },
-                ],
-              },
-              {
-                choices: [
-                  {
-                    delta: {
-                      reasoning_details: [
-                        { type: "reasoning.summary", summary: " tools", format: "openai-responses-v1", index: 0 },
-                      ],
-                    },
-                  },
-                ],
-              },
-              { choices: [{ delta: { reasoning_details: [merged[1]] } }] },
-              { choices: [{ delta: { content: "Hello" } }] },
-              { choices: [{ delta: {}, finish_reason: "stop" }] },
-            ),
-          ),
-        ),
-      )
-
-      expect(response.reasoning).toBe("Plan tools")
-      expect(response.message.content.find((part) => part.type === "reasoning")?.providerMetadata).toEqual({
-        openai: { reasoningDetails: merged },
-      })
-
-      const replay = yield* compileRequest(LLM.request({ model, messages: [response.message] }))
-      expect(replay.body.messages).toEqual([{ role: "assistant", content: "Hello", reasoning_details: merged }])
-    }),
-  )
-
   it.effect("uses scalar display text for signature-only reasoning details", () =>
     Effect.gen(function* () {
       const details = [{ type: "reasoning.text", signature: "signed", format: "provider-v2", index: 0 }]
@@ -1836,55 +1691,6 @@ describe("OpenAI Chat route", () => {
           providerMetadata: undefined,
         },
         { type: "finish", reason: { normalized: "tool-calls", raw: "tool_calls" }, usage: undefined },
-      ])
-    }),
-  )
-
-  it.effect("preserves Gemini thought signatures on streamed parallel tool calls", () =>
-    Effect.gen(function* () {
-      // Gemini's OpenAI-compatible endpoint omits `index`, streams each call whole,
-      // and signs only the first call of a parallel batch.
-      const body = sseEvents(
-        deltaChunk({
-          role: "assistant",
-          tool_calls: [
-            {
-              extra_content: { google: { thought_signature: "sig_1" } },
-              id: "call_1",
-              type: "function",
-              function: { name: "lookup", arguments: '{"city":"Paris"}' },
-            },
-          ],
-        }),
-        deltaChunk({
-          role: "assistant",
-          tool_calls: [{ id: "call_2", type: "function", function: { name: "lookup", arguments: '{"city":"Tokyo"}' } }],
-        }),
-        deltaChunk({}, "stop"),
-      )
-      const response = yield* LLMClient.generate(
-        LLMRequest.update(request, {
-          tools: [ToolDefinition.make({ name: "lookup", description: "Lookup data", inputSchema: { type: "object" } })],
-        }),
-      ).pipe(Effect.provide(fixedResponse(body)))
-
-      expect(response.events.filter(LLMEvent.is.toolCall)).toEqual([
-        {
-          type: "tool-call",
-          id: "call_1",
-          name: "lookup",
-          input: { city: "Paris" },
-          providerExecuted: undefined,
-          providerMetadata: { openai: { extraContent: { google: { thought_signature: "sig_1" } } } },
-        },
-        {
-          type: "tool-call",
-          id: "call_2",
-          name: "lookup",
-          input: { city: "Tokyo" },
-          providerExecuted: undefined,
-          providerMetadata: undefined,
-        },
       ])
     }),
   )

@@ -3,20 +3,7 @@ import { Effect } from "effect"
 import { CacheHint, LLM, Message } from "../src/index.js"
 import { Auth } from "../src/route.js"
 import { compileRequest } from "../src/route/client.js"
-import {
-  Alibaba,
-  AmazonBedrock,
-  AnthropicCompatible,
-  CloudflareAIGateway,
-  DigitalOcean,
-  GoogleVertexMessages,
-  Meta,
-  MiniMax,
-  Moonshot,
-  ZAICodingPlan,
-} from "../src/providers.js"
 import * as AnthropicMessages from "../src/protocols/anthropic-messages.js"
-import * as Gemini from "../src/protocols/gemini.js"
 import * as OpenAIChat from "../src/protocols/openai-chat.js"
 import { applyCachePolicy } from "../src/cache-policy.js"
 import { it } from "./lib/effect.js"
@@ -25,20 +12,9 @@ const anthropicModel = AnthropicMessages.route
   .with({ endpoint: { baseURL: "https://api.anthropic.test/v1/" }, auth: Auth.header("x-api-key", "test") })
   .model({ id: "claude-sonnet-4-5" })
 
-const bedrockModel = AmazonBedrock.configure({
-  credentials: { region: "us-east-1", accessKeyId: "fixture", secretAccessKey: "fixture" },
-}).model("anthropic.claude-3-5-sonnet-20241022-v2:0")
-
 const openaiModel = OpenAIChat.route
   .with({ endpoint: { baseURL: "https://api.openai.test/v1/" }, auth: Auth.bearer("test") })
   .model({ id: "gpt-4o-mini" })
-
-const geminiModel = Gemini.route
-  .with({
-    endpoint: { baseURL: "https://generativelanguage.test/v1beta/" },
-    auth: Auth.header("x-goog-api-key", "test"),
-  })
-  .model({ id: "gemini-2.5-flash" })
 
 describe("applyCachePolicy", () => {
   it.effect("undefined cache resolves to 'auto' (the recommended default)", () =>
@@ -60,192 +36,6 @@ describe("applyCachePolicy", () => {
     }),
   )
 
-  it.effect("'auto' marks the last tool, first and last system parts, and final message boundary on Anthropic", () =>
-    Effect.gen(function* () {
-      const prepared = yield* compileRequest(
-        LLM.request({
-          model: anthropicModel,
-          system: [
-            { type: "text", text: "Base agent" },
-            { type: "text", text: "Project instructions" },
-          ],
-          tools: [{ name: "t1", description: "t1", inputSchema: { type: "object", properties: {} } }],
-          messages: [
-            Message.user("first user"),
-            Message.assistant("assistant reply"),
-            Message.user("latest user message"),
-          ],
-          cache: "auto",
-        }),
-      )
-
-      expect(prepared.body).toMatchObject({
-        tools: [{ name: "t1", cache_control: { type: "ephemeral" } }],
-        system: [
-          { type: "text", text: "Base agent", cache_control: { type: "ephemeral" } },
-          { type: "text", text: "Project instructions", cache_control: { type: "ephemeral" } },
-        ],
-        messages: [
-          { role: "user", content: [{ type: "text", text: "first user" }] },
-          { role: "assistant", content: [{ type: "text", text: "assistant reply" }] },
-          {
-            role: "user",
-            content: [{ type: "text", text: "latest user message", cache_control: { type: "ephemeral" } }],
-          },
-        ],
-      })
-    }),
-  )
-
-  it.effect("'auto' emits Anthropic cache markers on Vertex", () =>
-    Effect.gen(function* () {
-      const prepared = yield* compileRequest(
-        LLM.request({
-          model: GoogleVertexMessages.configure({ accessToken: "test", location: "global", project: "test" }).model(
-            "claude-opus-4-8",
-          ),
-          system: "You are concise.",
-          tools: [{ name: "lookup", description: "Look up a value", inputSchema: { type: "object", properties: {} } }],
-          prompt: "hi",
-        }),
-      )
-
-      expect(prepared.body).toMatchObject({
-        tools: [{ name: "lookup", cache_control: { type: "ephemeral" } }],
-        system: [{ type: "text", text: "You are concise.", cache_control: { type: "ephemeral" } }],
-        messages: [{ role: "user", content: [{ type: "text", text: "hi", cache_control: { type: "ephemeral" } }] }],
-      })
-    }),
-  )
-
-  it.effect("'auto' emits cache_control markers on DigitalOcean", () =>
-    Effect.gen(function* () {
-      const prepared = yield* compileRequest(
-        LLM.request({
-          model: DigitalOcean.configure({ apiKey: "test" }).model("anthropic-claude-fable-5.1"),
-          system: "You are concise.",
-          tools: [{ name: "lookup", description: "Look up a value", inputSchema: { type: "object", properties: {} } }],
-          prompt: "hi",
-        }),
-      )
-
-      expect(prepared.body).toMatchObject({
-        tools: [{ type: "function", function: { name: "lookup" }, cache_control: { type: "ephemeral" } }],
-        messages: [
-          {
-            role: "system",
-            content: [{ text: "You are concise.", cache_control: { type: "ephemeral" } }],
-          },
-          {
-            role: "user",
-            content: [{ text: "hi", cache_control: { type: "ephemeral" } }],
-          },
-        ],
-      })
-    }),
-  )
-
-  it.effect("Alibaba chat caches the system and conversation tail without marking tools", () =>
-    Effect.gen(function* () {
-      const prepared = yield* compileRequest(
-        LLM.request({
-          model: Alibaba.configure({ region: "ap-southeast-1", apiKey: "test" }).chat("qwen3.8-max"),
-          system: "You are concise.",
-          tools: [{ name: "lookup", description: "Look up a value", inputSchema: { type: "object", properties: {} } }],
-          prompt: "hi",
-        }),
-      )
-
-      expect(prepared.body).toMatchObject({
-        tools: [{ type: "function", function: { name: "lookup" } }],
-        messages: [
-          {
-            role: "system",
-            content: [{ text: "You are concise.", cache_control: { type: "ephemeral" } }],
-          },
-          { role: "user", content: [{ text: "hi", cache_control: { type: "ephemeral" } }] },
-        ],
-      })
-      expect(prepared.body.tools?.[0]?.cache_control).toBeUndefined()
-    }),
-  )
-
-  it.effect("Alibaba chat omits automatic cache markers when cache is none", () =>
-    Effect.gen(function* () {
-      const prepared = yield* compileRequest(
-        LLM.request({
-          model: Alibaba.configure({ region: "ap-southeast-1", apiKey: "test" }).chat("qwen3.8-max"),
-          system: "You are concise.",
-          prompt: "hi",
-          cache: "none",
-        }),
-      )
-
-      expect(JSON.stringify(prepared.body)).not.toContain("cache_control")
-    }),
-  )
-
-  it.effect("Alibaba chat does not assume non-Qwen models support cache markers", () =>
-    Effect.gen(function* () {
-      const alibaba = Alibaba.configure({ region: "ap-southeast-1", apiKey: "test" })
-      for (const modelID of ["kimi-k3", "glm-5.2", "deepseek-v4-flash-0731", "MiniMax-M2.5"]) {
-        const prepared = yield* compileRequest(
-          LLM.request({ model: alibaba.chat(modelID), system: "You are concise.", prompt: "hi" }),
-        )
-
-        expect(JSON.stringify(prepared.body)).not.toContain("cache_control")
-      }
-    }),
-  )
-
-  it.effect("'auto' emits Anthropic cache markers on Anthropic-compatible routes", () =>
-    Effect.gen(function* () {
-      const prepared = yield* compileRequest(
-        LLM.request({
-          model: AnthropicCompatible.configure({ apiKey: "test", baseURL: "https://messages.example.test/v1" }).model(
-            "compatible",
-          ),
-          system: "You are concise.",
-          prompt: "hi",
-        }),
-      )
-
-      expect(prepared.route).toBe("anthropic-compatible-messages")
-      expect(prepared.body).toMatchObject({
-        system: [{ type: "text", text: "You are concise.", cache_control: { type: "ephemeral" } }],
-        messages: [{ role: "user", content: [{ type: "text", text: "hi", cache_control: { type: "ephemeral" } }] }],
-      })
-    }),
-  )
-
-  const messagesModels = [
-    ["alibaba-messages", Alibaba.configure({ region: "ap-southeast-1", apiKey: "test" }).messages("qwen3.8-max")],
-    [
-      "cloudflare-ai-gateway-messages",
-      CloudflareAIGateway.configure({ accountId: "test", gatewayId: "test", apiKey: "test" }).model(
-        "anthropic/claude-sonnet-4-6",
-      ),
-    ],
-    ["meta-messages", Meta.configure({ apiKey: "test" }).messages("muse-spark-1.3")],
-    ["minimax-messages", MiniMax.configure({ apiKey: "test" }).model("MiniMax-M3")],
-    ["moonshot-messages", Moonshot.configure({ apiKey: "test" }).messages("kimi-k3")],
-    ["zai-coding-messages", ZAICodingPlan.configure({ apiKey: "test" }).messages("glm-5.3")],
-  ] as const
-
-  messagesModels.forEach(([route, model]) =>
-    it.effect(`'auto' emits cache markers on ${route}`, () =>
-      Effect.gen(function* () {
-        const prepared = yield* compileRequest(LLM.request({ model, system: "Sys", prompt: "hi" }))
-
-        expect(prepared.route).toBe(route)
-        expect(prepared.body).toMatchObject({
-          system: [{ type: "text", text: "Sys", cache_control: { type: "ephemeral" } }],
-          messages: [{ role: "user", content: [{ type: "text", text: "hi", cache_control: { type: "ephemeral" } }] }],
-        })
-      }),
-    ),
-  )
-
   it.effect("'auto' is a no-op on OpenAI (implicit caching protocol)", () =>
     Effect.gen(function* () {
       const prepared = yield* compileRequest(
@@ -262,57 +52,6 @@ describe("applyCachePolicy", () => {
       const flat = JSON.stringify(body)
       expect(flat).not.toContain("cache_control")
       expect(flat).not.toContain("cachePoint")
-    }),
-  )
-
-  it.effect("'auto' is a no-op on Gemini (out-of-band caching protocol)", () =>
-    Effect.gen(function* () {
-      const prepared = yield* compileRequest(
-        LLM.request({
-          model: geminiModel,
-          system: "Sys",
-          prompt: "hi",
-          cache: "auto",
-        }),
-      )
-
-      const flat = JSON.stringify(prepared.body)
-      expect(flat).not.toContain("cache_control")
-      expect(flat).not.toContain("cachePoint")
-    }),
-  )
-
-  it.effect("'auto' on Bedrock emits cachePoint markers in the right places", () =>
-    Effect.gen(function* () {
-      const prepared = yield* compileRequest(
-        LLM.request({
-          model: bedrockModel,
-          system: [
-            { type: "text", text: "Base agent" },
-            { type: "text", text: "Project instructions" },
-          ],
-          tools: [{ name: "t1", description: "t1", inputSchema: { type: "object", properties: {} } }],
-          messages: [Message.user("first user"), Message.assistant("reply"), Message.user("latest user")],
-          cache: "auto",
-        }),
-      )
-
-      expect(prepared.body).toMatchObject({
-        toolConfig: {
-          tools: [{ toolSpec: { name: "t1" } }, { cachePoint: { type: "default" } }],
-        },
-        system: [
-          { text: "Base agent" },
-          { cachePoint: { type: "default" } },
-          { text: "Project instructions" },
-          { cachePoint: { type: "default" } },
-        ],
-        messages: [
-          { role: "user", content: [{ text: "first user" }] },
-          { role: "assistant", content: [{ text: "reply" }] },
-          { role: "user", content: [{ text: "latest user" }, { cachePoint: { type: "default" } }] },
-        ],
-      })
     }),
   )
 

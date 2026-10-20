@@ -11,7 +11,6 @@ import { Model } from "@opencode/core/model"
 import { Plugin } from "@opencode/core/plugin"
 import { PluginHost } from "@opencode/core/plugin/host"
 import { PluginHooks } from "@opencode/core/plugin/hooks"
-import { GithubCopilotPlugin } from "@opencode/core/plugin/provider/github-copilot"
 import { OpenAIPlugin } from "@opencode/core/plugin/provider/openai"
 import { Project } from "@opencode/core/project"
 import { Provider } from "@opencode/core/provider"
@@ -28,12 +27,6 @@ const addPlugin = Effect.fn(function* () {
   const plugin = yield* Plugin.Service
   const host = yield* PluginHost.make(plugin)
   yield* OpenAIPlugin.effect(host)
-})
-
-const addGithubCopilotPlugin = Effect.fn(function* () {
-  const plugin = yield* Plugin.Service
-  const host = yield* PluginHost.make(plugin)
-  yield* GithubCopilotPlugin.effect(host)
 })
 
 function required<T>(value: T | undefined): T {
@@ -278,7 +271,6 @@ describe("OpenAIPlugin", () => {
         value: Credential.Key.make({ type: "key", key: "sk-test" }),
       })
       yield* addPlugin()
-      yield* addGithubCopilotPlugin()
       const executor = { execute: () => Effect.die("unused WebSocket execution") }
       const transport = SessionModelTransport.Service.of({
         bind: () => executor,

@@ -460,52 +460,47 @@ describe("Provider and Model", () => {
     Effect.gen(function* () {
       const providers = yield* Provider.Service
       const models = yield* Model.Service
-      const providerID = Provider.ID.make("bedrock")
-      const modelID = Model.ID.make("claude")
+      const providerID = Provider.ID.make("gateway")
+      const modelID = Model.ID.make("chat")
       yield* providers.transform((editor) => {
         editor.update(providerID, (provider) => {
-          provider.package = Provider.aisdk("@ai-sdk/amazon-bedrock")
-          provider.settings = { region: "us-east-1", extraBody: { tag: "provider" } }
+          provider.package = Provider.aisdk("@ai-sdk/openai-compatible")
+          provider.settings = { baseURL: "https://example.com/v1", extraBody: { tag: "provider" } }
         })
         editor.models.update(providerID, modelID, () => {})
-        editor.update(Provider.ID.make("gitlab"), (provider) => {
+        editor.update(Provider.ID.make("unsupported"), (provider) => {
           provider.package = Provider.aisdk("@ai-sdk/gitlab")
           provider.settings = { extraBody: { kept: true } }
         })
       })
       yield* models.transform((editor) => {
         editor.update(providerID, modelID, (model) => {
-          model.modelID = Model.ID.make("anthropic.claude-opus-4-8")
-          model.package = Provider.aisdk("@ai-sdk/amazon-bedrock")
-          model.settings = { reasoningConfig: { type: "adaptive", maxReasoningEffort: "high" } }
+          model.package = Provider.aisdk("@ai-sdk/openai-compatible")
+          model.settings = { reasoningEffort: "high", extraBody: { top_k: 5 } }
           model.variants = [
             {
               id: Model.VariantID.make("max"),
-              settings: { reasoningConfig: { type: "adaptive", maxReasoningEffort: "max" } },
+              settings: { reasoningEffort: "max", extraBody: { top_k: 9 } },
             },
           ]
         })
       })
 
       expect(required(yield* providers.get(providerID))).toMatchObject({
-        package: "@opencode/ai/providers/amazon-bedrock",
-        settings: { region: "us-east-1" },
+        package: "@opencode/ai/providers/openai-compatible",
+        settings: { baseURL: "https://example.com/v1" },
         body: { tag: "provider" },
       })
       const model = required(yield* models.get(providerID, modelID))
-      expect(model.package).toBe("@opencode/ai/providers/amazon-bedrock")
-      expect(model.settings).not.toHaveProperty("reasoningConfig")
-      expect(model.body).toMatchObject({
-        additionalModelRequestFields: { thinking: { type: "adaptive" }, output_config: { effort: "high" } },
-      })
+      expect(model.package).toBe("@opencode/ai/providers/openai-compatible")
+      expect(model.settings).toMatchObject({ reasoningEffort: "high" })
+      expect(model.settings).not.toHaveProperty("extraBody")
+      expect(model.body).toMatchObject({ top_k: 5 })
       expect(model.variants).toEqual([
-        {
-          id: Model.VariantID.make("max"),
-          settings: {},
-          body: { additionalModelRequestFields: { thinking: { type: "adaptive" }, output_config: { effort: "max" } } },
-        },
+        { id: Model.VariantID.make("max"), settings: { reasoningEffort: "max" }, body: { top_k: 9 } },
       ])
-      expect(required(yield* providers.get(Provider.ID.make("gitlab")))).toMatchObject({
+      // AI SDK packages ktether does not ship keep their original spelling and options.
+      expect(required(yield* providers.get(Provider.ID.make("unsupported")))).toMatchObject({
         package: Provider.aisdk("@ai-sdk/gitlab"),
         settings: { extraBody: { kept: true } },
       })

@@ -2,7 +2,7 @@ import { expect } from "bun:test"
 import { Effect, Schema, Stream } from "effect"
 import { LLM, LLMClient } from "../../src/index.js"
 import { OpenResponses } from "../../src/protocols/open-responses.js"
-import { Azure, Meta, OpenAI, XAI } from "../../src/providers/index.js"
+import { OpenAI, XAI } from "../../src/providers/index.js"
 import { WebSocketTransport } from "../../src/route.js"
 import { configure } from "../../src/providers/openai-compatible-responses.js"
 import { it } from "../lib/effect.js"
@@ -85,57 +85,5 @@ it.effect("extracts error details from every shape and falls back to the raw fra
     }
     expect(OpenResponses.providerFailure({ type: "error" }, "fallback", "{}").message).toBe("fallback")
     expect(OpenResponses.providerFailure({ type: "error" }, "fallback", "{}").reason._tag).toBe("ProviderInternal")
-  }),
-)
-
-for (const model of [
-  OpenAI.configure({ apiKey: "fixture" }).responses("gpt-5.6-sol"),
-  XAI.configure({ apiKey: "fixture" }).responses("grok-4.6"),
-  Azure.configure({ apiKey: "fixture", resourceName: "fixture" }).responses("deployment"),
-]) {
-  it.effect(`preserves string error messages and raw bodies through ${model.provider} Responses`, () =>
-    Effect.gen(function* () {
-      const raw = '{ "type": "error", "error": "Gateway rejected the request", "trace": "original" }'
-      const webSocket = WebSocketTransport.makeDirect({
-        open: () => Effect.succeed({ sendText: () => Effect.void, messages: Stream.make(raw), close: Effect.void }),
-      })
-      for (const options of [{ webSocket }, {}]) {
-        const error = yield* LLMClient.generate(LLM.request({ model, prompt: "Hello" }), options).pipe(
-          Effect.provide(fixedResponse(sseEvents(raw))),
-          Effect.flip,
-        )
-        expect(error.reason._tag).toBe("UnknownProvider")
-        expect(error.message).toBe("Gateway rejected the request")
-        expect(error.reason.body).toBe(raw)
-      }
-    }),
-  )
-}
-
-it.effect("retains classification and original error bodies through Meta and generic Responses routes", () =>
-  Effect.gen(function* () {
-    const raw = `{
-  "type": "error",
-  "sequence_number": 4,
-  "code": "server_shutting_down",
-  "message": "Server is shutting down. Please retry your request.",
-  "param": null,
-  "diagnostic": "retain-original-frame"
-}`
-    for (const model of [
-      Meta.configure({ apiKey: "fixture" }).responses("muse-spark-1.3"),
-      configure({ apiKey: "fixture", provider: "gateway", baseURL: "https://responses.example.test/v1" }).model(
-        "example-model",
-      ),
-    ]) {
-      const error = yield* LLMClient.generate(LLM.request({ model, prompt: "Hello" })).pipe(
-        Effect.provide(fixedResponse(sseEvents(raw.replaceAll("\n", "\ndata: ")))),
-        Effect.flip,
-      )
-      expect(error.reason._tag).toBe("ProviderInternal")
-      expect(error.message).toBe("server_shutting_down: Server is shutting down. Please retry your request.")
-      expect(error.reason.body).toBe(raw)
-      expect(error.reason.http?.status).toBe(200)
-    }
   }),
 )

@@ -247,31 +247,6 @@ describe("ModelsDev Service", () => {
             },
           },
         },
-        "cloudflare-workers-ai": {
-          id: "cloudflare-workers-ai",
-          name: "Cloudflare Workers AI",
-          env: ["CLOUDFLARE_ACCOUNT_ID", "CLOUDFLARE_API_KEY"],
-          npm: "@ai-sdk/openai-compatible",
-          api: "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/ai/v1",
-          models: {},
-        },
-        azure: {
-          id: "azure",
-          name: "Azure",
-          env: ["AZURE_RESOURCE_NAME", "AZURE_API_KEY"],
-          npm: "@ai-sdk/azure",
-          models: {
-            "gpt-5": {
-              ...fixture.acme.models["acme-1"],
-              id: "gpt-5",
-            },
-            "custom-chat": {
-              ...fixture.acme.models["acme-1"],
-              id: "custom-chat",
-              provider: { shape: "completions" },
-            },
-          },
-        },
       })
       const state = yield* Ref.make(initialState)
       const result = yield* provided(
@@ -281,13 +256,6 @@ describe("ModelsDev Service", () => {
       )
       expect(result[0]?.info.package).toBe("@opencode/ai/providers/openai-compatible")
       expect(result[0]?.models[0]?.package).toBe("@opencode/ai/providers/openai")
-      expect(result[1]?.info.package).toBe("@opencode/ai/providers/cloudflare-workers-ai")
-      expect(result[1]?.info.settings).toBeUndefined()
-      expect(result[2]?.info.package).toBe("@opencode/ai/providers/azure/responses")
-      expect(result[2]?.models.find((model) => model.id === "gpt-5")?.package).toBeUndefined()
-      expect(result[2]?.models.find((model) => model.id === "custom-chat")?.package).toBe(
-        "@opencode/ai/providers/azure/chat",
-      )
     }),
   )
 
@@ -313,9 +281,9 @@ describe("ModelsDev Service", () => {
         cache,
         ModelsDev.Service.use((s) => s.get()),
       )
-      expect(result.length).toBeGreaterThan(0)
-      const anthropic = result.find((snapshot) => snapshot.info.id === "anthropic")
-      expect(anthropic?.environment).toContain("ANTHROPIC_API_KEY")
+      // ktether bundles only what its features need: voice sessions (OpenAI, xAI) and local LM Studio.
+      expect(result.map((snapshot) => String(snapshot.info.id)).sort()).toEqual(["lmstudio", "openai", "xai"])
+      expect(result.find((snapshot) => snapshot.info.id === "openai")?.environment).toContain("OPENAI_API_KEY")
       const final = yield* Ref.get(state)
       expect(final.calls).toEqual([])
     }),
@@ -364,7 +332,7 @@ describe("ModelsDev Service", () => {
       yield* ModelsDev.Service.use((service) => service.get()).pipe(
         Effect.provide(buildLayer(state, cache, { url: "", fetch: true, snapshot: false })),
       )
-      expect((yield* Ref.get(state)).calls[0]?.url).toBe("https://models.opencode.ai/api.json")
+      expect((yield* Ref.get(state)).calls[0]?.url).toBe("https://models.invalid/api.json")
     }),
   )
 

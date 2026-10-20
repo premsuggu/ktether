@@ -1,7 +1,7 @@
 import { expect } from "bun:test"
 import { Effect, Stream } from "effect"
 import { LLM, LLMClient, LLMRequest } from "../../src/index.js"
-import { Azure, OpenAI } from "../../src/providers.js"
+import { OpenAI, XAI } from "../../src/providers.js"
 import { testEffect } from "../lib/effect.js"
 import { dynamicResponse, fixedResponse } from "../lib/http.js"
 import { sseEvents } from "../lib/sse.js"
@@ -273,7 +273,7 @@ testEffect(dynamicResponse(() => Effect.die("Must reject before sending"))).effe
   () =>
     Effect.gen(function* () {
       const client = yield* LLMClient.Service
-      const unsupported = LLM.request({ model: Azure.configure({ resourceName: "fixture" }).responses("fixture") })
+      const unsupported = LLM.request({ model: XAI.configure({ apiKey: "fixture" }).responses("fixture") })
       expect(LLMClient.canCompact(unsupported)).toBe(true)
       expect(LLMClient.canCompact(unsupported, trigger)).toBe(false)
       // @ts-expect-error Exercise untyped consumers; the service must reject before sending.

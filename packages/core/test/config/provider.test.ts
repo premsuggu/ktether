@@ -10,7 +10,6 @@ import { Model } from "@opencode/core/model"
 import { ModelResolver } from "@opencode/core/model-resolver"
 import { Plugin } from "@opencode/core/plugin"
 import { PluginHost } from "@opencode/core/plugin/host"
-import { AzurePlugin } from "@opencode/core/plugin/provider/azure"
 import { OpenAIPlugin } from "@opencode/core/plugin/provider/openai"
 import { PromptCacheKeyPlugin } from "@opencode/core/plugin/provider/prompt-cache-key"
 import { XAIPlugin } from "@opencode/core/plugin/provider/xai"
@@ -275,8 +274,6 @@ describe("ConfigProviderPlugin.Plugin", () => {
   for (const builtin of [
     { id: "openai", model: "gpt-5.6-sol", package: "@opencode/ai/providers/openai/responses", plugin: OpenAIPlugin },
     { id: "xai", model: "grok-4.6", package: "@opencode/ai/providers/xai", plugin: XAIPlugin },
-    { id: "azure", model: "gpt-5.6-sol", package: "@opencode/ai/providers/azure/responses", plugin: AzurePlugin },
-    { id: "custom-azure", model: "deployment", package: "@opencode/ai/providers/azure/responses", plugin: AzurePlugin },
   ]) {
     it.live(`configured provider transport overrides ${builtin.id} defaults`, () =>
       Effect.gen(function* () {
@@ -662,77 +659,6 @@ describe("ConfigProviderPlugin.Plugin", () => {
       expect(result.diagnostics).toEqual([])
       yield* addPlugin([new Document({ type: "document", info: decode(result.encoded) })])
       expect(yield* models.get(providerID, modelID)).toEqual(before)
-    }),
-  )
-
-  it.effect("generates variants after rewriting a configured model package", () =>
-    Effect.gen(function* () {
-      const models = yield* Model.Service
-      yield* addPlugin([
-        new Document({
-          type: "document",
-          info: decode({
-            providers: {
-              custom: {
-                package: "aisdk:@ai-sdk/openai",
-                models: {
-                  claude: {
-                    modelID: "claude-opus-4-8",
-                    package: "aisdk:@ai-sdk/anthropic",
-                  },
-                },
-              },
-            },
-          }),
-        }),
-      ])
-
-      const model = required(yield* models.get(Provider.ID.make("custom"), Model.ID.make("claude")))
-      expect(model.package).toBe("@opencode/ai/providers/anthropic")
-      expect(model.variants.map((variant) => variant.id)).toEqual([
-        Model.VariantID.make("low"),
-        Model.VariantID.make("medium"),
-        Model.VariantID.make("high"),
-        Model.VariantID.make("xhigh"),
-        Model.VariantID.make("max"),
-      ])
-    }),
-  )
-
-  it.effect("respells inherited variants when config moves a catalog model to another package", () =>
-    Effect.gen(function* () {
-      const providers = yield* Provider.Service
-      const models = yield* Model.Service
-      const providerID = Provider.ID.make("bedrock")
-      const modelID = Model.ID.make("anthropic.claude-opus-5-5")
-      yield* providers.transform((editor) => {
-        editor.models.update(providerID, modelID, (model) => {
-          model.package = "@opencode/ai/providers/amazon-bedrock"
-          model.variants = [
-            {
-              id: Model.VariantID.make("high"),
-              body: { additionalModelRequestFields: { output_config: { effort: "high" } } },
-            },
-          ]
-        })
-      })
-      yield* addPlugin([
-        new Document({
-          type: "document",
-          info: decode({
-            providers: {
-              bedrock: { models: { [modelID]: { package: "@opencode/ai/providers/amazon-bedrock/mantle" } } },
-            },
-          }),
-        }),
-      ])
-
-      const model = required(yield* models.get(providerID, modelID))
-      expect(model.package).toBe("@opencode/ai/providers/amazon-bedrock/mantle/messages")
-      expect(model.variants.find((variant) => variant.id === "high")).toEqual({
-        id: Model.VariantID.make("high"),
-        settings: { effort: "high", thinking: { type: "adaptive", display: "summarized" } },
-      })
     }),
   )
 
