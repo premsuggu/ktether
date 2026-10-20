@@ -63,6 +63,7 @@ import { PermissionProvider } from "./context/permission"
 import { DialogModel } from "./component/dialog-model"
 import { useConnected } from "./component/use-connected"
 import { DialogMcp } from "./component/dialog-mcp"
+import { DialogKTether } from "./component/dialog-ktether"
 import { DialogStatus } from "./component/dialog-status"
 import { DialogConfig } from "./component/dialog-config"
 import { DialogDebug } from "./component/dialog-debug"
@@ -1013,6 +1014,39 @@ function App() {
         slash: { name: "status" },
         run: () => {
           dialog.replace(() => <DialogStatus />)
+        },
+        category: "System",
+      },
+      {
+        name: "ktether.status",
+        title: "Kaggle GPU status",
+        slash: { name: "ktether" },
+        run: () => {
+          dialog.replace(() => <DialogKTether />)
+        },
+        category: "System",
+      },
+      {
+        name: "ktether.start",
+        title: "Start Kaggle GPU",
+        slash: { name: "ktether-start" },
+        run: () => {
+          client.api.ktether
+            .start({})
+            .then(() => dialog.replace(() => <DialogKTether />))
+            .catch(toast.error)
+        },
+        category: "System",
+      },
+      {
+        name: "ktether.stop",
+        title: "Stop Kaggle GPU",
+        slash: { name: "ktether-stop" },
+        run: () => {
+          client.api.ktether
+            .stop({})
+            .then(() => dialog.replace(() => <DialogKTether />))
+            .catch(toast.error)
         },
         category: "System",
       },
