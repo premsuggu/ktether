@@ -6,7 +6,7 @@ export interface ModelSpec {
   readonly sizeGB: number
   /** Context window per server slot. */
   readonly context: number
-  /** Concurrent server slots. OpenCode issues a title request alongside the main one, so 2 avoids head-of-line blocking. */
+  /** Concurrent server slots. ktether issues a title request alongside the main one, so 2 avoids head-of-line blocking. */
   readonly parallel: number
   /** Max thinking tokens per request (thinking models only). Bounds runaway reasoning that would stall the tunnel. */
   readonly reasoningBudget?: number

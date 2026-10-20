@@ -1,9 +1,9 @@
-import { markdown } from "@opencode/ui/storybook/fixtures"
+import { markdown } from "@ktether/ui/storybook/fixtures"
 import { createSignal, onCleanup } from "solid-js"
 import { Markdown } from "./markdown"
 
 export default {
-  title: "OpenCode/Conversation/Markdown response",
+  title: "ktether/Conversation/Markdown response",
   id: "components-markdown",
   component: Markdown,
   parameters: {
@@ -91,7 +91,7 @@ export const StreamingInlineCode = {
 
 const externalLinkChunks = [
   "1. ",
-  "[#540](https://github.com/anomalyco/opencode/pull/540)",
+  "[#540](https://github.com/premsuggu/ktether/pull/540)",
   ": Batch access-policy reads.\n2. ",
   "[Stack Overflow](https://stackoverflow.com/questions/123)",
   ": Favicon from a public site.\n3. ",

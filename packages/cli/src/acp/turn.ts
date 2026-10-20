@@ -1,6 +1,6 @@
 import type { CancelNotification, PromptRequest, PromptResponse, RequestError } from "@agentclientprotocol/sdk"
-import type { OpenCodeClient, OpenCodeEvent } from "@opencode/client/effect"
-import { TokenUsage } from "@opencode/schema/token-usage"
+import type { KTetherClient, KTetherEvent } from "@ktether/client/effect"
+import { TokenUsage } from "@ktether/schema/token-usage"
 import {
   Cause,
   Context,
@@ -37,13 +37,13 @@ export interface Interface {
 }
 
 /** Core acknowledges an interrupt before its cleanup settles, and its shell tool waits 3s before SIGKILL. */
-export const CancelDrainTimeout = Context.Reference<Duration.Input>("@opencode/cli/acp/Turn/CancelDrainTimeout", {
+export const CancelDrainTimeout = Context.Reference<Duration.Input>("@ktether/cli/acp/Turn/CancelDrainTimeout", {
   defaultValue: () => "5 seconds",
 })
 
 type Subscription = {
   readonly scope: Scope.Closeable
-  readonly events: Queue.Dequeue<OpenCodeEvent, unknown>
+  readonly events: Queue.Dequeue<KTetherEvent, unknown>
   readonly askQueue: Queue.Queue<Effect.Effect<void, ACPError.Error | RequestError>>
   readonly settled: Map<string, Deferred.Deferred<void>>
 }
@@ -57,7 +57,7 @@ type Turn = {
 }
 
 export const make = Effect.fnUntraced(function* (input: {
-  readonly client: OpenCodeClient
+  readonly client: KTetherClient
   readonly connection: ACPConnection.Interface
   readonly sessions: ACPSessions.Interface
   readonly catalog: ACPCatalog.Interface

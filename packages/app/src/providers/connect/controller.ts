@@ -3,7 +3,7 @@ import type {
   IntegrationInfo,
   IntegrationMethod,
   IntegrationOauthConnectOutput,
-} from "@opencode/client/promise"
+} from "@ktether/client/promise"
 import { useLanguage } from "@/runtime/i18n/language"
 import { usePlatform } from "@/runtime/platform/platform"
 import { useServerSDK } from "@/runtime/server/client"
@@ -24,11 +24,11 @@ type Polling = {
   attempt?: Authorization
 }
 
-// OpenCode Go and OpenCode Zen both bill through the OpenCode Console, so the
+// ktether Go and ktether Zen both bill through the ktether Console, so the
 // Console sign-in is the connection method for both providers.
-export const CONSOLE_INTEGRATION = "opencode"
+export const CONSOLE_INTEGRATION = "ktether"
 
-export const CONSOLE_PROVIDERS = new Set(["opencode", "opencode-go"])
+export const CONSOLE_PROVIDERS = new Set(["ktether", "ktether-go"])
 
 export function consoleIntegration(provider: string) {
   return CONSOLE_PROVIDERS.has(provider) ? CONSOLE_INTEGRATION : provider
@@ -408,7 +408,7 @@ export function createProviderConnectionController(options: {
       .then((response) => {
         if (isConsole() && platform.platform === "desktop") {
           const url = new URL(response.data.url)
-          url.searchParams.set("client_id", "opencode-desktop")
+          url.searchParams.set("client_id", "ktether-desktop")
           // Lets the Console return link focus the window that started the sign-in.
           url.searchParams.set("return_window", platform.windowID)
           response.data.url = url.href
@@ -444,7 +444,7 @@ export function createProviderConnectionController(options: {
 
     polling.attempt = result.authorization
     dispatch({ type: "auth.waiting", authorization: result.authorization })
-    // Same as `opencode auth login`: hand the user straight to the browser instead of
+    // Same as `ktether auth login`: hand the user straight to the browser instead of
     // asking them to click a link and retype a code.
     void open()
 

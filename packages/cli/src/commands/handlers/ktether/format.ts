@@ -16,7 +16,7 @@ export function formatStatus(status: Status): string {
   if (!status.url) {
     lines.push(
       status.state === "pending"
-        ? "Status: LAUNCH PENDING (run `ktether start` to resume waiting)"
+        ? "Status: LAUNCH PENDING (run `ktether gpu start` to resume waiting)"
         : "Status: STOPPED / NO ACTIVE TUNNEL",
     )
     return lines.join(EOL)
@@ -24,7 +24,7 @@ export function formatStatus(status: Status): string {
 
   lines.push(`Tunnel URL: ${status.url}`, `Active Model: ${status.model}`)
   if (status.state === "unreachable") {
-    lines.push("Health Check: UNREACHABLE", "Try `ktether reconnect` in case the tunnel was replaced.")
+    lines.push("Health Check: UNREACHABLE", "Try `ktether gpu reconnect` in case the tunnel was replaced.")
     return lines.join(EOL)
   }
   lines.push(`Health Check: HEALTHY (${status.latencyMs}ms)`)

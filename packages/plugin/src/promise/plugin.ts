@@ -1,6 +1,6 @@
-import type { OpenCodeClient } from "@opencode/client"
-import type { CredentialApi, GenerateApi, PluginApi } from "@opencode/client/promise/api"
-import type { Location } from "@opencode/schema/location"
+import type { KTetherClient } from "@ktether/client"
+import type { CredentialApi, GenerateApi, PluginApi } from "@ktether/client/promise/api"
+import type { Location } from "@ktether/schema/location"
 import type { PluginOptions } from "../options.js"
 import type { App } from "../app.js"
 import type { AgentDomain } from "./agent.js"
@@ -33,7 +33,7 @@ export interface Context {
   readonly credential: Pick<CredentialApi, "activate">
   readonly event: EventDomain
   readonly experimental: {
-    readonly terminal: Pick<OpenCodeClient["experimental"]["persistentPty"], "read">
+    readonly terminal: Pick<KTetherClient["experimental"]["persistentPty"], "read">
   }
   readonly integration: IntegrationDomain
   readonly mcp: MCPDomain

@@ -1,16 +1,16 @@
 import { describe, expect } from "bun:test"
-import { Document, Event, Info, type Entry } from "@opencode/schema/config"
-import { ConfigPolicy } from "@opencode/schema/config/policy"
-import { Permission } from "@opencode/schema/permission"
-import { Config } from "@opencode/core/config"
-import { ConfigPolicyPlugin } from "@opencode/core/config/plugin/policy"
-import { Bus } from "@opencode/core/bus"
-import { ManagedPolicy } from "@opencode/core/managed-policy"
-import { Plugin } from "@opencode/core/plugin"
-import { PluginHooks } from "@opencode/core/plugin/hooks"
-import { PluginHost } from "@opencode/core/plugin/host"
-import { Provider } from "@opencode/core/provider"
-import { Session } from "@opencode/core/session"
+import { Document, Event, Info, type Entry } from "@ktether/schema/config"
+import { ConfigPolicy } from "@ktether/schema/config/policy"
+import { Permission } from "@ktether/schema/permission"
+import { Config } from "@ktether/core/config"
+import { ConfigPolicyPlugin } from "@ktether/core/config/plugin/policy"
+import { Bus } from "@ktether/core/bus"
+import { ManagedPolicy } from "@ktether/core/managed-policy"
+import { Plugin } from "@ktether/core/plugin"
+import { PluginHooks } from "@ktether/core/plugin/hooks"
+import { PluginHost } from "@ktether/core/plugin/host"
+import { Provider } from "@ktether/core/provider"
+import { Session } from "@ktether/core/session"
 import { Effect, Schema } from "effect"
 import { testEffect } from "../lib/effect"
 import { PluginTestLayer } from "../plugin/fixture"
@@ -170,14 +170,14 @@ describe("ConfigPolicyPlugin.Plugin", () => {
       yield* catalog.transform((catalog) => {
         catalog.update(Provider.ID.openai, () => {})
         catalog.update(Provider.ID.anthropic, () => {})
-        catalog.update(Provider.ID.opencode, () => {})
+        catalog.update(Provider.ID.ktether, () => {})
       })
-      yield* managed.set({ statements: [provider("deny", "*"), provider("allow", "opencode")] })
+      yield* managed.set({ statements: [provider("deny", "*"), provider("allow", "ktether")] })
       yield* addPlugin([document(provider("allow", "anthropic"))])
 
       expect(yield* catalog.get(Provider.ID.anthropic)).toBeUndefined()
       expect(yield* catalog.get(Provider.ID.openai)).toBeUndefined()
-      expect(yield* catalog.get(Provider.ID.opencode)).toBeDefined()
+      expect(yield* catalog.get(Provider.ID.ktether)).toBeDefined()
     }),
   )
 

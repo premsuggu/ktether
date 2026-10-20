@@ -1,11 +1,11 @@
 import { describe, expect } from "bun:test"
 import { Effect } from "effect"
-import { Model } from "@opencode/core/model"
-import { Plugin } from "@opencode/core/plugin"
-import { PluginHost } from "@opencode/core/plugin/host"
-import { KTetherPlugin } from "@opencode/core/plugin/provider/ktether"
-import { Provider } from "@opencode/core/provider"
-import { AVAILABLE_MODELS, DEFAULT_MODEL } from "@opencode/core/ktether/registry"
+import { Model } from "@ktether/core/model"
+import { Plugin } from "@ktether/core/plugin"
+import { PluginHost } from "@ktether/core/plugin/host"
+import { KTetherPlugin } from "@ktether/core/plugin/provider/ktether"
+import { Provider } from "@ktether/core/provider"
+import { AVAILABLE_MODELS, DEFAULT_MODEL } from "@ktether/core/ktether/registry"
 import { testEffect } from "../lib/effect"
 import { PluginTestLayer } from "./fixture"
 
@@ -22,11 +22,11 @@ describe("KTetherPlugin", () => {
     Effect.gen(function* () {
       yield* addPlugin()
       const providers = yield* Provider.Service
-      const provider = yield* providers.get(Provider.ID.make("ktether"))
+      const provider = yield* providers.get(Provider.ID.make("kaggle"))
       expect(provider).toMatchObject({
         name: "ktether (Kaggle GPU)",
         activation: "enabled",
-        package: "@opencode/ai/providers/ktether",
+        package: "@ktether/ai/providers/ktether",
       })
       // The endpoint and key come from the saved session at request time, never from configuration.
       expect(provider?.settings).toBeUndefined()
@@ -38,7 +38,7 @@ describe("KTetherPlugin", () => {
     Effect.gen(function* () {
       yield* addPlugin()
       const models = yield* Model.Service
-      const listed = (yield* models.all()).filter((model) => model.providerID === Provider.ID.make("ktether"))
+      const listed = (yield* models.all()).filter((model) => model.providerID === Provider.ID.make("kaggle"))
       expect(listed.map((model) => String(model.id)).sort()).toEqual(Object.keys(AVAILABLE_MODELS).sort())
       expect(listed.some((model) => String(model.id) === DEFAULT_MODEL)).toBe(true)
     }),
@@ -48,8 +48,8 @@ describe("KTetherPlugin", () => {
     Effect.gen(function* () {
       yield* addPlugin()
       const models = yield* Model.Service
-      const agentic = yield* models.get(Provider.ID.make("ktether"), Model.ID.make("qwen3.6-27b"))
-      const coder = yield* models.get(Provider.ID.make("ktether"), Model.ID.make("qwen2.5-coder-14b"))
+      const agentic = yield* models.get(Provider.ID.make("kaggle"), Model.ID.make("qwen3.6-27b"))
+      const coder = yield* models.get(Provider.ID.make("kaggle"), Model.ID.make("qwen2.5-coder-14b"))
       expect(agentic?.capabilities.tools).toBe(true)
       expect(coder?.capabilities.tools).toBe(false)
       expect(agentic?.limit.context).toBe(AVAILABLE_MODELS["qwen3.6-27b"].context)

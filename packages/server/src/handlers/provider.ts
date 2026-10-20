@@ -1,5 +1,5 @@
-import { Provider } from "@opencode/core/provider"
-import { ProviderNotFoundError } from "@opencode/protocol/errors"
+import { Provider } from "@ktether/core/provider"
+import { ProviderNotFoundError } from "@ktether/protocol/errors"
 import { Effect } from "effect"
 import { HttpApiBuilder } from "effect/http-api"
 import { Api } from "../api"

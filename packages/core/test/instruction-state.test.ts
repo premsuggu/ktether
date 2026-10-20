@@ -1,25 +1,25 @@
 import { describe, expect } from "bun:test"
 import { and, asc, eq } from "drizzle-orm"
 import { Effect, Schema } from "effect"
-import { Database } from "@opencode/core/database/database"
-import { AppNodeBuilder } from "@opencode/core/effect/app-node-builder"
-import { LayerNode } from "@opencode/util/effect/layer-node"
-import { Bus } from "@opencode/core/bus"
-import { Event } from "@opencode/schema/event"
-import { EventTable } from "@opencode/core/event/sql"
-import { Instructions } from "@opencode/core/instructions/index"
-import { Project } from "@opencode/core/project"
-import { ProjectTable } from "@opencode/core/project/sql"
-import { AbsolutePath } from "@opencode/core/schema"
-import { InstructionState } from "@opencode/core/session/instruction-state"
-import { SessionProjector } from "@opencode/core/session/projector"
-import { SessionSchema } from "@opencode/core/session/schema"
+import { Database } from "@ktether/core/database/database"
+import { AppNodeBuilder } from "@ktether/core/effect/app-node-builder"
+import { LayerNode } from "@ktether/util/effect/layer-node"
+import { Bus } from "@ktether/core/bus"
+import { Event } from "@ktether/schema/event"
+import { EventTable } from "@ktether/core/event/sql"
+import { Instructions } from "@ktether/core/instructions/index"
+import { Project } from "@ktether/core/project"
+import { ProjectTable } from "@ktether/core/project/sql"
+import { AbsolutePath } from "@ktether/core/schema"
+import { InstructionState } from "@ktether/core/session/instruction-state"
+import { SessionProjector } from "@ktether/core/session/projector"
+import { SessionSchema } from "@ktether/core/session/schema"
 import {
   InstructionBlobTable,
   InstructionStateTable,
   SessionMessageTable,
   SessionTable,
-} from "@opencode/core/session/sql"
+} from "@ktether/core/session/sql"
 import { testEffect } from "./lib/effect"
 
 const it = testEffect(

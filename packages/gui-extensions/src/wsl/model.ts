@@ -1,5 +1,5 @@
 import fuzzysort from "fuzzysort"
-import type { WslInstalledDistro, WslOnlineDistro, WslOpencodeCheck, WslServersState } from "./contract"
+import type { WslInstalledDistro, WslOnlineDistro, WslKTetherCheck, WslServersState } from "./contract"
 
 export type AddServerText = {
   key: string
@@ -17,7 +17,7 @@ export type AddServerPrimaryButton = {
   variant: "neutral" | "contrast"
   label: AddServerText
   disabled: boolean
-  action: "install-opencode" | "add" | null
+  action: "install-ktether" | "add" | null
   loading: boolean
   width: string | null
 }
@@ -41,12 +41,12 @@ function isHiddenDistro(name: string) {
   return /^docker-desktop(?:-data)?$/i.test(name)
 }
 
-export function wslOpencodeAction(check?: WslOpencodeCheck) {
+export function wslKTetherAction(check?: WslKTetherCheck) {
   if (!check) return
 
-  if (!check.resolvedPath) return "onboarding.installOpencode"
+  if (!check.resolvedPath) return "onboarding.installKTether"
 
-  if (check.matchesDesktop === false) return "onboarding.updateOpencode"
+  if (check.matchesDesktop === false) return "onboarding.updateKTether"
 }
 
 export function wslDistroReady(state: WslServersState | undefined, name: string) {
@@ -75,7 +75,7 @@ export function addServerViewModel(input: {
   const existingServerDistros = new Set((state?.servers ?? []).map((item) => item.config.distro))
   const addableInstalledDistros = visibleInstalledDistros.filter((item) => !existingServerDistros.has(item.name))
   const selectedDistro = addServerSelectedDistro(input.selectedDistro, visibleInstalledDistros, addableInstalledDistros)
-  const opencodeCheck = selectedDistro ? (state?.opencodeChecks[selectedDistro] ?? null) : null
+  const ktetherCheck = selectedDistro ? (state?.ktetherChecks[selectedDistro] ?? null) : null
   const installableDistros = addServerInstallableDistros(visibleInstalledDistros, visibleOnlineDistros)
   const filteredInstallableDistros = addServerFilteredInstallableDistros(installableDistros, input.catalogSearch)
   const catalogTarget = addServerCatalogTarget(input.catalogTarget, filteredInstallableDistros)
@@ -88,7 +88,7 @@ export function addServerViewModel(input: {
     visibleOnlineDistros,
     addableInstalledDistros,
     selectedDistro,
-    opencodeCheck,
+    ktetherCheck,
     wslReady: !!state?.runtime?.available && !state?.pendingRestart,
     distroStatuses: Object.fromEntries(
       addableInstalledDistros.flatMap((item) => {
@@ -102,7 +102,7 @@ export function addServerViewModel(input: {
     primaryButton: addServerPrimaryButton({
       state,
       selectedDistro,
-      opencodeCheck,
+      ktetherCheck,
       adding: input.adding,
       probingAddable: input.probingAddable,
     }),
@@ -175,7 +175,7 @@ function addServerDistroStatus(input: {
     return { label: { key: "onboarding.distroStatus.missingTools" }, tone: "warning" }
   }
 
-  const check = input.state?.opencodeChecks[input.name]
+  const check = input.state?.ktetherChecks[input.name]
 
   if (!check) {
     if (input.probingAddable || (job?.kind === "probe-addable" && job.distros.includes(input.name))) {
@@ -185,11 +185,11 @@ function addServerDistroStatus(input: {
     return
   }
 
-  if (check.matchesDesktop === false) return { label: { key: "onboarding.updateOpencode" }, tone: "warning" }
+  if (check.matchesDesktop === false) return { label: { key: "onboarding.updateKTether" }, tone: "warning" }
 
-  if (!check.resolvedPath) return { label: { key: "onboarding.distroStatus.opencodeMissing" }, tone: "warning" }
+  if (!check.resolvedPath) return { label: { key: "onboarding.distroStatus.ktetherMissing" }, tone: "warning" }
 
-  if (check.error) return { label: { key: "onboarding.installOpencode" }, tone: "warning" }
+  if (check.error) return { label: { key: "onboarding.installKTether" }, tone: "warning" }
 
   return { label: { key: "onboarding.distroStatus.ready" }, tone: "success" }
 }
@@ -201,25 +201,25 @@ function checkingStatus(): DistroStatus {
 function addServerPrimaryButton(input: {
   state: WslServersState | undefined
   selectedDistro: string | null
-  opencodeCheck: WslOpencodeCheck | null
+  ktetherCheck: WslKTetherCheck | null
   adding: boolean
   probingAddable: boolean
 }): AddServerPrimaryButton {
   const ready = !!input.selectedDistro && wslDistroReady(input.state, input.selectedDistro)
   const probingSelected = input.probingAddable && !addServerSelectedDistroSettled(input.state, input.selectedDistro)
 
-  const probingOpencode =
+  const probingKTether =
     probingSelected ||
     (ready &&
-      (!input.opencodeCheck ||
+      (!input.ktetherCheck ||
         (!!input.selectedDistro &&
           input.state?.job?.kind === "probe-addable" &&
           input.state.job.distros.includes(input.selectedDistro))))
 
-  const installingOpencode =
-    input.state?.job?.kind === "install-opencode" && input.state.job.distro === input.selectedDistro
+  const installingKTether =
+    input.state?.job?.kind === "install-ktether" && input.state.job.distro === input.selectedDistro
 
-  if (!ready || probingOpencode) {
+  if (!ready || probingKTether) {
     return {
       variant: "contrast",
       label: probingSelected ? { key: "onboarding.distroStatus.checking" } : { key: "server.add" },
@@ -230,19 +230,19 @@ function addServerPrimaryButton(input: {
     }
   }
 
-  if (!addServerOpencodeReady(input.opencodeCheck)) {
-    const update = !!input.opencodeCheck?.resolvedPath && input.opencodeCheck.matchesDesktop === false
+  if (!addServerKTetherReady(input.ktetherCheck)) {
+    const update = !!input.ktetherCheck?.resolvedPath && input.ktetherCheck.matchesDesktop === false
 
     return {
       variant: "neutral",
-      label: installingOpencode
-        ? { key: "onboarding.updatingOpencode" }
+      label: installingKTether
+        ? { key: "onboarding.updatingKTether" }
         : update
-          ? { key: "onboarding.updateOpencode" }
-          : { key: "onboarding.installOpencode" },
+          ? { key: "onboarding.updateKTether" }
+          : { key: "onboarding.installKTether" },
       disabled: !!input.state?.job || input.adding,
-      action: "install-opencode",
-      loading: installingOpencode,
+      action: "install-ktether",
+      loading: installingKTether,
       width: update ? "138px" : "129px",
     }
   }
@@ -257,7 +257,7 @@ function addServerPrimaryButton(input: {
   }
 }
 
-function addServerOpencodeReady(check: WslOpencodeCheck | null) {
+function addServerKTetherReady(check: WslKTetherCheck | null) {
   return !!check?.resolvedPath && check.matchesDesktop !== false && !check.error
 }
 
@@ -271,7 +271,7 @@ function addServerSelectedDistroSettled(state: WslServersState | undefined, sele
 
   if (!wslDistroReady(state, selectedDistro)) return true
 
-  return !!state.opencodeChecks[selectedDistro]
+  return !!state.ktetherChecks[selectedDistro]
 }
 
 function addServerInstallableDistros(installedDistros: WslInstalledDistro[], onlineDistros: WslOnlineDistro[]) {
@@ -322,7 +322,7 @@ export function addableProbePlan(input: {
 
     if (!state.distroProbes[item.name]) return [`distro:${item.name}`]
 
-    if (wslDistroReady(state, item.name) && !state.opencodeChecks[item.name]) return [`opencode:${item.name}`]
+    if (wslDistroReady(state, item.name) && !state.ktetherChecks[item.name]) return [`ktether:${item.name}`]
 
     return []
   })

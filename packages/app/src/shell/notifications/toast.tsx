@@ -1,5 +1,5 @@
-import { Icon, type IconProps } from "@opencode/ui/icon"
-import { Toast, showToast, toaster, type ToastOptions } from "@opencode/ui/toast"
+import { Icon, type IconProps } from "@ktether/ui/icon"
+import { Toast, showToast, toaster, type ToastOptions } from "@ktether/ui/toast"
 import type { JSX } from "solid-js"
 
 type AppToastOptions = Omit<ToastOptions, "icon"> & {

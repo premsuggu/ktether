@@ -1,6 +1,6 @@
 import { EOL } from "node:os"
-import { isConflictError, type CredentialCreateInput } from "@opencode/client"
-import { Credential } from "@opencode/schema/credential"
+import { isConflictError, type CredentialCreateInput } from "@ktether/client"
+import { Credential } from "@ktether/schema/credential"
 import { Effect, Option, Schema } from "effect"
 import { Commands } from "../../commands"
 import { Runtime } from "../../../framework/runtime"

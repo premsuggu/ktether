@@ -2,14 +2,14 @@ import { expect } from "bun:test"
 import { Deferred, Effect, Fiber, Layer, Queue, Scope, Sink, Stream } from "effect"
 import { ChildProcessSpawner } from "effect/process"
 import { ExitCode, makeHandle, ProcessId } from "effect/process/ChildProcessSpawner"
-import { AppNodeBuilder } from "@opencode/core/effect/app-node-builder"
-import { Config } from "@opencode/core/config"
-import { Environment } from "@opencode/core/environment/index"
-import { Location } from "@opencode/core/location"
-import { AbsolutePath } from "@opencode/core/schema"
-import { Shell } from "@opencode/core/shell"
-import { Workspace } from "@opencode/core/workspace"
-import { Global } from "@opencode/util/global"
+import { AppNodeBuilder } from "@ktether/core/effect/app-node-builder"
+import { Config } from "@ktether/core/config"
+import { Environment } from "@ktether/core/environment/index"
+import { Location } from "@ktether/core/location"
+import { AbsolutePath } from "@ktether/core/schema"
+import { Shell } from "@ktether/core/shell"
+import { Workspace } from "@ktether/core/workspace"
+import { Global } from "@ktether/util/global"
 import { hostEnvironmentLayer } from "./fixture/environment"
 import { tempGlobalLayer } from "./fixture/global"
 import { location, tempLocationLayer } from "./fixture/location"
@@ -141,7 +141,7 @@ it.live("does not inherit host process.env when creating a shell in a workspace-
     expect(process.env.PATH).toBeDefined()
     expect(capturedEnv).toEqual({
       TERM: "xterm-256color",
-      OPENCODE_TERMINAL: "1",
+      KTETHER_TERMINAL: "1",
     })
   }),
 )

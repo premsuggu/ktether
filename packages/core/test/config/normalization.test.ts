@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { Arbitrary, Duration, Effect, Schema } from "effect"
-import { ConfigNormalize } from "@opencode/core/config/normalize"
-import { Info } from "@opencode/schema/config"
+import { ConfigNormalize } from "@ktether/core/config/normalize"
+import { Info } from "@ktether/schema/config"
 
 const options = { errors: "all", onExcessProperty: "ignore" } as const
 

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { model } from "@opencode/ai/providers/openai"
+import { model } from "@ktether/ai/providers/openai"
 import { LLM } from "../src/index.js"
 import { Endpoint } from "../src/route/endpoint.js"
 
@@ -11,23 +11,23 @@ describe("provider package entrypoints", () => {
     const selected = model("gpt-5", {
       apiKey: "fixture",
       baseURL: "https://api.openai.test/v1",
-      headers: { "x-application": "opencode" },
+      headers: { "x-application": "ktether" },
       body: { service_tier: "priority" },
       unrelatedInheritedSetting: true,
     })
 
     expect(selected.route.id).toBe("openai-responses")
-    expect(selected.route.defaults.headers).toEqual({ "x-application": "opencode" })
+    expect(selected.route.defaults.headers).toEqual({ "x-application": "ktether" })
     expect(selected.route.defaults.http?.body).toEqual({ service_tier: "priority" })
   })
 
   test("maps OpenAI-compatible Responses settings onto the executable model", async () => {
-    const OpenAICompatibleResponses = await import("@opencode/ai/providers/openai-compatible/responses")
+    const OpenAICompatibleResponses = await import("@ktether/ai/providers/openai-compatible/responses")
     const selected = OpenAICompatibleResponses.model("custom-model", {
       apiKey: "fixture",
       baseURL: "https://responses.example.test/v1",
       provider: "example",
-      headers: { "x-application": "opencode" },
+      headers: { "x-application": "ktether" },
       body: { service_tier: "priority" },
       reasoningEffort: "low",
       store: true,
@@ -39,7 +39,7 @@ describe("provider package entrypoints", () => {
       baseURL: "https://responses.example.test/v1",
       path: "/responses",
     })
-    expect(selected.route.defaults.headers).toEqual({ "x-application": "opencode" })
+    expect(selected.route.defaults.headers).toEqual({ "x-application": "ktether" })
     expect(selected.route.defaults.http?.body).toEqual({ service_tier: "priority" })
     expect(selected.route.defaults.providerOptions).toEqual({
       reasoningEffort: "low",
@@ -62,7 +62,7 @@ describe("provider package entrypoints", () => {
   })
 
   test("maps ktether package settings onto the Kaggle-backed model", async () => {
-    const KTether = await import("@opencode/ai/providers/ktether")
+    const KTether = await import("@ktether/ai/providers/ktether")
     const selected = KTether.model("qwen3.6-27b", {
       apiKey: "kgp_fixture",
       baseURL: "https://example.trycloudflare.com",
@@ -70,7 +70,7 @@ describe("provider package entrypoints", () => {
       body: { top_k: 20 },
     })
 
-    expect(String(selected.provider)).toBe("ktether")
+    expect(String(selected.provider)).toBe("kaggle")
     expect(selected.route.id).toBe("openai-compatible-chat")
     // The saved session stores the bare tunnel URL, so the provider appends the OpenAI-compatible /v1 prefix.
     expect(selected.route.endpoint.baseURL).toBe("https://example.trycloudflare.com/v1")

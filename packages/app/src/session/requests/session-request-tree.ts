@@ -1,4 +1,4 @@
-import type { FormInfo, PermissionRequest, SessionInfo } from "@opencode/client/promise"
+import type { FormInfo, PermissionRequest, SessionInfo } from "@ktether/client/promise"
 
 function sessionTreeRequest<T>(
   session: SessionInfo[],

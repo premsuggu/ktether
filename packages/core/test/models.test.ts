@@ -1,15 +1,15 @@
 import { describe, expect, test } from "bun:test"
-import { Money } from "@opencode/schema/money"
+import { Money } from "@ktether/schema/money"
 import { Effect, Fiber, Layer, Ref, Scope, Stream } from "effect"
 import { HttpClient, HttpClientResponse } from "effect/http"
-import { AppNodeBuilder } from "@opencode/core/effect/app-node-builder"
-import { LayerNodePlatform } from "@opencode/util/effect/app-node-platform"
-import { LayerNode } from "@opencode/util/effect/layer-node"
-import { Bus } from "@opencode/core/bus"
-import { KV } from "@opencode/core/kv"
-import { Model } from "@opencode/core/model"
-import { bodyDigest, ModelsDev } from "@opencode/core/models-dev"
-import { Provider } from "@opencode/core/provider"
+import { AppNodeBuilder } from "@ktether/core/effect/app-node-builder"
+import { LayerNodePlatform } from "@ktether/util/effect/app-node-platform"
+import { LayerNode } from "@ktether/util/effect/layer-node"
+import { Bus } from "@ktether/core/bus"
+import { KV } from "@ktether/core/kv"
+import { Model } from "@ktether/core/model"
+import { bodyDigest, ModelsDev } from "@ktether/core/models-dev"
+import { Provider } from "@ktether/core/provider"
 import { it } from "./lib/effect"
 
 const cacheKey = "models-dev:catalog"
@@ -49,7 +49,7 @@ const fixtureSnapshot = [
       id: Provider.ID.make("acme"),
       name: "Acme",
       activation: "auto",
-      package: "@opencode/ai/providers/openai-compatible",
+      package: "@ktether/ai/providers/openai-compatible",
     },
     models: [
       {
@@ -112,7 +112,7 @@ const fixture2Snapshot = [
       id: Provider.ID.make("beta"),
       name: "Beta",
       activation: "auto",
-      package: "@opencode/ai/providers/openai-compatible",
+      package: "@ktether/ai/providers/openai-compatible",
     },
     models: [
       {
@@ -254,8 +254,8 @@ describe("ModelsDev Service", () => {
         cache,
         ModelsDev.Service.use((service) => service.get()),
       )
-      expect(result[0]?.info.package).toBe("@opencode/ai/providers/openai-compatible")
-      expect(result[0]?.models[0]?.package).toBe("@opencode/ai/providers/openai")
+      expect(result[0]?.info.package).toBe("@ktether/ai/providers/openai-compatible")
+      expect(result[0]?.models[0]?.package).toBe("@ktether/ai/providers/openai")
     }),
   )
 
@@ -397,7 +397,7 @@ describe("ModelsDev Service", () => {
       const final = yield* Ref.get(state)
       expect(final.calls.length).toBe(1)
       expect(final.calls[0].url).toContain("/api.json")
-      expect(final.calls[0].userAgent).toContain("/opencode")
+      expect(final.calls[0].userAgent).toContain("/ktether")
     }),
   )
 

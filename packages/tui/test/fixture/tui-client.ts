@@ -1,6 +1,6 @@
-import { OpenCode, type OpenCodeEvent } from "@opencode/client"
+import { KTether, type KTetherEvent } from "@ktether/client"
 
-export const worktree = "/tmp/opencode"
+export const worktree = "/tmp/ktether"
 export const directory = `${worktree}/packages/tui`
 
 export function json(data: unknown, init?: ResponseInit) {
@@ -51,7 +51,7 @@ export function createEventStream() {
   }
 
   return {
-    emit(event: OpenCodeEvent) {
+    emit(event: KTetherEvent) {
       send(v2, pending, event)
     },
     v2() {
@@ -174,5 +174,5 @@ export function createFetch(override?: FetchHandler, events?: ReturnType<typeof 
 }
 
 export function createApi(fetch: typeof globalThis.fetch) {
-  return OpenCode.make({ baseUrl: "http://test", fetch })
+  return KTether.make({ baseUrl: "http://test", fetch })
 }

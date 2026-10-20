@@ -1,6 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
-  "name": "opencode",
+  "name": "ktether",
   "description": "AI-powered development tool",
   "version": "2.0.32",
   "private": true,
@@ -8,9 +8,9 @@
   "packageManager": "bun@1.4.2",
   "scripts": {
     "dev": "bun run --cwd packages/cli src/index.ts",
-    "dev:live": "sh -c 'OPENCODE_TUI_CHANNEL=dev OPENCODE_PASSWORD=\"$(opencode service get password)\" exec bun run dev \"$@\" --server \"$(opencode service status)\"' --",
+    "dev:live": "sh -c 'KTETHER_TUI_CHANNEL=dev KTETHER_PASSWORD=\"$(ktether service get password)\" exec bun run dev \"$@\" --server \"$(ktether service status)\"' --",
     "dev:vite": "bun run --cwd packages/cli --conditions=browser dev/vite.ts",
-    "dev:vite:live": "sh -c 'OPENCODE_TUI_CHANNEL=dev OPENCODE_PASSWORD=\"$(opencode service get password)\" exec bun run dev:vite \"$@\" --server \"$(opencode service status)\"' --",
+    "dev:vite:live": "sh -c 'KTETHER_TUI_CHANNEL=dev KTETHER_PASSWORD=\"$(ktether service get password)\" exec bun run dev:vite \"$@\" --server \"$(ktether service status)\"' --",
     "dev:desktop": "bun --cwd packages/desktop dev",
     "dev:web": "bun --cwd packages/app dev",
     "dev:storybook": "bun --cwd packages/storybook storybook",
@@ -108,7 +108,7 @@
   "devDependencies": {
     "@actions/artifact": "5.0.1",
     "@ast-grep/cli": "0.44.0",
-    "@opencode/client": "workspace:*",
+    "@ktether/client": "workspace:*",
     "@oxlint/plugins": "1.60.0",
     "@tsconfig/bun": "catalog:",
     "@types/bun": "catalog:",
@@ -126,14 +126,14 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "3.933.0",
-    "@opencode/plugin": "workspace:*",
-    "@opencode/script": "workspace:*",
+    "@ktether/plugin": "workspace:*",
+    "@ktether/script": "workspace:*",
     "heap-snapshot-toolkit": "1.1.3",
     "typescript": "catalog:"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/anomalyco/opencode"
+    "url": "https://github.com/premsuggu/ktether"
   },
   "license": "MIT",
   "prettier": {

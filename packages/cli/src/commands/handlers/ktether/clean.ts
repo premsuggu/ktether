@@ -5,7 +5,7 @@ import { connect } from "./connection"
 import { begin, follow } from "./follow"
 
 export default Runtime.handler(
-  Commands.commands.ktether.commands.clean,
+  Commands.commands.gpu.commands.clean,
   Effect.fn("cli.ktether.clean")(function* (input) {
     const client = yield* connect(input)
     const started = yield* begin(() => client.ktether.clean({ confirm: input.yes }))

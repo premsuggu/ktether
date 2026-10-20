@@ -1,11 +1,11 @@
 import fs from "node:fs"
 import os from "node:os"
 import path from "node:path"
-import { setCliRunner, type CliResult } from "@opencode/core/ktether/kaggle"
-import { sign } from "@opencode/core/ktether/signaling"
-import { readState } from "@opencode/core/ktether/state"
+import { setCliRunner, type CliResult } from "@ktether/core/ktether/kaggle"
+import { sign } from "@ktether/core/ktether/signaling"
+import { readState } from "@ktether/core/ktether/state"
 
-/** Points the home directory at a fresh temp dir so tests never touch real ktether or OpenCode state. */
+/** Points the home directory at a fresh temp dir so tests never touch real ktether or ktether state. */
 export function isolateHome(): { dir: string; restore: () => void } {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "ktether-test-home-"))
   const saved = { USERPROFILE: process.env.USERPROFILE, HOME: process.env.HOME }

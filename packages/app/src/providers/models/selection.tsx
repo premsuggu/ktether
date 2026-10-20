@@ -1,5 +1,5 @@
-import { createSimpleContext } from "@opencode/ui/context"
-import { base64Encode } from "@opencode/util/encode"
+import { createSimpleContext } from "@ktether/ui/context"
+import { base64Encode } from "@ktether/util/encode"
 import { useParams } from "@solidjs/router"
 import { batch, createEffect, createMemo, onCleanup } from "solid-js"
 import { createStore } from "solid-js/store"

@@ -1,8 +1,8 @@
 import { describe, expect } from "bun:test"
 import { Effect } from "effect"
-import { AppNodeBuilder } from "@opencode/core/effect/app-node-builder"
-import { Session } from "@opencode/core/session"
-import { SessionEnvironment } from "@opencode/core/session/environment"
+import { AppNodeBuilder } from "@ktether/core/effect/app-node-builder"
+import { Session } from "@ktether/core/session"
+import { SessionEnvironment } from "@ktether/core/session/environment"
 import { testEffect } from "./lib/effect"
 
 const it = testEffect(AppNodeBuilder.build(SessionEnvironment.node))

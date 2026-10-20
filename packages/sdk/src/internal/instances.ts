@@ -1,13 +1,13 @@
 export * as SdkInstances from "./instances"
 
-import { Instance } from "@opencode/core/instance"
-import { LocationServiceMap } from "@opencode/core/location-service-map"
-import { Plugin } from "@opencode/core/plugin"
-import type { InstancePlugins } from "@opencode/core/plugin/instance"
-import { Location } from "@opencode/schema/location"
-import type { Session } from "@opencode/schema/session"
-import { makeGlobalNode } from "@opencode/util/effect/app-node"
-import type { LayerNode } from "@opencode/util/effect/layer-node"
+import { Instance } from "@ktether/core/instance"
+import { LocationServiceMap } from "@ktether/core/location-service-map"
+import { Plugin } from "@ktether/core/plugin"
+import type { InstancePlugins } from "@ktether/core/plugin/instance"
+import { Location } from "@ktether/schema/location"
+import type { Session } from "@ktether/schema/session"
+import { makeGlobalNode } from "@ktether/util/effect/app-node"
+import type { LayerNode } from "@ktether/util/effect/layer-node"
 import { Context, Duration, Effect, Layer, LayerMap, Scope } from "effect"
 
 export interface Configuration {

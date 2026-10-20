@@ -4,7 +4,7 @@ import { Commands } from "../commands"
 import { Runtime } from "../../framework/runtime"
 import { Updater } from "../../services/updater"
 import { handlePromptErrors } from "../../ui/prompt"
-import { OPENCODE_VERSION } from "../../version"
+import { KTETHER_VERSION } from "../../version"
 import { stripVTControlCharacters } from "node:util"
 
 export default Runtime.handler(
@@ -16,19 +16,19 @@ export default Runtime.handler(
       const method = Option.getOrUndefined(input.method) ?? (yield* updater.method())
       if (!method)
         return yield* Effect.fail(
-          new Error("Could not detect the installation method. Pass --method to choose how to upgrade OpenCode."),
+          new Error("Could not detect the installation method. Pass --method to choose how to upgrade ktether."),
         )
 
       log.info(`Using method: ${method}`)
       const target = Option.getOrUndefined(input.target) ?? (yield* updater.latest(method))
       const version = target.trim().replace(/^v/, "")
-      if (version === OPENCODE_VERSION) {
-        log.warn(`OpenCode upgrade skipped: ${version} is already installed`)
+      if (version === KTETHER_VERSION) {
+        log.warn(`ktether upgrade skipped: ${version} is already installed`)
         outro("Done")
         return
       }
 
-      log.info(`From ${OPENCODE_VERSION} → ${version}`)
+      log.info(`From ${KTETHER_VERSION} → ${version}`)
       const progress = spinner()
       progress.start("Upgrading...")
       yield* updater.upgrade(method, target).pipe(

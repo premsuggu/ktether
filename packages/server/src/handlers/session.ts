@@ -1,9 +1,9 @@
-import { Session } from "@opencode/core/session"
-import { SessionStats } from "@opencode/core/session/stats"
-import { SessionTitle } from "@opencode/core/session/title"
-import { SessionTransfer } from "@opencode/core/session/transfer"
-import { InstructionEntry } from "@opencode/core/session/instruction-entry"
-import { Form } from "@opencode/core/form"
+import { Session } from "@ktether/core/session"
+import { SessionStats } from "@ktether/core/session/stats"
+import { SessionTitle } from "@ktether/core/session/title"
+import { SessionTransfer } from "@ktether/core/session/transfer"
+import { InstructionEntry } from "@ktether/core/session/instruction-entry"
+import { Form } from "@ktether/core/form"
 import { DateTime, Effect, Stream } from "effect"
 import { HttpApiBuilder, HttpApiSchema } from "effect/http-api"
 import { Api } from "../api"
@@ -20,8 +20,8 @@ import {
   ServiceUnavailableError,
   SessionBusyError,
   SkillNotFoundError,
-} from "@opencode/protocol/errors"
-import { AbsolutePath } from "@opencode/core/schema"
+} from "@ktether/protocol/errors"
+import { AbsolutePath } from "@ktether/core/schema"
 import { locationErrors } from "../location"
 import { failedMessageDecode, failedSnapshot, missingMessage, missingSession } from "./session-error"
 

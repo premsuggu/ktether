@@ -2,21 +2,21 @@ import { describe, expect, test } from "bun:test"
 import fs from "fs/promises"
 import path from "path"
 import { Effect, Fiber, Schema, Stream } from "effect"
-import { Agent } from "@opencode/core/agent"
-import { Bus } from "@opencode/core/bus"
-import { Config } from "@opencode/core/config"
-import { Directory, Document, Event, Info } from "@opencode/schema/config"
-import { Model } from "@opencode/schema/model"
-import { ConfigAgentPlugin } from "@opencode/core/config/plugin/agent"
-import { AppNodeBuilder } from "@opencode/core/effect/app-node-builder"
-import { LayerNode } from "@opencode/util/effect/layer-node"
-import { FSUtil } from "@opencode/util/fs-util"
-import { Global } from "@opencode/util/global"
-import { Permission } from "@opencode/core/permission"
-import { AgentPlugin } from "@opencode/core/plugin/agent"
-import { AbsolutePath } from "@opencode/core/schema"
-import { ConfigNormalize } from "@opencode/core/config/normalize"
-import { ConfigAgentV1 } from "@opencode/core/v1/config/agent"
+import { Agent } from "@ktether/core/agent"
+import { Bus } from "@ktether/core/bus"
+import { Config } from "@ktether/core/config"
+import { Directory, Document, Event, Info } from "@ktether/schema/config"
+import { Model } from "@ktether/schema/model"
+import { ConfigAgentPlugin } from "@ktether/core/config/plugin/agent"
+import { AppNodeBuilder } from "@ktether/core/effect/app-node-builder"
+import { LayerNode } from "@ktether/util/effect/layer-node"
+import { FSUtil } from "@ktether/util/fs-util"
+import { Global } from "@ktether/util/global"
+import { Permission } from "@ktether/core/permission"
+import { AgentPlugin } from "@ktether/core/plugin/agent"
+import { AbsolutePath } from "@ktether/core/schema"
+import { ConfigNormalize } from "@ktether/core/config/normalize"
+import { ConfigAgentV1 } from "@ktether/core/v1/config/agent"
 import { advance, drain } from "../lib/clock"
 import { tmpdir, tmpdirScoped } from "../fixture/tmpdir"
 import { testEffect } from "../lib/effect"
@@ -143,7 +143,7 @@ permissions:
   it.effect("matches POSIX paths against home-relative permissions", () =>
     Effect.gen(function* () {
       const permissions = yield* loadHomePermissions("/home/test")
-      expect(Permission.evaluate("external_directory", "/home/test/p/opencode/src/*", permissions).effect).toBe("allow")
+      expect(Permission.evaluate("external_directory", "/home/test/p/ktether/src/*", permissions).effect).toBe("allow")
       expect(Permission.evaluate("external_directory", "/home/test/cache/files/*", permissions).effect).toBe("deny")
       expect(Permission.evaluate("external_directory", "/some/~/path", permissions).effect).toBe("deny")
       expect(Permission.evaluate("external_directory", "$HOMELESS/private/*", permissions).effect).toBe("deny")
@@ -162,7 +162,7 @@ permissions:
         effect: "allow",
       })
       expect(
-        Permission.evaluate("external_directory", "C:\\Users\\test\\p\\opencode\\src\\*", permissions).effect,
+        Permission.evaluate("external_directory", "C:\\Users\\test\\p\\ktether\\src\\*", permissions).effect,
       ).toBe("allow")
       expect(Permission.evaluate("external_directory", "C:\\Users\\test\\cache\\files\\*", permissions).effect).toBe(
         "deny",
@@ -191,12 +191,12 @@ permissions:
                   "*.env.*": "deny",
                   "*.env.example": "allow",
                   "*.dev.vars": "deny",
-                  "~/.local/share/opencode/mcp-auth.json": "deny",
-                  "$HOME/.local/share/opencode/mcp-auth.json": "deny",
+                  "~/.local/share/ktether/mcp-auth.json": "deny",
+                  "$HOME/.local/share/ktether/mcp-auth.json": "deny",
                 },
                 external_directory: {
                   "*": "ask",
-                  "~/.local/share/opencode/*": "deny",
+                  "~/.local/share/ktether/*": "deny",
                 },
               },
             }),
@@ -212,7 +212,7 @@ permissions:
                   { action: "external_directory", resource: "*", effect: "allow" },
                   {
                     action: "external_directory",
-                    resource: "~/.local/share/opencode/*",
+                    resource: "~/.local/share/ktether/*",
                     effect: "deny",
                   },
                   { action: "read", resource: "*.env", effect: "deny" },
@@ -229,8 +229,8 @@ permissions:
 
       const build = yield* agents.get(Agent.defaultID)
       if (!build) throw new Error("expected configured build agent")
-      const opencodeData = path.join(global.home, ".local", "share", "opencode", "*")
-      const mcpAuth = path.join(global.home, ".local", "share", "opencode", "mcp-auth.json")
+      const ktetherData = path.join(global.home, ".local", "share", "ktether", "*")
+      const mcpAuth = path.join(global.home, ".local", "share", "ktether", "mcp-auth.json")
       expect(build.permissions).toEqual([
         ...defaultPermissions,
         { action: "question", resource: "*", effect: "allow" },
@@ -245,17 +245,17 @@ permissions:
         { action: "read", resource: mcpAuth, effect: "deny" },
         { action: "read", resource: mcpAuth, effect: "deny" },
         { action: "external_directory", resource: "*", effect: "ask" },
-        { action: "external_directory", resource: opencodeData, effect: "deny" },
+        { action: "external_directory", resource: ktetherData, effect: "deny" },
         { action: "*", resource: "*", effect: "allow" },
         { action: "external_directory", resource: "*", effect: "allow" },
-        { action: "external_directory", resource: opencodeData, effect: "deny" },
+        { action: "external_directory", resource: ktetherData, effect: "deny" },
         { action: "read", resource: "*.env", effect: "deny" },
       ])
       expect(Permission.evaluate("shell", "bun test", build.permissions).effect).toBe("allow")
       expect(Permission.evaluate("edit", "src/index.ts", build.permissions).effect).toBe("allow")
       expect(Permission.evaluate("webfetch", "https://example.com", build.permissions).effect).toBe("allow")
       expect(Permission.evaluate("read", ".env", build.permissions).effect).toBe("deny")
-      expect(Permission.evaluate("external_directory", opencodeData, build.permissions).effect).toBe("deny")
+      expect(Permission.evaluate("external_directory", ktetherData, build.permissions).effect).toBe("deny")
       expect(Permission.evaluate("external_directory", "/outside/*", build.permissions).effect).toBe("allow")
     }),
   )
@@ -623,7 +623,7 @@ Use native v2 fields.`,
           )
 
           yield* configTest.emitChange({ type: "create", path: path.join(tmp.path, "commands", "review.md") })
-          yield* configTest.emitChange({ type: "update", path: path.join(tmp.path, "opencode.json") })
+          yield* configTest.emitChange({ type: "update", path: path.join(tmp.path, "ktether.json") })
           yield* drain
           expect(reloads).toBe(0)
 

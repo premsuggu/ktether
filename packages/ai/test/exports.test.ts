@@ -17,10 +17,10 @@ import {
   TranscriptionClient,
   Video,
   VideoClient,
-} from "@opencode/ai"
-import { Route, Protocol, RequestExecutor, WebSocketTransport } from "@opencode/ai/route"
-import { Provider as ProviderSubpath } from "@opencode/ai/provider"
-import { OpenAI, OpenAICompatible, XAI } from "@opencode/ai/providers"
+} from "@ktether/ai"
+import { Route, Protocol, RequestExecutor, WebSocketTransport } from "@ktether/ai/route"
+import { Provider as ProviderSubpath } from "@ktether/ai/provider"
+import { OpenAI, OpenAICompatible, XAI } from "@ktether/ai/providers"
 import {
   OpenAIChat,
   OpenAICompatibleChat,
@@ -28,10 +28,10 @@ import {
   OpenAIResponses,
   OpenResponses,
   OpenResponsesChannel,
-} from "@opencode/ai/protocols"
-import * as AnthropicMessages from "@opencode/ai/protocols/anthropic-messages"
-import { TestLLM } from "@opencode/ai/testing"
-import { Evaluation, EvaluationClient } from "@opencode/ai/experimental"
+} from "@ktether/ai/protocols"
+import * as AnthropicMessages from "@ktether/ai/protocols/anthropic-messages"
+import { TestLLM } from "@ktether/ai/testing"
+import { Evaluation, EvaluationClient } from "@ktether/ai/experimental"
 
 describe("public exports", () => {
   test("modality, provider, and protocol entrypoints load first in a fresh process", async () => {

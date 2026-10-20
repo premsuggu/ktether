@@ -1,6 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
-  "name": "@opencode/latex",
+  "name": "@ktether/latex",
   "version": "2.0.32",
   "private": true,
   "type": "module",
@@ -13,7 +13,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@opencode/plugin": "workspace:*",
+    "@ktether/plugin": "workspace:*",
     "@opentui/core": "catalog:",
     "string-width": "catalog:"
   },

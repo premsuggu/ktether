@@ -1,4 +1,4 @@
-import type { SessionMessageAssistantTool } from "@opencode/client/promise"
+import type { SessionMessageAssistantTool } from "@ktether/client/promise"
 
 export function canonicalToolPart(
   name: string,

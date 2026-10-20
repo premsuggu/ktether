@@ -1,5 +1,5 @@
-import { Tabs } from "@opencode/ui/tabs"
-import { useDialog } from "@opencode/ui/context/dialog"
+import { Tabs } from "@ktether/ui/tabs"
+import { useDialog } from "@ktether/ui/context/dialog"
 import {
   createEffect,
   createMemo,

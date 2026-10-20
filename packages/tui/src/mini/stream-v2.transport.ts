@@ -2,15 +2,15 @@ import type {
   EventSubscribeOutput,
   FormInfo,
   LocationRef,
-  OpenCodeClient,
+  KTetherClient,
   PermissionRequest,
   SessionMessageAssistantTool,
   SessionMessageInfo,
   SessionMessageUser,
   SessionInboxInfo,
-} from "@opencode/client/promise"
-import { Event } from "@opencode/schema/event"
-import { SessionMessage } from "@opencode/schema/session-message"
+} from "@ktether/client/promise"
+import { Event } from "@ktether/schema/event"
+import { SessionMessage } from "@ktether/schema/session-message"
 import { blockerStatus, pickBlockerView } from "./session-data"
 import { writeSessionOutput } from "./stream"
 import { createFragmentReconciler, fragmentRef, type FragmentReconciler } from "./stream-v2.fragment"
@@ -40,9 +40,9 @@ type Trace = {
 }
 
 type StreamInput = {
-  sdk: OpenCodeClient
-  reconnect?: (signal: AbortSignal) => Promise<OpenCodeClient>
-  onClient?: (sdk: OpenCodeClient) => void
+  sdk: KTetherClient
+  reconnect?: (signal: AbortSignal) => Promise<KTetherClient>
+  onClient?: (sdk: KTetherClient) => void
   readTextFile?: (url: string) => Promise<string>
   location?: LocationRef
   sessionID: string
@@ -110,7 +110,7 @@ type RunV2Event = EventSubscribeOutput
 type PromptFilePart = Extract<RunPromptPart, { type: "file" }>
 
 type Attempt = {
-  client: OpenCodeClient
+  client: KTetherClient
   signal: AbortSignal
   generation: number
 }
@@ -449,7 +449,7 @@ function compactionError(messageID: string, text: string): StreamCommit {
 
 async function resolveSelectedModel(
   input: StreamInput,
-  sdk: OpenCodeClient,
+  sdk: KTetherClient,
   next: Pick<SessionTurnInput, "model" | "variant" | "signal">,
 ) {
   if (next.model) return { providerID: next.model.providerID, id: next.model.modelID, variant: next.variant }
@@ -481,7 +481,7 @@ export async function createSessionTransport(input: StreamInput): Promise<Sessio
   let sdk = input.sdk
   let generation = 0
   let activeAttempt: Attempt | undefined
-  let settlementClient: OpenCodeClient | undefined
+  let settlementClient: KTetherClient | undefined
   input.signal?.addEventListener("abort", () => controller.abort(), { once: true })
   const state: State = {
     permissions: [],
@@ -898,7 +898,7 @@ export async function createSessionTransport(input: StreamInput): Promise<Sessio
     }
   }
 
-  const projectedMessages = async (client: OpenCodeClient, signal: AbortSignal) =>
+  const projectedMessages = async (client: KTetherClient, signal: AbortSignal) =>
     (
       await client.message.list(
         { sessionID: input.sessionID, limit: input.replayLimit ?? 200, order: "desc" },
@@ -906,7 +906,7 @@ export async function createSessionTransport(input: StreamInput): Promise<Sessio
       )
     ).data.toReversed()
 
-  const settleSession = async (client: OpenCodeClient) => {
+  const settleSession = async (client: KTetherClient) => {
     await client.session.wait({ sessionID: input.sessionID }, { signal: controller.signal })
     for (const message of await projectedMessages(client, controller.signal)) renderMessage(message, true)
     paintIdle(blockerStatus(state.view))
@@ -914,7 +914,7 @@ export async function createSessionTransport(input: StreamInput): Promise<Sessio
   }
 
   const resolvePermissionSources = async (
-    client: OpenCodeClient,
+    client: KTetherClient,
     permissions: PermissionRequest[],
     attempt: Attempt,
   ) => {
@@ -1600,7 +1600,7 @@ export async function createSessionTransport(input: StreamInput): Promise<Sessio
   const runTurnWait = async (
     next: SessionTurnInput,
     messageID: string,
-    client: OpenCodeClient,
+    client: KTetherClient,
     send: () => Promise<SessionInboxInfo | void>,
     onAdmitted?: () => void,
   ) => {
@@ -1727,7 +1727,7 @@ export async function createSessionTransport(input: StreamInput): Promise<Sessio
   let queuedResizeReplay: SessionResizeReplayInput | undefined
   let closing: Promise<void> | undefined
 
-  const admitPrompt = async (next: SessionTurnInput, client: OpenCodeClient, delivery: RunDelivery) => {
+  const admitPrompt = async (next: SessionTurnInput, client: KTetherClient, delivery: RunDelivery) => {
     const messageID = next.prompt.messageID
     if (!messageID) throw new Error("Prompt message ID is required")
     const command = next.prompt.command

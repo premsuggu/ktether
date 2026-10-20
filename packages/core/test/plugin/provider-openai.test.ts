@@ -1,23 +1,23 @@
-import { Money } from "@opencode/schema/money"
-import { Agent } from "@opencode/schema/agent"
-import { Session } from "@opencode/core/session"
-import { OpenAIResponses } from "@opencode/ai/protocols/openai-responses"
+import { Money } from "@ktether/schema/money"
+import { Agent } from "@ktether/schema/agent"
+import { Session } from "@ktether/core/session"
+import { OpenAIResponses } from "@ktether/ai/protocols/openai-responses"
 import { describe, expect } from "bun:test"
 import { DateTime, Effect } from "effect"
-import { Credential } from "@opencode/core/credential"
-import { Integration } from "@opencode/core/integration"
-import { Location } from "@opencode/core/location"
-import { Model } from "@opencode/core/model"
-import { Plugin } from "@opencode/core/plugin"
-import { PluginHost } from "@opencode/core/plugin/host"
-import { PluginHooks } from "@opencode/core/plugin/hooks"
-import { OpenAIPlugin } from "@opencode/core/plugin/provider/openai"
-import { Project } from "@opencode/core/project"
-import { Provider } from "@opencode/core/provider"
-import { AbsolutePath } from "@opencode/core/schema"
-import { SessionModelRequest } from "@opencode/core/session/model-request"
-import { SessionModelTransport } from "@opencode/core/session/model-transport"
-import { SessionRunnerModel } from "@opencode/core/session/runner/model"
+import { Credential } from "@ktether/core/credential"
+import { Integration } from "@ktether/core/integration"
+import { Location } from "@ktether/core/location"
+import { Model } from "@ktether/core/model"
+import { Plugin } from "@ktether/core/plugin"
+import { PluginHost } from "@ktether/core/plugin/host"
+import { PluginHooks } from "@ktether/core/plugin/hooks"
+import { OpenAIPlugin } from "@ktether/core/plugin/provider/openai"
+import { Project } from "@ktether/core/project"
+import { Provider } from "@ktether/core/provider"
+import { AbsolutePath } from "@ktether/core/schema"
+import { SessionModelRequest } from "@ktether/core/session/model-request"
+import { SessionModelTransport } from "@ktether/core/session/model-transport"
+import { SessionRunnerModel } from "@ktether/core/session/runner/model"
 import { testEffect } from "../lib/effect"
 import { PluginTestLayer } from "./fixture"
 
@@ -84,7 +84,7 @@ describe("OpenAIPlugin", () => {
       const credentials = yield* Credential.Service
       yield* catalog.transform((catalog) => {
         catalog.update(Provider.ID.openai, (draft) => {
-          draft.package = "@opencode/ai/providers/openai"
+          draft.package = "@ktether/ai/providers/openai"
         })
         catalog.models.update(Provider.ID.openai, Model.ID.make("gpt-5.5"), (model) => {
           model.limit = { context: 1_050_000, input: 922_000, output: 128_000 }
@@ -147,20 +147,20 @@ describe("OpenAIPlugin", () => {
       const proxy = yield* request(Provider.ID.openai, "https://proxy.example/v1?region=us")
 
       const provider = required(yield* catalog.get(Provider.ID.openai))
-      expect(provider.package).toBe("@opencode/ai/providers/openai")
+      expect(provider.package).toBe("@ktether/ai/providers/openai")
       expect(provider.settings).toMatchObject({ baseURL: "https://chatgpt.com/backend-api/codex" })
       expect(provider.settings?.encoding).toBe("zstd")
       expect(provider.headers).toMatchObject({
-        originator: "opencode",
+        originator: "ktether",
         "chatgpt-account-id": "acct_123",
         "x-codex-beta-features": "remote_compaction_v2",
       })
       expect(direct.baseURL).toBe("https://chatgpt.com/backend-api/codex")
-      expect(direct.headers).toMatchObject({ originator: "opencode", "session-id": "ses_test" })
+      expect(direct.headers).toMatchObject({ originator: "ktether", "session-id": "ses_test" })
       expect(direct.hasHttpHooks).toBe(false)
       expect(custom.headers).not.toHaveProperty("originator")
       expect(proxy.baseURL).toBe("https://proxy.example/v1?region=us")
-      expect(proxy.headers).toMatchObject({ originator: "opencode", "session-id": "ses_test" })
+      expect(proxy.headers).toMatchObject({ originator: "ktether", "session-id": "ses_test" })
       const sessions = yield* Session.Service
       const location = yield* Location.Service
       const parent = yield* sessions.create({ location: { directory: location.directory } })
@@ -168,8 +168,8 @@ describe("OpenAIPlugin", () => {
       const childRequest = yield* request(Provider.ID.openai, "https://api.openai.com/v1", child.id)
       expect(childRequest.headers).toMatchObject({ "session-id": parent.id })
       const eligible = required(yield* models.get(Provider.ID.openai, Model.ID.make("gpt-5.5")))
-      expect(eligible.package).toBe("@opencode/ai/providers/openai")
-      expect(eligible.headers).toMatchObject({ originator: "opencode", "chatgpt-account-id": "acct_123" })
+      expect(eligible.package).toBe("@ktether/ai/providers/openai")
+      expect(eligible.headers).toMatchObject({ originator: "ktether", "chatgpt-account-id": "acct_123" })
       expect(eligible.cost).toEqual([])
       expect(eligible.limit).toEqual({ context: 400_000, input: 272_000, output: 128_000 })
       expect(eligible.enabled).toBe(true)
@@ -206,7 +206,7 @@ describe("OpenAIPlugin", () => {
       const credentials = yield* Credential.Service
       yield* catalog.transform((catalog) => {
         catalog.update(Provider.ID.openai, (draft) => {
-          draft.package = "@opencode/ai/providers/openai"
+          draft.package = "@ktether/ai/providers/openai"
         })
         catalog.models.update(Provider.ID.openai, Model.ID.make("gpt-5.5"), (model) => {
           model.limit = { context: 1_050_000, input: 922_000, output: 128_000 }
@@ -223,7 +223,7 @@ describe("OpenAIPlugin", () => {
 
       const provider = required(yield* catalog.get(Provider.ID.openai))
       const model = required(yield* models.get(Provider.ID.openai, Model.ID.make("gpt-5.5")))
-      expect(model.package).toBe("@opencode/ai/providers/openai")
+      expect(model.package).toBe("@ktether/ai/providers/openai")
       expect(model.enabled).toBe(true)
       expect(model.limit).toEqual({ context: 1_050_000, input: 922_000, output: 128_000 })
       expect(provider.settings?.transport).toBe("websocket")

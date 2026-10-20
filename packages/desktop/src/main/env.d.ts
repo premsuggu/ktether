@@ -1,6 +1,6 @@
 interface ImportMetaEnv {
-  readonly OPENCODE_CHANNEL: string
-  readonly OPENCODE_VERSION?: string
+  readonly KTETHER_CHANNEL: string
+  readonly KTETHER_VERSION?: string
 }
 
 interface ImportMeta {

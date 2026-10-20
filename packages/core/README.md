@@ -1,3 +1,3 @@
-# @opencode/core
+# @ktether/core
 
-Core runtime services for OpenCode.
+Core runtime services for ktether.

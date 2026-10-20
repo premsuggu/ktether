@@ -1,12 +1,12 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
   "version": "2.0.32",
-  "name": "@opencode/sdk",
+  "name": "@ktether/sdk",
   "type": "module",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/anomalyco/opencode.git",
+    "url": "git+https://github.com/premsuggu/ktether.git",
     "directory": "packages/sdk"
   },
   "publishConfig": {
@@ -28,18 +28,18 @@
     "verify:package": "bun run script/verify-package.ts"
   },
   "dependencies": {
-    "@opencode/client": "workspace:*",
-    "@opencode/core": "workspace:*",
-    "@opencode/plugin": "workspace:*",
-    "@opencode/schema": "workspace:*",
-    "@opencode/server": "workspace:*",
-    "@opencode/util": "workspace:*",
+    "@ktether/client": "workspace:*",
+    "@ktether/core": "workspace:*",
+    "@ktether/plugin": "workspace:*",
+    "@ktether/schema": "workspace:*",
+    "@ktether/server": "workspace:*",
+    "@ktether/util": "workspace:*",
     "effect": "catalog:"
   },
   "devDependencies": {
-    "@opencode/ai": "workspace:*",
-    "@opencode/httpapi-codegen": "workspace:*",
-    "@opencode/protocol": "workspace:*",
+    "@ktether/ai": "workspace:*",
+    "@ktether/httpapi-codegen": "workspace:*",
+    "@ktether/protocol": "workspace:*",
     "@tsconfig/bun": "catalog:",
     "@types/bun": "catalog:",
     "@typescript/native": "catalog:"

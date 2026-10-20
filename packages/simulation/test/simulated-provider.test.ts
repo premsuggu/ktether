@@ -2,21 +2,21 @@ import { expect, test } from "bun:test"
 import { mkdir, mkdtemp, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { Agent } from "@opencode/core/agent"
-import { Config } from "@opencode/core/config"
-import { Database } from "@opencode/core/database/database"
-import { makeGlobalNode } from "@opencode/util/effect/app-node"
-import { AppNodeBuilder } from "@opencode/core/effect/app-node-builder"
-import { LayerNode } from "@opencode/util/effect/layer-node"
-import { Bus } from "@opencode/core/bus"
-import { Location } from "@opencode/core/location"
-import { LocationServiceMap } from "@opencode/core/location-services"
-import { Plugin } from "@opencode/core/plugin"
-import { SdkPlugins } from "@opencode/core/plugin/sdk"
-import { AbsolutePath } from "@opencode/core/schema"
-import { Session } from "@opencode/core/session"
-import { SessionMessage } from "@opencode/core/session/message"
-import { Tool } from "@opencode/core/tool"
+import { Agent } from "@ktether/core/agent"
+import { Config } from "@ktether/core/config"
+import { Database } from "@ktether/core/database/database"
+import { makeGlobalNode } from "@ktether/util/effect/app-node"
+import { AppNodeBuilder } from "@ktether/core/effect/app-node-builder"
+import { LayerNode } from "@ktether/util/effect/layer-node"
+import { Bus } from "@ktether/core/bus"
+import { Location } from "@ktether/core/location"
+import { LocationServiceMap } from "@ktether/core/location-services"
+import { Plugin } from "@ktether/core/plugin"
+import { SdkPlugins } from "@ktether/core/plugin/sdk"
+import { AbsolutePath } from "@ktether/core/schema"
+import { Session } from "@ktether/core/session"
+import { SessionMessage } from "@ktether/core/session/message"
+import { Tool } from "@ktether/core/tool"
 import { Deferred, Effect, Fiber, Layer, Queue, Stream } from "effect"
 import type { Scope } from "effect/Scope"
 import { SimulatedProvider } from "../src/backend/simulated-provider"
@@ -44,7 +44,7 @@ test("streams a Drive-controlled provider response and removes the finished invo
         result: {
           protocolVersion: 1,
           role: "backend",
-          server: { name: "opencode", version: expect.any(String) },
+          server: { name: "ktether", version: expect.any(String) },
           capabilities: expect.arrayContaining(["llm.attach", "llm.request"]),
         },
       })
@@ -214,7 +214,7 @@ test("fails the provider stream when Drive disconnects the invocation", async ()
 
 test("controls arbitrary tools through scoped SDK overlays", async () => {
   const endpoint = availableEndpoint()
-  const directory = await mkdtemp(join(tmpdir(), "opencode-simulated-tools-"))
+  const directory = await mkdtemp(join(tmpdir(), "ktether-simulated-tools-"))
   const secondDirectory = join(directory, "second")
   await mkdir(secondDirectory)
   try {

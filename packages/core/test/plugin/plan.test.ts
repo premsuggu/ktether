@@ -1,21 +1,21 @@
 import { describe, expect } from "bun:test"
-import { Message, ToolFailure } from "@opencode/ai"
+import { Message, ToolFailure } from "@ktether/ai"
 import { DateTime, Effect, Option, Stream, Types } from "effect"
-import type { SessionContext } from "@opencode/plugin/effect/session"
-import type { ToolHooks } from "@opencode/plugin/effect/tool"
-import { Agent } from "@opencode/core/agent"
-import { Environment } from "@opencode/core/environment/index"
-import { Event } from "@opencode/schema/event"
-import { Model } from "@opencode/core/model"
-import { PlanPlugin } from "@opencode/core/plugin/plan"
-import { Permission } from "@opencode/core/permission"
-import { Provider } from "@opencode/core/provider"
-import { Session } from "@opencode/core/session"
-import { SessionEvent } from "@opencode/core/session/event"
-import { SessionInbox } from "@opencode/core/session/inbox"
-import { SessionMessage } from "@opencode/core/session/message"
-import { Tool } from "@opencode/schema/tool"
-import { Global } from "@opencode/util/global"
+import type { SessionContext } from "@ktether/plugin/effect/session"
+import type { ToolHooks } from "@ktether/plugin/effect/tool"
+import { Agent } from "@ktether/core/agent"
+import { Environment } from "@ktether/core/environment/index"
+import { Event } from "@ktether/schema/event"
+import { Model } from "@ktether/core/model"
+import { PlanPlugin } from "@ktether/core/plugin/plan"
+import { Permission } from "@ktether/core/permission"
+import { Provider } from "@ktether/core/provider"
+import { Session } from "@ktether/core/session"
+import { SessionEvent } from "@ktether/core/session/event"
+import { SessionInbox } from "@ktether/core/session/inbox"
+import { SessionMessage } from "@ktether/core/session/message"
+import { Tool } from "@ktether/schema/tool"
+import { Global } from "@ktether/util/global"
 import path from "path"
 import { it } from "../lib/effect"
 import { host } from "./host"
@@ -24,7 +24,7 @@ const sessionID = Session.ID.make("ses_plan_test")
 const plan = Agent.ID.make("plan")
 const build = Agent.ID.make("build")
 const home = "/home/plan-test"
-const planDirectory = path.join(home, ".opencode", "plan")
+const planDirectory = path.join(home, ".ktether", "plan")
 
 const agentSelected = (agent: Agent.ID, previous: Agent.ID): SessionEvent.AgentSelected => ({
   id: Event.ID.create(),

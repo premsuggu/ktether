@@ -25,10 +25,10 @@ export type KTetherState = typeof State.Type
 const Usage = Schema.Array(Schema.Struct({ start: Schema.Number, end: Schema.Number }))
 export type UsageEntry = typeof Usage.Type[number]
 
-const stateDir = (): string => path.join(os.homedir(), ".local", "state", "opencode")
+const stateDir = (): string => path.join(os.homedir(), ".local", "state", "ktether")
 
-export const stateFilePath = (): string => path.join(stateDir(), "ktether.json")
-export const usageFilePath = (): string => path.join(stateDir(), "ktether-usage.json")
+export const stateFilePath = (): string => path.join(stateDir(), "session.json")
+export const usageFilePath = (): string => path.join(stateDir(), "usage.json")
 
 function writeJson(file: string, value: unknown): void {
   fs.mkdirSync(path.dirname(file), { recursive: true })

@@ -1,6 +1,6 @@
 import { expect } from "bun:test"
-import { SdkPlugins } from "@opencode/core/plugin/sdk"
-import { Plugin } from "@opencode/plugin/effect"
+import { SdkPlugins } from "@ktether/core/plugin/sdk"
+import { Plugin } from "@ktether/plugin/effect"
 import { Context, Deferred, Effect, Fiber, Layer } from "effect"
 import { HttpEffect, HttpRouter, HttpServer } from "effect/http"
 import { tmpdirScoped } from "../../core/test/fixture/tmpdir"
@@ -11,7 +11,7 @@ it.live(
   "provider reads stay nonblocking while authentication discovery waits for plugins",
   () =>
     Effect.gen(function* () {
-      const tmp = yield* tmpdirScoped("opencode-provider-endpoints-")
+      const tmp = yield* tmpdirScoped("ktether-provider-endpoints-")
       const started = yield* Deferred.make<void>()
       const release = yield* Deferred.make<void>()
       const context = yield* Layer.build(
@@ -27,7 +27,7 @@ it.live(
               providers: {
                 custom: {
                   name: "Configured Custom Provider",
-                  package: "@opencode/ai/providers/openai-compatible",
+                  package: "@ktether/ai/providers/openai-compatible",
                   settings: { apiKey: "secret" },
                   models: { chat: {} },
                 },
@@ -52,12 +52,12 @@ it.live(
         .pipe(HttpEffect.toWebHandlerWith(context))
       const request = (method: "GET" | "POST", route: string) =>
         Effect.promise((signal) => {
-          const url = new URL(route, "http://opencode.local")
+          const url = new URL(route, "http://ktether.local")
           url.searchParams.set("location[directory]", tmp.path)
           return handler(
             new Request(url, {
               method,
-              headers: { authorization: `Basic ${btoa("opencode:secret")}` },
+              headers: { authorization: `Basic ${btoa("ktether:secret")}` },
               signal,
             }),
           )

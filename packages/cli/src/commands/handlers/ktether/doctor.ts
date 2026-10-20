@@ -6,7 +6,7 @@ import { connect } from "./connection"
 import { formatChecks } from "./format"
 
 export default Runtime.handler(
-  Commands.commands.ktether.commands.doctor,
+  Commands.commands.gpu.commands.doctor,
   Effect.fn("cli.ktether.doctor")(function* (input) {
     const client = yield* connect(input)
     const checks = yield* Effect.promise(() => client.ktether.doctor())

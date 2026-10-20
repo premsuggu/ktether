@@ -1,7 +1,7 @@
-import { Icon } from "@opencode/ui/icon"
-import { Switch } from "@opencode/ui/switch"
-import { Tabs } from "@opencode/ui/tabs"
-import { Button } from "@opencode/ui/button"
+import { Icon } from "@ktether/ui/icon"
+import { Switch } from "@ktether/ui/switch"
+import { Tabs } from "@ktether/ui/tabs"
+import { Button } from "@ktether/ui/button"
 import { useQuery } from "@tanstack/solid-query"
 import {
   type Component,
@@ -379,7 +379,7 @@ export const ProjectSettingsExtensions: Component<{
                 kind="skills"
                 empty={projectSkills().length === 0}
                 action={
-                  <ExternalLink class="settings-extension-link" href="https://opencode.ai/docs/skills/">
+                  <ExternalLink class="settings-extension-link" href="https://github.com/premsuggu/ktether/tree/main/docs">
                     {language.t("settings.extensions.addSkills")}
                   </ExternalLink>
                 }

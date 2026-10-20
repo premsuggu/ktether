@@ -16,7 +16,7 @@ export type DiffProps<T = {}> = FileDiffOptions<T, undefined> & {
 
 const unsafeCSS = `
 :host {
-  --diffs-bg: var(--opencode-diffs-bg, var(--color-background-stronger));
+  --diffs-bg: var(--ktether-diffs-bg, var(--color-background-stronger));
   /* Pierre mixes 15% in dark mode, which makes collapsed rows read as highlighted. */
   --diffs-bg-separator-override: light-dark(
     color-mix(in lab, var(--diffs-bg) 98%, var(--diffs-mixer)),
@@ -124,11 +124,11 @@ const unsafeCSS = `
   background-color: var(--diffs-bg-context-gutter);
 }
 
-::highlight(opencode-find) {
+::highlight(ktether-find) {
   background-color: rgb(from var(--surface-warning-base) r g b / 0.35);
 }
 
-::highlight(opencode-find-current) {
+::highlight(ktether-find-current) {
   background-color: rgb(from var(--surface-warning-strong) r g b / 0.55);
 }
 
@@ -250,7 +250,7 @@ ${lineCommentStyles}
 
 export function createDefaultOptions<T>(style: FileDiffOptions<T, undefined>["diffStyle"]) {
   return {
-    theme: "OpenCode",
+    theme: "ktether",
     themeType: "system",
     disableLineNumbers: false,
     overflow: "wrap",

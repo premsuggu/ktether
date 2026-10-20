@@ -1,6 +1,6 @@
 import { createEffect, onCleanup } from "solid-js"
-import type { PermissionRequest } from "@opencode/client/promise"
-import type { Data } from "@opencode/client/solid"
+import type { PermissionRequest } from "@ktether/client/promise"
+import type { Data } from "@ktether/client/solid"
 import type { ServerSDK } from "@/runtime/server/client"
 import { projectSettingsKey, useSettings } from "@/settings/model"
 

@@ -1,4 +1,4 @@
-import type { Platform } from "@opencode/app/desktop"
+import type { Platform } from "@ktether/app/desktop"
 import type { ElectronAPI } from "../api-types"
 import { resetZoom, zoomIn, zoomOut } from "../window/zoom"
 

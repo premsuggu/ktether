@@ -1,7 +1,7 @@
-import { OpenCode } from "@opencode/client"
-import { Service } from "@opencode/client/effect/service"
-import { Session } from "@opencode/schema/session"
-import { SessionTransfer } from "@opencode/schema/session-transfer"
+import { KTether } from "@ktether/client"
+import { Service } from "@ktether/client/effect/service"
+import { Session } from "@ktether/schema/session"
+import { SessionTransfer } from "@ktether/schema/session-transfer"
 import { Effect, Option, Schema } from "effect"
 import { EOL } from "node:os"
 import path from "node:path"
@@ -29,7 +29,7 @@ export default Runtime.handler(
       server: Option.getOrUndefined(input.server),
       standalone: input.standalone,
     })
-    const client = OpenCode.make({
+    const client = KTether.make({
       baseUrl: server.endpoint.url,
       headers: Service.headers(server.endpoint),
     })

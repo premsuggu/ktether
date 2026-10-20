@@ -30,5 +30,5 @@ export function acceptedLastActiveUrl(value: string | null | undefined) {
 }
 
 function windowLastActiveUrlKey(windowID: string) {
-  return `opencode.desktop.window.${windowID}.last-active-url`
+  return `ktether.desktop.window.${windowID}.last-active-url`
 }

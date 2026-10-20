@@ -1,8 +1,8 @@
-import type { OpenCodeEvent, SessionMessageInfo } from "@opencode/client/promise"
+import type { KTetherEvent, SessionMessageInfo } from "@ktether/client/promise"
 import { expect, test, type Locator, type Page } from "@playwright/test"
-import { base64Encode } from "@opencode/util/encode"
+import { base64Encode } from "@ktether/util/encode"
 import { SERVER, holdRoute, project, provider, session, workspaceKey } from "../utils/app"
-import { mockOpenCodeServer } from "../utils/mock-server"
+import { mockKTetherServer } from "../utils/mock-server"
 import { fileDiff, fileNode, openSession } from "../utils/workspace"
 import { expectSessionTitle } from "../utils/waits"
 
@@ -116,7 +116,7 @@ test("a rejected Git init releases its session's button without showing an error
 
 test("open file tab browses, searches, and tracks missing files", async ({ page }) => {
   const searches: { query: string; dirs?: string; limit?: number }[] = []
-  const directory = "C:/OpenCode/ReviewOpenFile"
+  const directory = "C:/ktether/ReviewOpenFile"
   const files = Array.from({ length: 80 }, (_, index) => `file-${String(index).padStart(2, "0")}.ts`)
 
   const workspace = await openSession(page, {
@@ -138,7 +138,7 @@ test("open file tab browses, searches, and tracks missing files", async ({ page 
     },
     seed: {
       panes: { ses_reviewopenfile: { review: true } },
-      storage: { "opencode.global.dat:review-panel-v2": { sidebarOpened: false } },
+      storage: { "ktether.global.dat:review-panel-v2": { sidebarOpened: false } },
     },
   })
 
@@ -263,7 +263,7 @@ for (const listed of [false, true]) {
   test(`the open file heading names a subfolder session ${listed ? "after its sidebar project" : "after its folder"}`, async ({
     page,
   }) => {
-    const root = "C:/OpenCode/BrowserRepo"
+    const root = "C:/ktether/BrowserRepo"
     const directory = `${root}/packages/app`
     await openSession(page, {
       name: "BrowserRepo",
@@ -298,9 +298,9 @@ test("context closes the side region only when its button opened it", async ({ p
     name: "ReviewContextOpener",
     seed: {
       storage: {
-        "opencode.global.dat:layout": {
+        "ktether.global.dat:layout": {
           sessionTabs: {
-            [`local\u0000${base64Encode("C:/OpenCode/ReviewContextOpener")}/ses_reviewcontextopener`]: {
+            [`local\u0000${base64Encode("C:/ktether/ReviewContextOpener")}/ses_reviewcontextopener`]: {
               all: ["btw"],
               active: "btw",
             },
@@ -361,14 +361,14 @@ test("context hides free-model cost but keeps paid-model zero cost", async ({ pa
       ...cases.map((item) => ({
         id: item.id,
         title: item.title,
-        model: { id: item.model, providerID: "opencode" },
+        model: { id: item.model, providerID: "ktether" },
         cost: item.cost,
       })),
       {
         id: "ses_context_family_child",
         parentID: "ses_context_family",
         title: "Subagent run",
-        model: { id: "paid", providerID: "opencode" },
+        model: { id: "paid", providerID: "ktether" },
         cost: 1.25,
       },
     ],
@@ -380,7 +380,7 @@ test("context hides free-model cost but keeps paid-model zero cost", async ({ pa
                 id: `msg_${item.id}`,
                 type: "assistant",
                 agent: "build",
-                model: { id: item.model, providerID: "opencode" },
+                model: { id: item.model, providerID: "ktether" },
                 tokens: { input: 1500, output: 500, reasoning: 0, cache: { read: 0, write: 0 } },
                 content: [{ type: "text", text: "Done." }],
                 time: { created: 1, completed: 2 },
@@ -413,7 +413,7 @@ test("context hides free-model cost but keeps paid-model zero cost", async ({ pa
 })
 
 test("file tree expands Windows paths and scrolls long names in both directions", async ({ page }) => {
-  const directory = "C:/OpenCode/OpenFileExpand"
+  const directory = "C:/ktether/OpenFileExpand"
   const longFilename = "a-very-long-file-name-that-must-overflow-the-file-sidebar-instead-of-being-truncated.ts"
   const longPath = `frontend/${longFilename}`
   await openSession(page, {
@@ -446,7 +446,7 @@ test("file tree expands Windows paths and scrolls long names in both directions"
     fileContent: (path) => ({ type: "text", content: `contents:${path}` }),
     seed: {
       panes: { ses_openfileexpand: { review: true } },
-      storage: { "opencode.global.dat:review-panel-v2": { sidebarOpened: true } },
+      storage: { "ktether.global.dat:review-panel-v2": { sidebarOpened: true } },
     },
   })
 
@@ -502,7 +502,7 @@ test("file tree expands Windows paths and scrolls long names in both directions"
 })
 
 test("a restored file tab keeps the file tree on Files Changed", async ({ page }) => {
-  const directory = "C:/OpenCode/TreeRestore"
+  const directory = "C:/ktether/TreeRestore"
   await openSession(page, {
     name: "TreeRestore",
     vcsDiff: [fileDiff("src/changed.ts")],
@@ -511,7 +511,7 @@ test("a restored file tab keeps the file tree on Files Changed", async ({ page }
     seed: {
       panes: { ses_treerestore: { review: true } },
       settings: { general: { showFileTree: true } },
-      storage: { "opencode.global.dat:layout": { fileTree: { opened: true, width: 240, tab: "changes" } } },
+      storage: { "ktether.global.dat:layout": { fileTree: { opened: true, width: 240, tab: "changes" } } },
     },
   })
   const panel = page.locator("#review-panel")
@@ -545,7 +545,7 @@ test("rereads a file each time an artifact link opens it", async ({ page }) => {
       id: "msg_reply",
       type: "assistant",
       agent: "build",
-      model: { id: "test", providerID: "opencode" },
+      model: { id: "test", providerID: "ktether" },
       content: [{ type: "text", text: "Updated [shopping.txt](shopping.txt)." }],
       time: { created: 2, completed: 3 },
     },
@@ -628,7 +628,7 @@ test("image gestures anchor zoom, pan, and reset independently of the pane", asy
           id: "msg_images",
           type: "assistant",
           agent: "build",
-          model: { id: "test", providerID: "opencode" },
+          model: { id: "test", providerID: "ktether" },
           content: [{ type: "text", text: "[First](first.svg) [Second](second.svg)" }],
           time: { created: 1, completed: 2 },
         },
@@ -723,7 +723,7 @@ test("image gestures anchor zoom, pan, and reset independently of the pane", asy
 
 test("image files load into the review panel and keep it painted while loading", async ({ page }) => {
   await page.setViewportSize({ width: 960, height: 900 })
-  const directory = "C:/OpenCode/ReviewImage"
+  const directory = "C:/ktether/ReviewImage"
   const image = "assets/preview.png"
   const read = Promise.withResolvers<void>()
   const release = Promise.withResolvers<void>()
@@ -817,7 +817,7 @@ test("image files load into the review panel and keep it painted while loading",
 test("video files over 25 MB play in the viewer, expand into the theatre overlay, and collapse on Escape without remounting", async ({
   page,
 }) => {
-  const directory = "C:/OpenCode/ReviewVideo"
+  const directory = "C:/ktether/ReviewVideo"
   const file = "arcade-update-draft.mp4"
 
   const head = Buffer.from(
@@ -905,7 +905,7 @@ test("restores review state and the side-panel tab per session", async ({ page }
     { id: "ses_review_state_c", title: "Gamma review state" },
   ]
 
-  const directory = "C:/OpenCode/ReviewState"
+  const directory = "C:/ktether/ReviewState"
   await openSession(page, {
     name: "ReviewState",
     sessions,
@@ -1023,7 +1023,7 @@ test("shows and restores last turn changes from the session diff", async ({ page
 })
 
 test("keeps the review state a session stored before extensions", async ({ page }) => {
-  const directory = "C:/OpenCode/ReviewLegacy"
+  const directory = "C:/ktether/ReviewLegacy"
   await openSession(page, {
     name: "ReviewLegacy",
     vcs: { current: "feature", default: "dev" },
@@ -1031,7 +1031,7 @@ test("keeps the review state a session stored before extensions", async ({ page 
       mode === "branch" ? [fileDiff("alpha.ts"), fileDiff("beta.ts")] : [fileDiff("alpha.ts"), fileDiff("gamma.ts")],
     seed: {
       storage: {
-        "opencode.global.dat:layout": {
+        "ktether.global.dat:layout": {
           sessionView: {
             [`local\u0000${base64Encode(directory)}/ses_reviewlegacy`]: {
               scroll: {},
@@ -1072,10 +1072,10 @@ test("keeps the review state a session stored before extensions", async ({ page 
 })
 
 test("desktop review waits for the session's stored mode before it loads changes", async ({ page }) => {
-  const directory = "C:/OpenCode/ReviewDesktop"
+  const directory = "C:/ktether/ReviewDesktop"
   const id = "ses_review_desktop"
   const title = "Desktop review"
-  await mockOpenCodeServer(page, {
+  await mockKTetherServer(page, {
     directory,
     project: project({ id: "proj_review_desktop", directory }),
     provider: provider(),
@@ -1285,7 +1285,7 @@ async function statusInset(status: Locator, side: "left" | "right") {
   }, side)
 }
 
-function filesystemEvent(directory: string, file: string, event: "add" | "change" | "unlink"): OpenCodeEvent {
+function filesystemEvent(directory: string, file: string, event: "add" | "change" | "unlink"): KTetherEvent {
   return {
     id: `evt_${file}_${event}`,
     created: 1,

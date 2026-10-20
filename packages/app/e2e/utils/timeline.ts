@@ -1,24 +1,24 @@
 import type {
   JsonValue,
-  OpenCodeEvent,
+  KTetherEvent,
   SessionInfo,
   SessionMessageAssistant,
   SessionMessageInfo,
   SessionMessageUser,
   SessionStatus,
   SessionStructuredError,
-} from "@opencode/client/promise"
-import { EventManifest } from "@opencode/schema/event-manifest"
-import { SessionMessage } from "@opencode/schema/session-message"
-import type { TimelineDetail } from "@opencode/session-ui/timeline/detail"
+} from "@ktether/client/promise"
+import { EventManifest } from "@ktether/schema/event-manifest"
+import { SessionMessage } from "@ktether/schema/session-message"
+import type { TimelineDetail } from "@ktether/session-ui/timeline/detail"
 import { expect, test, type Page, type TestInfo } from "@playwright/test"
 import { Schema } from "effect"
 import { SERVER, seed, sessionHref } from "./app"
-import { mockOpenCodeServer, type MockServerConfig } from "./mock-server"
+import { mockKTetherServer, type MockServerConfig } from "./mock-server"
 import { installSseTransport } from "./sse-transport"
 import { expectSessionReady } from "./waits"
 
-export const directory = "C:/OpenCode/TimelineStability"
+export const directory = "C:/ktether/TimelineStability"
 
 export const projectID = "proj_timeline_stability"
 
@@ -30,7 +30,7 @@ export const assistantID = "msg_1001_timeline_assistant"
 
 export const title = "Timeline visual stability"
 
-export const model = { providerID: "opencode", modelID: "claude-opus-4-6", variant: "max" }
+export const model = { providerID: "ktether", modelID: "claude-opus-4-6", variant: "max" }
 
 const tokens = { input: 100, output: 200, reasoning: 0, cache: { read: 0, write: 0 } }
 
@@ -133,9 +133,9 @@ type TimelineServerInput = Partial<
 
 export type TimelineMessage = SessionMessageUser | SessionMessageAssistant
 
-export type TimelineEvent = OpenCodeEvent | readonly OpenCodeEvent[]
+export type TimelineEvent = KTetherEvent | readonly KTetherEvent[]
 
-export type EventPayload = OpenCodeEvent
+export type EventPayload = KTetherEvent
 
 export type ToolStatus = ToolSeed["state"]["status"]
 
@@ -248,7 +248,7 @@ export async function setupTimeline(
     keepalive: input.keepalive,
   })
 
-  const mock = await mockOpenCodeServer(page, {
+  const mock = await mockKTetherServer(page, {
     ...input,
     directory,
     project: project(),
@@ -276,7 +276,7 @@ export async function setupTimeline(
 
   if (input.locale) {
     await page.addInitScript((locale) => {
-      localStorage.setItem("opencode.global.dat:language", JSON.stringify({ locale }))
+      localStorage.setItem("ktether.global.dat:language", JSON.stringify({ locale }))
     }, input.locale)
   }
 
@@ -337,7 +337,7 @@ function timelineEvents(input: TimelineEvent) {
   return (Array.isArray(input) ? input : [input]).map(validateTimelineEvent)
 }
 
-function describeEvent(event: OpenCodeEvent) {
+function describeEvent(event: KTetherEvent) {
   if (event.type.startsWith("session.tool.")) {
     const data = event.data as { id?: string }
 
@@ -349,40 +349,40 @@ function describeEvent(event: OpenCodeEvent) {
 
 export function event(
   type: "session.status",
-  data: Extract<OpenCodeEvent, { type: "session.status" }>["data"],
-): OpenCodeEvent {
+  data: Extract<KTetherEvent, { type: "session.status" }>["data"],
+): KTetherEvent {
   return makeEvent(type, data)
 }
 
-export function compactionStarted(data: Extract<OpenCodeEvent, { type: "session.compaction.started" }>["data"]) {
+export function compactionStarted(data: Extract<KTetherEvent, { type: "session.compaction.started" }>["data"]) {
   return makeEvent("session.compaction.started", data)
 }
 
-export function compactionDelta(data: Extract<OpenCodeEvent, { type: "session.compaction.delta" }>["data"]) {
+export function compactionDelta(data: Extract<KTetherEvent, { type: "session.compaction.delta" }>["data"]) {
   return makeEvent("session.compaction.delta", data)
 }
 
-export function compactionEnded(data: Extract<OpenCodeEvent, { type: "session.compaction.ended" }>["data"]) {
+export function compactionEnded(data: Extract<KTetherEvent, { type: "session.compaction.ended" }>["data"]) {
   return makeEvent("session.compaction.ended", data)
 }
 
-export function compactionFailed(data: Extract<OpenCodeEvent, { type: "session.compaction.failed" }>["data"]) {
+export function compactionFailed(data: Extract<KTetherEvent, { type: "session.compaction.failed" }>["data"]) {
   return makeEvent("session.compaction.failed", data)
 }
 
-export function toolInputStarted(data: Extract<OpenCodeEvent, { type: "session.tool.input.started" }>["data"]) {
+export function toolInputStarted(data: Extract<KTetherEvent, { type: "session.tool.input.started" }>["data"]) {
   return makeEvent("session.tool.input.started", data)
 }
 
-export function toolInputEnded(data: Extract<OpenCodeEvent, { type: "session.tool.input.ended" }>["data"]) {
+export function toolInputEnded(data: Extract<KTetherEvent, { type: "session.tool.input.ended" }>["data"]) {
   return makeEvent("session.tool.input.ended", data)
 }
 
-export function toolCalled(data: Extract<OpenCodeEvent, { type: "session.tool.called" }>["data"]) {
+export function toolCalled(data: Extract<KTetherEvent, { type: "session.tool.called" }>["data"]) {
   return makeEvent("session.tool.called", data)
 }
 
-export function validateTimelineEvent(input: unknown): OpenCodeEvent {
+export function validateTimelineEvent(input: unknown): KTetherEvent {
   if (!input || typeof input !== "object") throw new Error("Timeline event must be an object")
 
   if (!("type" in input) || typeof input.type !== "string") throw new Error("Timeline event requires a type")
@@ -390,7 +390,7 @@ export function validateTimelineEvent(input: unknown): OpenCodeEvent {
 
   if (!definition) throw new Error(`Unknown timeline event: ${input.type}`)
 
-  return Schema.decodeUnknownSync(definition)(input) as OpenCodeEvent
+  return Schema.decodeUnknownSync(definition)(input) as KTetherEvent
 }
 
 export function validateTimelineMessages(input: readonly TimelineMessage[]): TimelineMessage[] {
@@ -495,7 +495,7 @@ export function historyMessages(count: number): TimelineMessage[] {
   }).flat()
 }
 
-export function partUpdated(part: PartSeed<"assistant">): readonly OpenCodeEvent[] {
+export function partUpdated(part: PartSeed<"assistant">): readonly KTetherEvent[] {
   const messageID = part.messageID ?? assistantID
   const startedParts = scenario().startedParts
   const started = startedParts.has(part.id)
@@ -910,13 +910,13 @@ function messageContent(
   }
 }
 
-function toolEvents(part: ToolSeed, messageID: string): readonly OpenCodeEvent[] {
+function toolEvents(part: ToolSeed, messageID: string): readonly KTetherEvent[] {
   const toolStates = scenario().toolStates
   const previous = toolStates.get(part.id)
 
   if (previous === "completed" || previous === "error") return []
 
-  const events: OpenCodeEvent[] = []
+  const events: KTetherEvent[] = []
 
   if (!previous) {
     events.push(
@@ -1028,10 +1028,10 @@ function partRef(id: string, messageID: string, type: PartRef["type"]): PartRef 
   return ref
 }
 
-function makeEvent<Type extends OpenCodeEvent["type"]>(
+function makeEvent<Type extends KTetherEvent["type"]>(
   type: Type,
-  data: Extract<OpenCodeEvent, { type: Type }>["data"],
-): OpenCodeEvent {
+  data: Extract<KTetherEvent, { type: Type }>["data"],
+): KTetherEvent {
   const state = scenario()
   const sequence = ++state.eventSequence
   const id = `evt_timeline_${String(sequence).padStart(4, "0")}`
@@ -1048,7 +1048,7 @@ function makeEvent<Type extends OpenCodeEvent["type"]>(
         }
       : base
 
-  return Schema.decodeUnknownSync(definition)(input) as unknown as OpenCodeEvent
+  return Schema.decodeUnknownSync(definition)(input) as unknown as KTetherEvent
 }
 
 function jsonRecord(value: Record<string, unknown> | undefined): Record<string, JsonValue> {
@@ -1079,8 +1079,8 @@ function provider() {
   return {
     all: [
       {
-        id: "opencode",
-        name: "OpenCode",
+        id: "ktether",
+        name: "ktether",
         models: { "claude-opus-4-6": { id: "claude-opus-4-6", name: "Claude Opus 4.6", limit: { context: 200_000 } } },
       },
       {
@@ -1102,7 +1102,7 @@ function provider() {
         },
       },
     ],
-    connected: ["opencode", "company-gateway"],
-    default: { providerID: "opencode", modelID: "claude-opus-4-6" },
+    connected: ["ktether", "company-gateway"],
+    default: { providerID: "ktether", modelID: "claude-opus-4-6" },
   }
 }

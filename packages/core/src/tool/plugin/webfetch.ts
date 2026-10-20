@@ -1,7 +1,7 @@
 export * as WebFetchTool from "./webfetch.js"
 
-import type { Context } from "@opencode/plugin/effect/plugin"
-import { ToolFailure } from "@opencode/ai"
+import type { Context } from "@ktether/plugin/effect/plugin"
+import { ToolFailure } from "@ktether/ai"
 import { Duration, Effect, Schema } from "effect"
 import { HttpClient, type HttpClientError, HttpClientRequest, HttpClientResponse } from "effect/http"
 import { Parser } from "htmlparser2"
@@ -56,7 +56,7 @@ const headers = (format: Format, userAgent: string) => ({
 })
 
 const openCodeUserAgent =
-  "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; OpenCode-User/1.0; +https://opencode.ai"
+  "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ktether-User/1.0; +https://github.com/premsuggu/ktether"
 
 const isCloudflareChallenge = (error: HttpClientError.HttpClientError) => {
   if (error.reason._tag !== "StatusCodeError") return false
@@ -101,7 +101,7 @@ const convert = (content: string, contentType: string, format: Format) => {
 }
 
 export const Plugin = {
-  id: "opencode.tool.webfetch",
+  id: "ktether.tool.webfetch",
   effect: Effect.fn("WebFetchTool.Plugin")(function* (ctx: Context) {
     const http = yield* HttpClient.HttpClient
     const permission = yield* Permission.Service
@@ -133,7 +133,7 @@ export const Plugin = {
 
               const { body, contentType } = yield* Effect.gen(function* () {
                 const response = yield* execute(http, input.url, input.format).pipe(
-                  Effect.catchIf(isCloudflareChallenge, () => execute(http, input.url, input.format, "opencode")),
+                  Effect.catchIf(isCloudflareChallenge, () => execute(http, input.url, input.format, "ktether")),
                 )
                 const contentType = response.headers["content-type"] || ""
                 const mime = mimeFrom(contentType)

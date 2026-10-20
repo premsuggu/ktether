@@ -1,12 +1,12 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
-  "name": "@opencode/simulation",
+  "name": "@ktether/simulation",
   "version": "2.0.32",
   "type": "module",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/anomalyco/opencode.git",
+    "url": "git+https://github.com/premsuggu/ktether.git",
     "directory": "packages/simulation"
   },
   "publishConfig": {
@@ -29,11 +29,11 @@
     "typecheck": "tsc -b"
   },
   "dependencies": {
-    "@opencode/core": "workspace:*",
-    "@opencode/ai": "workspace:*",
-    "@opencode/plugin": "workspace:*",
-    "@opencode/protocol": "workspace:*",
-    "@opencode/util": "workspace:*",
+    "@ktether/core": "workspace:*",
+    "@ktether/ai": "workspace:*",
+    "@ktether/plugin": "workspace:*",
+    "@ktether/protocol": "workspace:*",
+    "@ktether/util": "workspace:*",
     "@opentui/core": "catalog:",
     "effect": "catalog:",
     "ws": "8.21.0"

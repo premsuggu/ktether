@@ -73,7 +73,7 @@ export function KTetherStatusView(props: { status: Status | undefined; error?: s
             </Show>
             <Show when={status().state === "unreachable"}>
               <text fg={theme.text.muted} wrapMode="word">
-                The tunnel does not answer. Run `ktether reconnect` in case the kernel replaced it.
+                The tunnel does not answer. Run `ktether gpu reconnect` in case the kernel replaced it.
               </text>
             </Show>
             <text fg={theme.text.muted}>
@@ -109,7 +109,7 @@ export function KTetherStatusView(props: { status: Status | undefined; error?: s
             </Show>
             <Show when={status().state === "stopped"}>
               <text fg={theme.text.muted} wrapMode="word">
-                Type /ktether-start to provision a GPU, or run `ktether start` from a terminal.
+                Type /ktether-start to provision a GPU, or run `ktether gpu start` from a terminal.
               </text>
             </Show>
           </box>

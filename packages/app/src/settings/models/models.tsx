@@ -1,5 +1,5 @@
-import { useFilteredList } from "@opencode/ui/hooks"
-import { Switch } from "@opencode/ui/switch"
+import { useFilteredList } from "@ktether/ui/hooks"
+import { Switch } from "@ktether/ui/switch"
 import { type Component, createEffect, createMemo, For, Show } from "solid-js"
 
 import { Schema } from "effect"

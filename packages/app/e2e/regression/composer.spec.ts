@@ -18,10 +18,10 @@ test("a catalog refresh cannot replace an existing session's model", async ({ pa
 
   const view = await openSession(page, {
     name: "CatalogSelection",
-    sessions: [{ id: sessionID, agent: "build", model: { id: "alpha", providerID: "opencode", variant: "high" } }],
+    sessions: [{ id: sessionID, agent: "build", model: { id: "alpha", providerID: "ktether", variant: "high" } }],
     provider: () => catalog.current,
     onPrompt: (input) => void prompts.push(input.body),
-    seed: { storage: { "opencode.global.dat:model": { recent: [{ providerID: "opencode", modelID: "beta" }] } } },
+    seed: { storage: { "ktether.global.dat:model": { recent: [{ providerID: "ktether", modelID: "beta" }] } } },
   })
 
   const control = page.locator('[data-action="composer-model"]')
@@ -59,7 +59,7 @@ test("a catalog refresh cannot replace an existing session's model", async ({ pa
   await expect(page.getByRole("button", { name: "Choose model variant", exact: true })).toHaveText("high")
   await view.editor.press("Enter")
   await expect.poll(() => prompts.length).toBe(1)
-  expect(switches).toEqual([{ model: { id: "alpha", providerID: "opencode", variant: "high" } }])
+  expect(switches).toEqual([{ model: { id: "alpha", providerID: "ktether", variant: "high" } }])
 
   catalog.current = provider(beta)
   await view.push([
@@ -82,8 +82,8 @@ test("a catalog refresh cannot replace an existing session's model", async ({ pa
   await view.editor.press("Enter")
   await expect.poll(() => prompts.length).toBe(2)
   expect(switches).toEqual([
-    { model: { id: "alpha", providerID: "opencode", variant: "high" } },
-    { model: { id: "beta", providerID: "opencode" } },
+    { model: { id: "alpha", providerID: "ktether", variant: "high" } },
+    { model: { id: "beta", providerID: "ktether" } },
   ])
 })
 
@@ -277,7 +277,7 @@ test("shows the dropzone and attaches a dropped file", async ({ page }) => {
     .toEqual([
       {
         path: expect.stringMatching(/\/uploads\/[0-9a-f-]{36}\/dropzone\.txt$/),
-        directory: "C:/OpenCode/ComposerDraft",
+        directory: "C:/ktether/ComposerDraft",
         body: "Dropzone fixture",
       },
     ])
@@ -410,7 +410,7 @@ test("marks a Console provider with its workspace only when it is also connected
   const managed = (id: string, canonical: string, name: string, models: ReturnType<typeof model>) => ({
     id,
     canonical,
-    integrationID: "opencode",
+    integrationID: "ktether",
     name: `Anomaly / ${name}`,
     models,
   })
@@ -419,19 +419,19 @@ test("marks a Console provider with its workspace only when it is also connected
     name: "ComposerConsoleProviders",
     provider: {
       all: [
-        managed("opencode", "opencode", "OpenCode", model("console-model", "Console Model")),
+        managed("ktether", "ktether", "ktether", model("console-model", "Console Model")),
         managed("console-google", "google", "Google", model("managed-gemini", "Managed Gemini")),
         managed("console-openai", "openai", "OpenAI", model("managed-gpt", "Managed GPT")),
         { id: "google", canonical: "google", name: "Google", models: model("direct-gemini", "Direct Gemini") },
       ],
-      connected: ["opencode", "console-google", "console-openai", "google"],
-      default: { providerID: "opencode", modelID: "console-model" },
+      connected: ["ktether", "console-google", "console-openai", "google"],
+      default: { providerID: "ktether", modelID: "console-model" },
     },
     seed: {
       storage: {
-        "opencode.global.dat:model": {
+        "ktether.global.dat:model": {
           user: [
-            ["opencode", "console-model"],
+            ["ktether", "console-model"],
             ["console-google", "managed-gemini"],
             ["console-openai", "managed-gpt"],
             ["google", "direct-gemini"],
@@ -451,7 +451,7 @@ test("marks a Console provider with its workspace only when it is also connected
   await expect(headings.filter({ hasText: /^GoogleAnomaly$/ })).toHaveCount(1)
   await expect(headings.filter({ hasText: /^Google$/ })).toHaveCount(1)
   await expect(headings.filter({ hasText: /^OpenAI$/ })).toHaveCount(1)
-  await expect(headings.filter({ hasText: /^OpenCode$/ })).toHaveCount(1)
+  await expect(headings.filter({ hasText: /^ktether$/ })).toHaveCount(1)
   await expect(menu.getByText(/Anomaly \//)).toHaveCount(0)
 })
 

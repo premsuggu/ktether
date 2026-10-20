@@ -258,7 +258,7 @@ const unsupportedCompaction = (request: LLMRequest, mechanism: string | undefine
   })
 }
 
-export class LLMClientService extends Context.Service<LLMClientService, Interface>()("@opencode/LLMClient") {}
+export class LLMClientService extends Context.Service<LLMClientService, Interface>()("@ktether/LLMClient") {}
 export const Service = LLMClientService
 export type Service = LLMClientService
 

@@ -1,7 +1,7 @@
-import { Event } from "@opencode/schema/event"
-import { EventManifest } from "@opencode/schema/event-manifest"
-import { Location } from "@opencode/schema/location"
-import type { Definition } from "@opencode/schema/event"
+import { Event } from "@ktether/schema/event"
+import { EventManifest } from "@ktether/schema/event-manifest"
+import { Location } from "@ktether/schema/location"
+import type { Definition } from "@ktether/schema/event"
 import { Schema } from "effect"
 import { HttpApiEndpoint, HttpApiGroup, HttpApiSchema, OpenApi } from "effect/http-api"
 
@@ -61,8 +61,8 @@ export const makeEventGroup = <const Definitions extends ReadonlyArray<Definitio
 
 const event = make(EventManifest.ServerDefinitions)
 export const EventGroup = event.group
-export const OpenCodeEvent = event.schema
-export type OpenCodeEvent = typeof OpenCodeEvent.Type
-export type OpenCodeEventEncoded = typeof OpenCodeEvent.Encoded
-export const isOpenCodeEvent = (event: { readonly type: string }): event is OpenCodeEvent =>
+export const KTetherEvent = event.schema
+export type KTetherEvent = typeof KTetherEvent.Type
+export type KTetherEventEncoded = typeof KTetherEvent.Encoded
+export const isKTetherEvent = (event: { readonly type: string }): event is KTetherEvent =>
   event.type === "server.connected" || EventManifest.isServer(event) || event.type.startsWith("rpc.")

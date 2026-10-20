@@ -1,5 +1,5 @@
 import { Effect } from "effect"
-import { define } from "@opencode/plugin/effect/plugin"
+import { define } from "@ktether/plugin/effect/plugin"
 import { AVAILABLE_MODELS } from "../../ktether/registry.js"
 import { Model } from "../../model.js"
 
@@ -10,17 +10,17 @@ import { Model } from "../../model.js"
  * session when a request is made, so they are never stale and never written into a config file.
  */
 export const KTetherPlugin = define({
-  id: "opencode.provider.ktether",
+  id: "ktether.provider.kaggle",
   effect: Effect.fn(function* (ctx) {
     yield* ctx.provider.transform((providers) => {
-      providers.update("ktether", (provider) => {
+      providers.update("kaggle", (provider) => {
         provider.name = "ktether (Kaggle GPU)"
         provider.activation = "enabled"
-        provider.package = "@opencode/ai/providers/ktether"
+        provider.package = "@ktether/ai/providers/ktether"
         provider.integrationID = undefined
       })
       for (const spec of Object.values(AVAILABLE_MODELS)) {
-        providers.models.update("ktether", spec.id, (model) => {
+        providers.models.update("kaggle", spec.id, (model) => {
           model.modelID = Model.ID.make(spec.id)
           model.name = spec.displayName
           model.capabilities = {

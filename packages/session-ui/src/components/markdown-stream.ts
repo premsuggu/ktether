@@ -1,6 +1,6 @@
 import { Marked, type Tokens } from "marked"
 import remend from "remend"
-import { markdownMath } from "@opencode/ui/context/marked-parser"
+import { markdownMath } from "@ktether/ui/context/marked-parser"
 import { completedProjection } from "./markdown-projection"
 
 export type Block = {

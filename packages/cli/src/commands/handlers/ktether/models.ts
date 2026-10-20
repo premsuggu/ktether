@@ -6,7 +6,7 @@ import { connect } from "./connection"
 import { formatModels } from "./format"
 
 export default Runtime.handler(
-  Commands.commands.ktether.commands.models,
+  Commands.commands.gpu.commands.models,
   Effect.fn("cli.ktether.models")(function* (input) {
     const client = yield* connect(input)
     const models = yield* Effect.promise(() => client.ktether.models())

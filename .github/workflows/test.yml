@@ -50,7 +50,7 @@ jobs:
             exit 0
           fi
           # Storybook hosts the component tests, but no app package depends on it.
-          bun x turbo@2.10.2 ls --affected --filter=@opencode/app --filter=@opencode/storybook --output=json > affected.json
+          bun x turbo@2.10.2 ls --affected --filter=@ktether/app --filter=@ktether/storybook --output=json > affected.json
           bun -e 'const result = await Bun.file("affected.json").json(); console.log(`app=${result.packages.count > 0}`)' >> "$GITHUB_OUTPUT"
 
   unit:
@@ -93,8 +93,8 @@ jobs:
 
       - name: Configure git identity
         run: |
-          git config --global user.email "bot@opencode.ai"
-          git config --global user.name "opencode"
+          git config --global user.email "bot@users.noreply.github.com"
+          git config --global user.name "ktether"
 
       - name: Run unit tests
         timeout-minutes: 20
@@ -106,7 +106,7 @@ jobs:
           fi
           GITHUB_ACTIONS=false bun turbo test --affected --concurrency=3
         env:
-          OPENCODE_EXPERIMENTAL_DISABLE_FILEWATCHER: ${{ runner.os == 'Windows' && 'true' || 'false' }}
+          KTETHER_EXPERIMENTAL_DISABLE_FILEWATCHER: ${{ runner.os == 'Windows' && 'true' || 'false' }}
           TURBO_SCM_BASE: ${{ github.event_name == 'pull_request' && format('{0}^1', github.sha) || github.event.before }}
           TURBO_SCM_HEAD: ${{ github.sha }}
 
@@ -120,10 +120,10 @@ jobs:
         timeout-minutes: 15
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            bun turbo verify:package --filter=@opencode/sdk
+            bun turbo verify:package --filter=@ktether/sdk
             exit 0
           fi
-          bun turbo verify:package --affected --filter=@opencode/sdk
+          bun turbo verify:package --affected --filter=@ktether/sdk
         env:
           TURBO_SCM_BASE: ${{ github.event_name == 'pull_request' && format('{0}^1', github.sha) || github.event.before }}
           TURBO_SCM_HEAD: ${{ github.sha }}
@@ -131,11 +131,6 @@ jobs:
       - name: Check generated client
         if: runner.os == 'Linux'
         working-directory: packages/client
-        run: bun run check:generated
-
-      - name: Check generated documentation
-        if: runner.os == 'Linux'
-        working-directory: services/www
         run: bun run check:generated
 
   build:
@@ -180,10 +175,10 @@ jobs:
         timeout-minutes: 10
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            bun turbo build --concurrency=3 --filter='@opencode/cli^...' --filter='@opencode/app^...'
+            bun turbo build --concurrency=3 --filter='@ktether/cli^...' --filter='@ktether/app^...'
             exit 0
           fi
-          bun turbo build --affected --concurrency=3 --filter='@opencode/cli^...' --filter='@opencode/app^...'
+          bun turbo build --affected --concurrency=3 --filter='@ktether/cli^...' --filter='@ktether/app^...'
         env:
           TURBO_SCM_BASE: ${{ github.event_name == 'pull_request' && format('{0}^1', github.sha) || github.event.before }}
           TURBO_SCM_HEAD: ${{ github.sha }}

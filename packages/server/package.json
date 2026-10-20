@@ -1,12 +1,12 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
-  "name": "@opencode/server",
+  "name": "@ktether/server",
   "version": "2.0.32",
   "type": "module",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/anomalyco/opencode.git",
+    "url": "git+https://github.com/premsuggu/ktether.git",
     "directory": "packages/server"
   },
   "publishConfig": {
@@ -27,17 +27,17 @@
   "dependencies": {
     "@effect/platform-node": "catalog:",
     "@effect/platform-node-shared": "catalog:",
-    "@opencode/core": "workspace:*",
-    "@opencode/protocol": "workspace:*",
-    "@opencode/schema": "workspace:*",
-    "@opencode/simulation": "workspace:*",
-    "@opencode/util": "workspace:*",
+    "@ktether/core": "workspace:*",
+    "@ktether/protocol": "workspace:*",
+    "@ktether/schema": "workspace:*",
+    "@ktether/simulation": "workspace:*",
+    "@ktether/util": "workspace:*",
     "effect": "catalog:"
   },
   "devDependencies": {
     "@opencode-ai/pty": "0.2.0",
-    "@opencode/client": "workspace:*",
-    "@opencode/plugin": "workspace:*",
+    "@ktether/client": "workspace:*",
+    "@ktether/plugin": "workspace:*",
     "@tsconfig/bun": "catalog:",
     "@types/bun": "catalog:",
     "@typescript/native": "catalog:",
