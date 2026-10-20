@@ -1,0 +1,122 @@
+#!/usr/bin/env bash
+# Installs a ktether binary into ~/.ktether/bin and puts that directory on PATH.
+#
+# The desktop app pipes this script to bash to install the CLI it bundles:
+#   bash -s -- --binary /path/to/ktether
+# There is no download mode; ktether has no release channel yet.
+set -euo pipefail
+
+usage() {
+    cat <<'EOF'
+ktether installer
+
+Usage: install --binary <path> [--no-modify-path]
+
+Options:
+    -h, --help              Display this help message
+    -b, --binary <path>     The ktether binary to install (required)
+        --no-modify-path    Don't modify shell config files (.zshrc, .bashrc, etc.)
+EOF
+}
+
+binary_path=""
+no_modify_path=false
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -h|--help)
+            usage
+            exit 0
+            ;;
+        -b|--binary)
+            if [[ -z "${2:-}" ]]; then
+                echo "Error: --binary requires a path argument" >&2
+                exit 1
+            fi
+            binary_path="$2"
+            shift 2
+            ;;
+        --no-modify-path)
+            no_modify_path=true
+            shift
+            ;;
+        *)
+            echo "Warning: Unknown option '$1'" >&2
+            shift
+            ;;
+    esac
+done
+
+if [[ -z "$binary_path" ]]; then
+    echo "Error: --binary <path> is required" >&2
+    usage >&2
+    exit 1
+fi
+
+if [[ ! -f "$binary_path" ]]; then
+    echo "Error: Binary not found at $binary_path" >&2
+    exit 1
+fi
+
+INSTALL_DIR="$HOME/.ktether/bin"
+mkdir -p "$INSTALL_DIR"
+
+installed_binary=ktether
+case "$(uname -s)" in
+    MINGW*|MSYS*|CYGWIN*) installed_binary=ktether.exe ;;
+esac
+
+echo "Installing ktether from $binary_path"
+cp "$binary_path" "$INSTALL_DIR/$installed_binary"
+chmod 755 "$INSTALL_DIR/$installed_binary"
+
+add_to_path() {
+    local config_file=$1
+    local command=$2
+
+    if grep -Fxq "$command" "$config_file"; then
+        echo "PATH entry already in $config_file, skipping."
+    elif [[ -w $config_file ]]; then
+        printf '\n# ktether\n%s\n' "$command" >> "$config_file"
+        echo "Added ktether to PATH in $config_file"
+    else
+        echo "Manually add the directory to $config_file (or similar):"
+        echo "  $command"
+    fi
+}
+
+if [[ "$no_modify_path" != "true" ]]; then
+    XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-$HOME/.config}
+    current_shell=$(basename "${SHELL:-bash}")
+
+    case $current_shell in
+        fish) config_files="$HOME/.config/fish/config.fish" ;;
+        zsh) config_files="${ZDOTDIR:-$HOME}/.zshrc ${ZDOTDIR:-$HOME}/.zshenv $XDG_CONFIG_HOME/zsh/.zshrc $XDG_CONFIG_HOME/zsh/.zshenv" ;;
+        ash|sh) config_files="$HOME/.ashrc $HOME/.profile /etc/profile" ;;
+        *) config_files="$HOME/.bashrc $HOME/.bash_profile $HOME/.profile $XDG_CONFIG_HOME/bash/.bashrc $XDG_CONFIG_HOME/bash/.bash_profile" ;;
+    esac
+
+    config_file=""
+    for file in $config_files; do
+        if [[ -f $file ]]; then
+            config_file=$file
+            break
+        fi
+    done
+
+    if [[ ":$PATH:" == *":$INSTALL_DIR:"* ]]; then
+        :
+    elif [[ -z $config_file ]]; then
+        echo "No shell config file found. Add ktether to PATH yourself:"
+        echo "  export PATH=$INSTALL_DIR:\$PATH"
+    elif [[ $current_shell == fish ]]; then
+        add_to_path "$config_file" "fish_add_path $INSTALL_DIR"
+    else
+        add_to_path "$config_file" "export PATH=$INSTALL_DIR:\$PATH"
+    fi
+fi
+
+echo
+echo "Done. Start a GPU and the agent with:"
+echo "  ktether gpu start"
+echo "  ktether --model kaggle/qwen3.6-27b"
