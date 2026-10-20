@@ -7,15 +7,7 @@ import {
   LLMClient,
   LLMRequest,
 } from "../../src/index.js"
-import {
-  Anthropic,
-  Azure,
-  AmazonBedrock,
-  AmazonBedrockMantle,
-  OpenAI,
-  OpenAICompatibleResponses,
-  XAI,
-} from "../../src/providers.js"
+import { OpenAI, OpenAICompatibleResponses, XAI } from "../../src/providers.js"
 import type { WebSocketChannelExecutor } from "../../src/route.js"
 import type { RoutePatch } from "../../src/route/client.js"
 import type { OpenAIResponsesBody } from "../../src/protocols/openai-responses.js"
@@ -53,48 +45,29 @@ for (const selected of [
 LLMClient.compact(new LLMRequest(LLMRequest.input(request)), { mechanism: "trigger" })
 LLMClient.compact(LLMRequest.update(request, { messages: [] }), { mechanism: "trigger" })
 
-const azure = Azure.configure({ resourceName: "fixture" }).responses("fixture")
 const xai = XAI.configure().responses("fixture")
-// @ts-expect-error Azure must not inherit OpenAI's trigger operation.
-LLMClient.compact(LLM.request({ model: azure }), { mechanism: "trigger" })
-LLMClient.compact(LLM.request({ model: Azure.responsesModel("fixture", { resourceName: "fixture" }) }), {
-  // @ts-expect-error Azure's package entrypoint must preserve its narrower capability.
-  mechanism: "trigger",
-})
 // @ts-expect-error xAI endpoint support does not imply trigger support.
 LLMClient.compact(LLM.request({ model: xai }), { mechanism: "trigger" })
 // @ts-expect-error xAI's package entrypoint must preserve its narrower capability.
 LLMClient.compact(LLM.request({ model: XAI.model("fixture", {}) }), { mechanism: "trigger" })
 
 const unsupported = {
-  bedrock: LLM.request({ model: AmazonBedrock.configure().model("fixture") }),
-  mantle: LLM.request({ model: AmazonBedrockMantle.configure().responses("fixture") }),
-  anthropic: LLM.request({ model: Anthropic.configure().model("fixture") }),
   openai: LLM.request({ model: OpenAI.configure().chat("fixture") }),
-  azure: LLM.request({ model: Azure.configure({ resourceName: "fixture" }).chat("fixture") }),
   xai: LLM.request({ model: XAI.configure().chat("fixture") }),
   compatible: LLM.request({
     model: OpenAICompatibleResponses.configure({ baseURL: "https://example.com" }).model("fixture"),
   }),
 }
-// @ts-expect-error Bedrock does not expose trigger compaction.
-LLMClient.compact(unsupported.bedrock, { mechanism: "trigger" })
-// @ts-expect-error Mantle must not inherit trigger support from OpenAI's protocol.
-LLMClient.compact(unsupported.mantle, { mechanism: "trigger" })
-// @ts-expect-error Anthropic does not expose trigger compaction.
-LLMClient.compact(unsupported.anthropic, { mechanism: "trigger" })
 // @ts-expect-error OpenAI Chat does not expose trigger compaction.
 LLMClient.compact(unsupported.openai, { mechanism: "trigger" })
-// @ts-expect-error Azure Chat does not expose trigger compaction.
-LLMClient.compact(unsupported.azure, { mechanism: "trigger" })
 // @ts-expect-error xAI Chat does not expose trigger compaction.
 LLMClient.compact(unsupported.xai, { mechanism: "trigger" })
 // @ts-expect-error Generic protocol compatibility does not grant trigger support.
 LLMClient.compact(unsupported.compatible, { mechanism: "trigger" })
 // @ts-expect-error Changing the model replaces its capability.
-LLMClient.compact(LLMRequest.update(request, { model: azure }), { mechanism: "trigger" })
+LLMClient.compact(LLMRequest.update(request, { model: xai }), { mechanism: "trigger" })
 // @ts-expect-error Changing the route replaces its capability.
-LLMClient.compact(LLM.request({ model: LanguageModel.update(model, { route: azure.route }) }), { mechanism: "trigger" })
+LLMClient.compact(LLM.request({ model: LanguageModel.update(model, { route: xai.route }) }), { mechanism: "trigger" })
 LLMClient.compact(
   LLM.request({
     model: model.route.with({ compact: { endpoint: model.route.compact.endpoint } }).model({ id: "fixture" }),

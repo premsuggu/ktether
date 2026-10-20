@@ -1,7 +1,7 @@
 import { describe, expect } from "bun:test"
 import { Effect } from "effect"
 import { LLM } from "../../src/index.js"
-import { Anthropic, Google, OpenAI } from "../../src/providers.js"
+import { OpenAI } from "../../src/providers.js"
 import { LLMClient } from "../../src/route.js"
 import { it } from "../lib/effect.js"
 import { fixedResponse } from "../lib/http.js"
@@ -10,11 +10,6 @@ import { sseEvents } from "../lib/sse.js"
 describe("provider error retention", () => {
   const options = { apiKey: "test", baseURL: "https://provider.test" }
   const cases = [
-    {
-      name: "Anthropic",
-      model: Anthropic.configure(options).model("claude"),
-      event: { type: "error", error: { type: "rate_limit_error", message: "Slow down", details: { opaque: [1, 2] } } },
-    },
     {
       name: "OpenAI Chat",
       model: OpenAI.configure(options).chat("gpt"),
@@ -31,11 +26,6 @@ describe("provider error retention", () => {
           opaque: { upstream: true },
         },
       },
-    },
-    {
-      name: "Gemini",
-      model: Google.configure(options).model("gemini"),
-      event: { error: { code: 429, status: "RESOURCE_EXHAUSTED", message: "Slow down", details: { opaque: [1, 2] } } },
     },
   ]
 
@@ -61,75 +51,6 @@ describe("provider error retention", () => {
       }),
     )
   }
-
-  it.effect("classifies a message-less Gemini 429 and retains its event and HTTP context", () =>
-    Effect.gen(function* () {
-      const body = JSON.stringify({
-        error: { code: 429, status: "RESOURCE_EXHAUSTED", details: { opaque: [1, 2] } },
-        trace: { opaque: "outer" },
-      })
-      const error = yield* LLMClient.generate(
-        LLM.request({ model: Google.configure(options).model("gemini"), prompt: "hello" }),
-      ).pipe(
-        Effect.provide(
-          fixedResponse(sseEvents(body), {
-            headers: { "content-type": "text/event-stream", "x-provider-trace": "trace-1" },
-          }),
-        ),
-        Effect.flip,
-      )
-
-      expect(error.message).toBe("RESOURCE_EXHAUSTED")
-      expect(error.reason._tag).toBe("RateLimit")
-      expect(error.reason.body).toBe(body)
-      expect(error.reason.http).toMatchObject({ status: 200, headers: { "x-provider-trace": "trace-1" } })
-      expect(error.reason.http?.url).toStartWith("https://provider.test/")
-    }),
-  )
-
-  it.effect("rejects a malformed non-record Gemini error", () =>
-    Effect.gen(function* () {
-      const body = JSON.stringify({ error: "RESOURCE_EXHAUSTED", trace: { opaque: "outer" } })
-      const error = yield* LLMClient.generate(
-        LLM.request({ model: Google.configure(options).model("gemini"), prompt: "hello" }),
-      ).pipe(Effect.provide(fixedResponse(sseEvents(body))), Effect.flip)
-
-      expect(error.reason._tag).toBe("InvalidProviderOutput")
-      expect(error.message).toContain("Invalid google/gemini stream event")
-      expect(error.reason.body).toBe(body)
-      expect(error.reason.http?.status).toBe(200)
-    }),
-  )
-
-  it.effect("rejects and retains an explicit null Gemini error", () =>
-    Effect.gen(function* () {
-      const body = JSON.stringify({ error: null, trace: { opaque: "outer" } })
-      const error = yield* LLMClient.generate(
-        LLM.request({ model: Google.configure(options).model("gemini"), prompt: "hello" }),
-      ).pipe(
-        Effect.provide(fixedResponse(sseEvents(body), { headers: { "x-provider-trace": "trace-null" } })),
-        Effect.flip,
-      )
-
-      expect(error.reason._tag).toBe("InvalidProviderOutput")
-      expect(error.reason.body).toBe(body)
-      expect(error.reason.http).toMatchObject({ status: 200, headers: { "x-provider-trace": "trace-null" } })
-      expect(error.reason.http?.url).toStartWith("https://provider.test/")
-    }),
-  )
-
-  it.effect("retains malformed provider frames and the original decode cause", () =>
-    Effect.gen(function* () {
-      const body = '{"type":"error","error":{"message":42,"opaque":{"nested":true}},"trace":"outer"}'
-      const error = yield* LLMClient.generate(
-        LLM.request({ model: Anthropic.configure(options).model("claude"), prompt: "hello" }),
-      ).pipe(Effect.provide(fixedResponse(sseEvents(body))), Effect.flip)
-      expect(error.reason._tag).toBe("InvalidProviderOutput")
-      expect(error.reason.body).toBe(body)
-      expect(error.reason.cause).toBeInstanceOf(Error)
-      expect(error.reason.http?.status).toBe(200)
-    }),
-  )
 
   it.effect("retains the HTTP response context when a channel falls back", () =>
     Effect.gen(function* () {

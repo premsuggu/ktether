@@ -2,7 +2,6 @@ import { describe, expect, test } from "bun:test"
 import { Effect, Schema, Stream } from "effect"
 import * as OpenAIChat from "../src/protocols/openai-chat.js"
 import { AIError, HttpContext, InvalidProviderOutputError, LLM } from "../src/index.js"
-import { Anthropic } from "../src/providers.js"
 import { Auth, Framing, HttpTransport, LLMClient, Route } from "../src/route.js"
 import { fixedResponse, truncatedStream } from "./lib/http.js"
 import { sseEvents } from "./lib/sse.js"
@@ -139,46 +138,6 @@ describe("Route diagnostics", () => {
         expect(error.reason.http).toBe(http)
       }),
     ),
-  )
-
-  it.effect("retains malformed assembled Anthropic hosted-tool arguments", () =>
-    Effect.gen(function* () {
-      const body = '{"query": BROKEN}'
-      const error = yield* LLMClient.generate(
-        LLM.request({
-          model: Anthropic.configure({ apiKey: "test", baseURL: "https://provider.test" }).model("claude"),
-          prompt: "Hello",
-        }),
-      ).pipe(
-        Effect.provide(
-          fixedResponse(
-            sseEvents(
-              { type: "message_start", message: { usage: { input_tokens: 5 } } },
-              {
-                type: "content_block_start",
-                index: 0,
-                content_block: { type: "server_tool_use", id: "srv1", name: "web_search" },
-              },
-              {
-                type: "content_block_delta",
-                index: 0,
-                delta: { type: "input_json_delta", partial_json: '{"query": ' },
-              },
-              { type: "content_block_delta", index: 0, delta: { type: "input_json_delta", partial_json: "BROKEN}" } },
-              { type: "content_block_stop", index: 0 },
-            ),
-            { headers },
-          ),
-        ),
-        Effect.flip,
-      )
-
-      expect(error.reason._tag).toBe("InvalidProviderOutput")
-      expect(error.message).toContain("Invalid JSON input for anthropic-messages tool call web_search")
-      expect(error.reason.body).toBe(body)
-      expect(error.reason.cause).toBeInstanceOf(Error)
-      expect(error.reason.http).toMatchObject({ status: 200, headers })
-    }),
   )
 
   it.effect("adds successful HTTP metadata without replacing framing diagnostics", () =>

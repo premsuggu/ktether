@@ -3,7 +3,7 @@ import { EffectFlock } from "@opencode/util/effect-flock"
 import { LayerNode } from "@opencode/util/effect/layer-node"
 import { Global } from "@opencode/util/global"
 import { AppProcess } from "@opencode/util/process"
-import { expect, spyOn, test } from "bun:test"
+import { afterAll, beforeAll, expect, spyOn, test } from "bun:test"
 import { Effect, FileSystem, Layer, PlatformError, Stream } from "effect"
 import { ChildProcess, ChildProcessSpawner } from "effect/process"
 import { existsSync, readdirSync, readFileSync } from "node:fs"
@@ -12,6 +12,17 @@ import { Updater } from "../src/services/updater"
 import { testEffect } from "../../core/test/lib/effect"
 
 const it = testEffect(NodeServices.layer)
+
+// ktether publishes no release channel, so the updater only runs against an explicitly configured one.
+const UPDATE_URL = "https://updates.example.test/update/api"
+const previousUpdateURL = process.env.KTETHER_UPDATE_URL
+beforeAll(() => {
+  process.env.KTETHER_UPDATE_URL = UPDATE_URL
+})
+afterAll(() => {
+  if (previousUpdateURL === undefined) delete process.env.KTETHER_UPDATE_URL
+  else process.env.KTETHER_UPDATE_URL = previousUpdateURL
+})
 
 declare const OPENCODE_CLI_NAME: string | undefined
 
@@ -222,7 +233,7 @@ it.live("bun ignores install cache cleanup failures", () =>
       const installer = test.commands[0]?.[3]
       expect(installer).toStartWith(path.join(test.global.cache, "update-"))
       expect(test.commands).toEqual([
-        ["curl", "-fsSL", "-o", installer, "https://opencode.ai/v2/install"],
+        ["curl", "-fsSL", "-o", installer, `${UPDATE_URL}/install`],
         ...(failure === "download" ? [] : [[test.bash, installer, "--version", "2.3.4-beta.1", "--no-modify-path"]]),
       ])
       expect(yield* test.fs.readDirectory(test.global.cache)).toEqual([])
@@ -320,7 +331,7 @@ it.live("Homebrew Core installs check and upgrade the Core formula", () =>
     expect(yield* test.updater.latest("npm")).toBe("2.3.4")
     expect(test.requests).toEqual([
       "https://formulae.brew.sh/api/formula/opencode.json",
-      "https://opencode.ai/update/api/local/cli/npm?current=local",
+      `${UPDATE_URL}/local/cli/npm?current=local`,
     ])
   }),
 )
@@ -333,8 +344,8 @@ it.live("Homebrew Core installs check and upgrade the Core formula", () =>
       yield* test.updater.upgrade("brew", "2.3.4")
       expect(test.commands).toEqual([["brew", "upgrade", `anomalyco/tap/${formula}`]])
       expect(test.requests).toEqual([
-        "https://opencode.ai/update/api/local/cli/homebrew?current=local",
-        "https://opencode.ai/update/api/local/cli/homebrew?current=local",
+        `${UPDATE_URL}/local/cli/homebrew?current=local`,
+        `${UPDATE_URL}/local/cli/homebrew?current=local`,
       ])
     }),
   )

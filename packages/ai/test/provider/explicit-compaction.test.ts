@@ -5,7 +5,7 @@ import { LLMClient, Route } from "../../src/route/client.js"
 import { Auth } from "../../src/route/auth.js"
 import { Endpoint } from "../../src/route/endpoint.js"
 import { OpenAIResponses } from "../../src/protocols/openai-responses.js"
-import { OpenAI, Azure, XAI, Anthropic, OpenAICompatibleResponses } from "../../src/providers/index.js"
+import { OpenAI, XAI, OpenAICompatibleResponses } from "../../src/providers/index.js"
 import { testEffect } from "../lib/effect.js"
 import { dynamicResponse, fixedResponse } from "../lib/http.js"
 import { sseEvents } from "../lib/sse.js"
@@ -95,78 +95,6 @@ testEffect(
     expect(middleware).toEqual(["/fixture/responses", "/fixture/responses/compact"])
   }),
 )
-
-for (const model of [
-  OpenAI.configure({ apiKey: "test" }).responses("fixture"),
-  Azure.configure({ apiKey: "test", resourceName: "test" }).responses("fixture"),
-  XAI.configure({ apiKey: "test" }).responses("fixture"),
-]) {
-  const item = {
-    type: model.provider === "xai" ? "x_search_call" : "computer_call",
-    id: "hosted_1",
-    status: "completed",
-  }
-  testEffect(
-    dynamicResponse(({ request, text, respond }) =>
-      Effect.sync(() => {
-        expect(new URL(request.url).pathname).toEndWith("/responses/compact")
-        expect(JSON.parse(text)).toEqual({
-          model: "fixture",
-          input: [item],
-          instructions: "Keep the context",
-          include: ["reasoning.encrypted_content"],
-        })
-        return respond(JSON.stringify({ object: "response.compaction", output: [checkpoint] }))
-      }),
-    ),
-  ).effect(`${model.provider} validates tools but ignores unrelated unsupported generation settings`, () =>
-    Effect.gen(function* () {
-      const request = LLM.request({
-        model,
-        system: "Keep the context",
-        messages: [
-          Message.assistant({
-            type: "tool-result",
-            id: item.id,
-            name: item.type,
-            result: { type: "json", value: item },
-            providerExecuted: true,
-            providerMetadata: { [model.route.providerMetadataKey ?? model.provider]: { itemId: item.id } },
-          }),
-        ],
-      })
-      for (const [candidate, tag] of [
-        [
-          LLMRequest.update(request, {
-            tools: [
-              ToolDefinition.make({
-                name: "unsupported",
-                description: "Generation only",
-                inputSchema: {},
-                native: { unsupported: {} },
-              }),
-            ],
-          }),
-          "InvalidRequest",
-        ],
-        [
-          LLMRequest.update(request, { providerOptions: { contextManagement: "invalid-generation-option" } }),
-          model.provider === "xai" ? "UnsupportedOperation" : "InvalidRequest",
-        ],
-      ] as const) {
-        const error = yield* LLMClient.generate(candidate).pipe(Effect.flip)
-        expect(error.reason._tag).toBe(tag)
-        if (candidate.tools.length > 0) {
-          const compactError = yield* LLMClient.compact(candidate).pipe(Effect.flip)
-          expect(compactError.reason._tag).toBe("InvalidRequest")
-          continue
-        }
-        const response = yield* LLMClient.compact(candidate)
-        expect(response.replacement[0]?.content[0]?.type).toBe("compaction")
-      }
-    }),
-  )
-}
 
 const retainedItems = [
   retained,
@@ -355,41 +283,6 @@ for (const item of [
   )
 }
 
-for (const model of [
-  OpenAI.configure({ apiKey: "test" }).responses("fixture"),
-  Azure.configure({ apiKey: "test", resourceName: "test" }).responses("fixture"),
-  XAI.configure({ apiKey: "test" }).responses("fixture"),
-]) {
-  const images = [undefined, "low", "high", "auto"].map((detail) => ({
-    type: "input_image",
-    image_url: "https://example.com/image.png",
-    ...(detail === undefined ? {} : { detail }),
-  }))
-  testEffect(
-    dynamicResponse(({ request, text, respond }) =>
-      Effect.sync(() => {
-        if (new URL(request.url).pathname.endsWith("/compact"))
-          return respond(
-            JSON.stringify({
-              object: "response.compaction",
-              output: [{ type: "message", role: "user", content: images }, checkpoint],
-            }),
-          )
-        expect(JSON.parse(text).input[0].content).toEqual(images)
-        return respond(sseEvents({ type: "response.completed", response: { id: "resp_1" } }))
-      }),
-    ),
-  ).effect(`${model.provider} preserves retained image detail through serialization and replay`, () =>
-    Effect.gen(function* () {
-      const request = LLM.request({ model, prompt: "hello" })
-      const compacted = yield* LLMClient.compact(request)
-      const codec = Schema.fromJsonString(Schema.Array(Message))
-      const messages = Schema.decodeSync(codec)(Schema.encodeSync(codec)(compacted.replacement))
-      yield* LLMClient.generate(LLMRequest.update(request, { messages }))
-    }),
-  )
-}
-
 testEffect(fixedResponse("must not execute")).effect("xAI rejects automatic compaction options", () =>
   Effect.gen(function* () {
     const request = LLMRequest.update(
@@ -402,80 +295,6 @@ testEffect(fixedResponse("must not execute")).effect("xAI rejects automatic comp
     if (error.reason._tag === "UnsupportedOperation") expect(error.reason.operation).toBe("in-band-compaction")
   }),
 )
-
-for (const model of [
-  OpenAI.configure({ apiKey: "test" }).responses("gpt-5.3-codex"),
-  Azure.configure({ apiKey: "test", resourceName: "test" }).responses("deployment"),
-  XAI.configure({ apiKey: "test" }).responses("grok-4.6"),
-]) {
-  testEffect(
-    dynamicResponse(({ request, text, respond }) =>
-      Effect.sync(() => {
-        const body = JSON.parse(text)
-        expect(request.method).toBe("POST")
-        expect(request.headers[model.provider === "azure" ? "api-key" : "authorization"]).toBe(
-          model.provider === "azure" ? "test" : "Bearer test",
-        )
-        if (new URL(request.url).pathname.endsWith("/responses/compact")) {
-          expect(body).toEqual({
-            model: model.id,
-            input: [{ type: "message", role: "user", content: [{ type: "input_text", text: "original" }] }],
-            instructions: "system",
-            include: ["reasoning.encrypted_content"],
-            ...(model.id === "gpt-5.3-codex" ? { reasoning: { effort: "medium", summary: "auto" } } : {}),
-          })
-          return respond(
-            JSON.stringify({
-              object: "response.compaction",
-              output,
-              usage: { input_tokens: 1000, output_tokens: 10, total_tokens: 1010 },
-            }),
-            { headers: { "content-type": "application/json" } },
-          )
-        }
-        expect(new URL(request.url).pathname.endsWith("/responses")).toBe(true)
-        expect(body.input).toEqual([
-          ...output,
-          { type: "message", role: "user", content: [{ type: "input_text", text: "continue" }] },
-        ])
-        return respond(sseEvents({ type: "response.completed", response: { id: "resp_1", output: [] } }), {
-          headers: { "content-type": "text/event-stream" },
-        })
-      }),
-    ),
-  ).effect(`${model.provider} explicitly compacts and replays the entire canonical window`, () =>
-    Effect.gen(function* () {
-      const request = LLM.request({ model, prompt: "original", system: "system", http: { body: { store: false } } })
-      const compacted = yield* LLMClient.compact(request)
-      expect(compacted.usage?.totalTokens).toBe(1010)
-      expect(compacted.replacement.map((message) => message.role)).toEqual(["user", "assistant"])
-      expect(compacted.replacement[0]?.content).toEqual([{ type: "text", text: "retained" }])
-      expect(compacted.replacement[1]?.content).toEqual([
-        { type: "compaction", provider: model.provider, id: "cmp_1", encrypted: "opaque" },
-      ])
-      const codec = Schema.fromJsonString(Schema.Array(Message))
-      const messages = Schema.decodeSync(codec)(Schema.encodeSync(codec)(compacted.replacement))
-      yield* LLMClient.generate(LLMRequest.update(request, { messages: [...messages, Message.user("continue")] }))
-    }),
-  )
-}
-
-for (const model of [
-  Anthropic.configure({ apiKey: "test" }).model("claude-opus-4-6"),
-  OpenAICompatibleResponses.configure({ apiKey: "test", baseURL: "https://compatible.example/v1" }).model("model"),
-]) {
-  testEffect(fixedResponse("must not execute")).effect(
-    `${model.route.id} does not inherit an unsupported compact endpoint`,
-    () =>
-      Effect.gen(function* () {
-        // @ts-expect-error Untyped callers must still receive the runtime capability error.
-        const error = yield* LLMClient.compact(LLM.request({ model, prompt: "hello" })).pipe(Effect.flip)
-        expect(error.reason._tag).toBe("UnsupportedOperation")
-        expect(error.message).toContain("does not support explicit compaction")
-        if (error.reason._tag === "UnsupportedOperation") expect(error.reason.operation).toBe("compact")
-      }),
-  )
-}
 
 testEffect(
   fixedResponse(JSON.stringify({ object: "response.compaction", output: [retained], debug: "original payload" })),

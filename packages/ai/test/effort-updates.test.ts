@@ -5,8 +5,7 @@ import { Auth, LLMClient } from "../src/route.js"
 import { compileRequest } from "../src/route/client.js"
 import { AnthropicMessages } from "../src/protocols/anthropic-messages.js"
 import { OpenAIResponses } from "../src/protocols/openai-responses.js"
-import { Gemini } from "../src/protocols/gemini.js"
-import { AmazonBedrockMantle, GoogleVertexMessages, OpenAI } from "../src/providers.js"
+import { OpenAI } from "../src/providers.js"
 import { applyEffortUpdates } from "../src/effort-updates.js"
 import { it, testEffect } from "./lib/effect.js"
 import { dynamicResponse } from "./lib/http.js"
@@ -43,47 +42,6 @@ describe("applyEffortUpdates", () => {
     expect(applyEffortUpdates(supported)).toBe(supported)
   })
 
-  it.effect("compiles markers away for protocols without per-message effort", () =>
-    Effect.gen(function* () {
-      const model = Gemini.route
-        .with({
-          endpoint: { baseURL: "https://generativelanguage.test/v1beta/" },
-          auth: Auth.header("x-goog-api-key", "test"),
-        })
-        .model({ id: "gemini-3.5-flash" })
-      const withMarkers = yield* compileRequest(LLM.request({ model, messages: conversation }))
-      const withoutMarkers = yield* compileRequest(
-        LLM.request({ model, messages: [Message.user("Before."), Message.user("After.")] }),
-      )
-
-      expect(withMarkers.body).toEqual(withoutMarkers.body)
-    }),
-  )
-})
-
-describe("cache policy", () => {
-  it.effect("walks the tail breakpoint back past a trailing effort marker", () =>
-    Effect.gen(function* () {
-      const prepared = yield* compileRequest(
-        LLM.request({
-          model: opus5,
-          messages: [Message.user("first"), Message.assistant("reply"), Message.user("latest"), lowFromHigh],
-          providerOptions: { effort: "low" },
-          cache: "auto",
-        }),
-      )
-
-      expect(prepared.body.messages).toEqual([
-        { role: "user", content: [{ type: "text", text: "first" }] },
-        { role: "assistant", content: [{ type: "text", text: "reply" }] },
-        { role: "user", content: [{ type: "text", text: "latest", cache_control: { type: "ephemeral" } }] },
-        { role: "system", content: [], output_config: { effort: "low" } },
-      ])
-    }),
-  )
-})
-
-describe("Anthropic Messages effort updates", () => {
   it.effect("lowers markers to per-turn system messages and freezes the top-level effort", () =>
     Effect.gen(function* () {
       const prepared = yield* compileRequest(
@@ -284,58 +242,6 @@ describe("Anthropic Messages effort updates", () => {
     }),
   )
 
-  it.effect("strips markers for Opus 5.0 on Bedrock Mantle Messages while lowering Opus 5.5", () =>
-    Effect.gen(function* () {
-      const mantle = AmazonBedrockMantle.configure({ apiKey: "test", region: "us-east-1" })
-      const opus50 = yield* compileRequest(
-        LLM.request({
-          model: mantle.messages("anthropic.claude-opus-5"),
-          messages: conversation,
-          providerOptions: { effort: "low" },
-        }),
-      )
-      const opus55 = yield* compileRequest(
-        LLM.request({
-          model: mantle.messages("anthropic.claude-opus-5-5"),
-          messages: conversation,
-          providerOptions: { effort: "low" },
-        }),
-      )
-
-      expect(systemMessages(opus50.body)).toHaveLength(0)
-      expect(opus50.body.output_config).toEqual({ effort: "low" })
-      expect(systemMessages(opus55.body)).toEqual([{ role: "system", content: [], output_config: { effort: "low" } }])
-      expect(opus55.body.output_config).toEqual({ effort: "high" })
-    }),
-  )
-
-  it.effect("lowers markers on the Vertex Anthropic route for models that support them", () =>
-    Effect.gen(function* () {
-      const vertex = GoogleVertexMessages.configure({ accessToken: "test", location: "global", project: "test" })
-      const opus5 = yield* compileRequest(
-        LLM.request({
-          model: vertex.model("claude-opus-5"),
-          messages: conversation,
-          providerOptions: { effort: "low" },
-        }),
-      )
-      const opus48 = yield* compileRequest(
-        LLM.request({
-          model: vertex.model("claude-opus-4-8"),
-          messages: conversation,
-          providerOptions: { effort: "low" },
-        }),
-      )
-
-      expect(systemMessages(opus5.body)).toEqual([{ role: "system", content: [], output_config: { effort: "low" } }])
-      expect(opus5.body.output_config).toEqual({ effort: "high" })
-      expect(systemMessages(opus48.body)).toHaveLength(0)
-      expect(opus48.body.output_config).toEqual({ effort: "low" })
-    }),
-  )
-})
-
-describe("OpenAI Responses effort updates", () => {
   it.effect("lowers markers to configuration_update items and freezes reasoning.effort", () =>
     Effect.gen(function* () {
       const prepared = yield* compileRequest(

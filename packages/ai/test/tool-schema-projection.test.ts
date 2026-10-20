@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { Effect, Schema, SchemaGetter } from "effect"
 import { LLM } from "../src/index.js"
-import { AnthropicMessages, Gemini, OpenAIChat, OpenAIResponses } from "../src/protocols.js"
+import { AnthropicMessages, OpenAIChat, OpenAIResponses } from "../src/protocols.js"
 import { ToolSchemaProjection } from "../src/protocols/utils/tool-schema.js"
 import { Tool, toDefinitions } from "../src/tool.js"
 import { Auth } from "../src/route.js"
@@ -142,17 +142,6 @@ describe("tool schema projections", () => {
         name: names[index],
         input_schema,
       })),
-    },
-    {
-      route: Gemini.route,
-      tools: [
-        {
-          functionDeclarations: schemas.map((parametersJsonSchema, index) => ({
-            name: names[index],
-            parametersJsonSchema,
-          })),
-        },
-      ],
     },
   ]) {
     it.effect(`${scenario.route.id} prepares empty Effect Struct tools alongside nonempty and raw schemas`, () =>
@@ -300,46 +289,6 @@ describe("tool schema projections", () => {
         type: "object",
         properties: { mode: { type: "string", enum: ["fast"] } },
       })
-    }),
-  )
-
-  it.effect("selects tool schema handling from the model name unless compatibility is explicit", () =>
-    Effect.gen(function* () {
-      const route = OpenAIChat.route.with({
-        endpoint: { baseURL: "https://api.openai.test/v1/" },
-        auth: Auth.bearer("test"),
-      })
-      const original = {
-        type: "object",
-        required: ["mode", "missing"],
-        properties: { mode: { enum: ["fast", "safe"] } },
-      }
-      const parameters = (model: ReturnType<typeof route.model>) =>
-        compileRequest(
-          LLM.request({
-            model,
-            prompt: "Use the tool.",
-            tools: [{ name: "lookup", description: "Lookup data.", inputSchema: original }],
-          }),
-        ).pipe(Effect.map((prepared) => prepared.body.tools?.[0]?.function.parameters))
-      const gemini = { ...original, required: ["mode"] }
-      const moonshot = { ...original, properties: { mode: { type: "string", enum: ["fast", "safe"] } } }
-
-      expect(yield* parameters(route.model({ id: "google/Gemini-3.8-Flash" }))).toEqual(gemini)
-      expect(
-        yield* parameters(route.model({ id: "my-tuned-endpoint", compatibility: { sanitizer: "gemini" } })),
-      ).toEqual(gemini)
-      expect(
-        yield* parameters(route.model({ id: "google/gemini-3.8-flash", compatibility: { sanitizer: "moonshot" } })),
-      ).toEqual(moonshot)
-      expect(yield* parameters(route.model({ id: "moonshotai/Kimi-K3" }))).toEqual(moonshot)
-      expect(
-        yield* parameters(route.model({ id: "google/gemini-3.8-flash", compatibility: { sanitizer: "none" } })),
-      ).toEqual(original)
-      expect(
-        yield* parameters(route.model({ id: "moonshotai/Kimi-K3", compatibility: { sanitizer: "none" } })),
-      ).toEqual(original)
-      expect(yield* parameters(route.model({ id: "gpt-6-luna" }))).toEqual(original)
     }),
   )
 

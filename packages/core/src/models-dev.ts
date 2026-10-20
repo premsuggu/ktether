@@ -277,11 +277,13 @@ const Cache = Schema.Struct({
   digest: Schema.optional(Schema.String),
   body: CatalogJson,
 })
-const defaultSource = "https://models.opencode.ai"
+// ktether lists only the models it ships, so no remote catalog is fetched unless KTETHER_MODELS_URL (or an explicit
+// option) names one. `.invalid` never resolves, so this placeholder cannot reach a real host by mistake.
+const defaultSource = "https://models.invalid"
 
 // Bundled snapshot of https://models.opencode.ai/api.json, committed at
 // packages/core/src/models-dev/snapshot.txt and refreshed via
-// `bun run script/update-models-snapshot.ts`. Decoded and normalized once per
+// hand. Decoded and normalized once per
 // isolate: the snapshot is a multi-MB module-level constant and one isolate can
 // host many runtimes (Cloudflare colocates Durable Object instances), so
 // per-runtime decoding would multiply the cost.
@@ -324,8 +326,8 @@ export const layer = (options?: Options) =>
         ),
       )
 
-      const source = options?.url || defaultSource
-      const fetch = options?.fetch ?? true
+      const source = options?.url || process.env.KTETHER_MODELS_URL || defaultSource
+      const fetch = options?.fetch ?? Boolean(process.env.KTETHER_MODELS_URL)
       const userAgent = App.useragent(app)
       const key = cacheKey(source)
       const ttl = Duration.minutes(5)
