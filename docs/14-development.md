@@ -665,7 +665,7 @@ What that means in practice:
 ## 13. Things that look stale or wrong
 
 Collected while writing this guide, so you do not trip over them:
-  `services/www`, a directory that does not exist. That CI step cannot succeed as written.
+- `script/generate.ts` runs `bun run generate` in `services/www`, a directory that does not exist.
 - `script/publish.ts` (the inherited release flow, unused so far) still checks out a `dev` branch; adapt it before
   publishing a release.
 - `CONTRIBUTING.md` says Bun 1.3 or newer; `package.json` pins 1.4.2 and the pre-push hook enforces `^1.4.2`.
