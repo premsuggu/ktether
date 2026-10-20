@@ -665,8 +665,6 @@ What that means in practice:
 ## 13. Things that look stale or wrong
 
 Collected while writing this guide, so you do not trip over them:
-
-- `script/generate.ts` and the "Check generated documentation" step in `.github/workflows/test.yml` both use
   `services/www`, a directory that does not exist. That CI step cannot succeed as written.
 - `script/publish.ts` (the inherited release flow, unused so far) still checks out a `dev` branch; adapt it before
   publishing a release.
