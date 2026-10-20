@@ -13,9 +13,6 @@
     "dev:vite:live": "sh -c 'OPENCODE_TUI_CHANNEL=dev OPENCODE_PASSWORD=\"$(opencode service get password)\" exec bun run dev:vite \"$@\" --server \"$(opencode service status)\"' --",
     "dev:desktop": "bun --cwd packages/desktop dev",
     "dev:web": "bun --cwd packages/app dev",
-    "dev:console": "ulimit -n 10240 2>/dev/null; bun run --cwd packages/console/app dev",
-    "dev:stats": "bun sst shell --stage=production -- bun run --cwd packages/stats/app dev",
-    "dev:www": "bun run --cwd services/www dev",
     "dev:storybook": "bun --cwd packages/storybook storybook",
     "bench:devex": "bun run --cwd packages/app test:bench:devex",
     "lint": "oxlint && ast-grep scan -c script/ast-grep/gui-extensions/sgconfig.yml && bun script/sdk-docs.ts",
@@ -31,17 +28,11 @@
     "upgrade-opentui": "bun run script/upgrade-opentui.ts",
     "postinstall": "bun run --cwd packages/core fix-node-pty",
     "prepare": "husky",
-    "random": "echo 'Random script'",
-    "sso": "aws sso login --sso-session=opencode --no-browser",
     "test": "echo 'do not run tests from root' && exit 1"
   },
   "workspaces": {
     "packages": [
-      "packages/*",
-      "packages/plugins/*",
-      "services/*",
-      "packages/console/*",
-      "packages/stats/*"
+      "packages/*"
     ],
     "catalog": {
       "@effect/opentelemetry": "4.0.1",
@@ -98,7 +89,6 @@
       "@typescript/native": "npm:typescript@7.0.2",
       "zod": "4.1.8",
       "remeda": "2.26.0",
-      "sst": "4.13.1",
       "shiki": "4.4.3",
       "solid-list": "0.3.0",
       "string-width": "7.2.0",
@@ -132,7 +122,6 @@
     "oxlint-tsgolint": "0.21.0",
     "prettier": "3.6.2",
     "semver": "^7.6.0",
-    "sst": "catalog:",
     "turbo": "2.10.2"
   },
   "dependencies": {
