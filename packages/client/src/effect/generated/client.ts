@@ -117,6 +117,16 @@ import type {
   GenerateTextOutput,
   VoiceSessionInput,
   VoiceSessionOutput,
+  KtetherStatusOutput,
+  KtetherModelsOutput,
+  KtetherDoctorOutput,
+  KtetherStartInput,
+  KtetherStartOutput,
+  KtetherStopInput,
+  KtetherStopOutput,
+  KtetherCleanInput,
+  KtetherCleanOutput,
+  KtetherReconnectOutput,
   ProviderListInput,
   ProviderListOutput,
   ProviderGetInput,
@@ -877,6 +887,74 @@ const EndpointVoiceSession = (raw: RawClient["server.voice"]) => (input: VoiceSe
 
 const adaptGroupVoice = (raw: RawClient["server.voice"]) => ({ session: EndpointVoiceSession(raw) })
 
+const EndpointKtetherStatus = (raw: RawClient["server.ktether"]) => () =>
+  preserveEffect<KtetherStatusOutput>()(
+    raw["ktether.status"]({}).pipe(
+      Effect.mapError(mapClientError),
+      Effect.map((value) => value.data),
+    ),
+  )
+
+const EndpointKtetherModels = (raw: RawClient["server.ktether"]) => () =>
+  preserveEffect<KtetherModelsOutput>()(
+    raw["ktether.models"]({}).pipe(
+      Effect.mapError(mapClientError),
+      Effect.map((value) => value.data),
+    ),
+  )
+
+const EndpointKtetherDoctor = (raw: RawClient["server.ktether"]) => () =>
+  preserveEffect<KtetherDoctorOutput>()(
+    raw["ktether.doctor"]({}).pipe(
+      Effect.mapError(mapClientError),
+      Effect.map((value) => value.data),
+    ),
+  )
+
+const EndpointKtetherStart = (raw: RawClient["server.ktether"]) => (input?: KtetherStartInput) =>
+  preserveEffect<KtetherStartOutput>()(
+    raw["ktether.start"]({
+      payload: { model: input?.["model"], idleTimeoutMinutes: input?.["idleTimeoutMinutes"] },
+    }).pipe(
+      Effect.mapError(mapClientError),
+      Effect.map((value) => value.data),
+    ),
+  )
+
+const EndpointKtetherStop = (raw: RawClient["server.ktether"]) => (input?: KtetherStopInput) =>
+  preserveEffect<KtetherStopOutput>()(
+    raw["ktether.stop"]({ payload: { delete: input?.["delete"] } }).pipe(
+      Effect.mapError(mapClientError),
+      Effect.map((value) => value.data),
+    ),
+  )
+
+const EndpointKtetherClean = (raw: RawClient["server.ktether"]) => (input?: KtetherCleanInput) =>
+  preserveEffect<KtetherCleanOutput>()(
+    raw["ktether.clean"]({ payload: { confirm: input?.["confirm"] } }).pipe(
+      Effect.mapError(mapClientError),
+      Effect.map((value) => value.data),
+    ),
+  )
+
+const EndpointKtetherReconnect = (raw: RawClient["server.ktether"]) => () =>
+  preserveEffect<KtetherReconnectOutput>()(
+    raw["ktether.reconnect"]({}).pipe(
+      Effect.mapError(mapClientError),
+      Effect.map((value) => value.data),
+    ),
+  )
+
+const adaptGroupKtether = (raw: RawClient["server.ktether"]) => ({
+  status: EndpointKtetherStatus(raw),
+  models: EndpointKtetherModels(raw),
+  doctor: EndpointKtetherDoctor(raw),
+  start: EndpointKtetherStart(raw),
+  stop: EndpointKtetherStop(raw),
+  clean: EndpointKtetherClean(raw),
+  reconnect: EndpointKtetherReconnect(raw),
+})
+
 const EndpointProviderList = (raw: RawClient["server.provider"]) => (input?: ProviderListInput) =>
   preserveEffect<ProviderListOutput>()(
     raw["provider.list"]({ query: { location: input?.["location"] } }).pipe(Effect.mapError(mapClientError)),
@@ -1631,6 +1709,7 @@ const adaptClient = (raw: RawClient) => ({
   model: adaptGroupModel(raw["server.model"]),
   generate: adaptGroupGenerate(raw["server.generate"]),
   voice: adaptGroupVoice(raw["server.voice"]),
+  ktether: adaptGroupKtether(raw["server.ktether"]),
   provider: adaptGroupProvider(raw["server.provider"]),
   integration: adaptGroupIntegration(raw["server.integration"]),
   mcp: adaptGroupMcp(raw["server.mcp"]),

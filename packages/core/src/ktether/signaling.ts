@@ -1,3 +1,4 @@
+import { Option, Schema } from "effect"
 import crypto from "node:crypto"
 
 /**
@@ -26,17 +27,16 @@ const safeEqual = (a: string, b: string): boolean => {
   return left.length === right.length && crypto.timingSafeEqual(left, right)
 }
 
+const Envelope = Schema.fromJsonString(Schema.Struct({ p: Schema.String, s: Schema.String }))
+const Payload = Schema.fromJsonString(Schema.Record(Schema.String, Schema.Unknown))
+const decodeEnvelope = Schema.decodeUnknownOption(Envelope)
+const decodePayload = Schema.decodeUnknownOption(Payload)
+
 /** Verifies a `{ p, s }` envelope produced by the kernel and returns the decoded payload, or undefined if forged. */
 export function openEnvelope(key: string, raw: string): Record<string, unknown> | undefined {
-  try {
-    const envelope = JSON.parse(raw) as { p?: unknown; s?: unknown }
-    if (typeof envelope.p !== "string" || typeof envelope.s !== "string") return undefined
-    if (!safeEqual(envelope.s, sign(key, envelope.p))) return undefined
-    const payload = JSON.parse(envelope.p)
-    return payload && typeof payload === "object" ? (payload as Record<string, unknown>) : undefined
-  } catch {
-    return undefined
-  }
+  const envelope = Option.getOrUndefined(decodeEnvelope(raw))
+  if (!envelope || !safeEqual(envelope.s, sign(key, envelope.p))) return undefined
+  return Option.getOrUndefined(decodePayload(envelope.p))
 }
 
 export const createStopMessage = (key: string, nowMs: number = Date.now()): string => {

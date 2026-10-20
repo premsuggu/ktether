@@ -548,11 +548,12 @@ const Root = Spec.make(typeof OPENCODE_CLI_NAME === "string" ? OPENCODE_CLI_NAME
       },
     }),
     Spec.make("ktether", {
-      description: "Manage free Kaggle GPU tethering (ktether)",
+      description: "Run models on a free Kaggle GPU",
       commands: [
         Spec.make("start", {
           description: "Start the remote Kaggle GPU backend",
           params: {
+            ...ServerParams,
             model: Flag.String("model").pipe(
               Flag.withAlias("m"),
               Flag.withDescription("Model to serve on Kaggle GPU (default: qwen3.6-27b)"),
@@ -568,6 +569,7 @@ const Root = Spec.make(typeof OPENCODE_CLI_NAME === "string" ? OPENCODE_CLI_NAME
         Spec.make("stop", {
           description: "Stop the remote Kaggle GPU backend to preserve quota",
           params: {
+            ...ServerParams,
             delete: Flag.Boolean("delete").pipe(
               Flag.withDescription("Also delete the ktether notebook from your Kaggle account"),
               Flag.withDefault(false),
@@ -577,6 +579,7 @@ const Root = Spec.make(typeof OPENCODE_CLI_NAME === "string" ? OPENCODE_CLI_NAME
         Spec.make("clean", {
           description: "Stop the session and delete the ktether notebook from your Kaggle account",
           params: {
+            ...ServerParams,
             yes: Flag.Boolean("yes").pipe(
               Flag.withAlias("y"),
               Flag.withDescription("Confirm deletion without a preview"),
@@ -586,15 +589,19 @@ const Root = Spec.make(typeof OPENCODE_CLI_NAME === "string" ? OPENCODE_CLI_NAME
         }),
         Spec.make("status", {
           description: "Check the status and latency of the Kaggle GPU backend",
+          params: ServerParams,
         }),
         Spec.make("reconnect", {
           description: "Re-attach to a running session whose tunnel was replaced",
+          params: ServerParams,
         }),
         Spec.make("doctor", {
           description: "Check that the Kaggle CLI, credentials and network are ready for ktether",
+          params: ServerParams,
         }),
         Spec.make("models", {
           description: "List available models for Kaggle GPU",
+          params: ServerParams,
         }),
       ],
     }),

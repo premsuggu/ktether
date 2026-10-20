@@ -1,11 +1,16 @@
 import { Effect } from "effect"
 import { Commands } from "../../commands"
 import { Runtime } from "../../../framework/runtime"
-import { startSession } from "../../../ktether/lifecycle"
+import { connect } from "./connection"
+import { begin, follow } from "./follow"
 
 export default Runtime.handler(
   Commands.commands.ktether.commands.start,
   Effect.fn("cli.ktether.start")(function* (input) {
-    yield* Effect.promise(() => startSession({ model: input.model, timeoutMinutes: input.timeout }))
+    const client = yield* connect(input)
+    const started = yield* begin(() =>
+      client.ktether.start({ model: input.model, idleTimeoutMinutes: input.timeout }),
+    )
+    if (started) yield* follow(client)
   }),
 )

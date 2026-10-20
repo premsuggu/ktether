@@ -1,5 +1,6 @@
 import { Layer } from "effect"
 import { GenerateHandler } from "./handlers/generate"
+import { KTetherHandler } from "./handlers/ktether"
 import { VoiceHandler } from "./handlers/voice"
 import { MessageHandler } from "./handlers/message"
 import { ModelHandler } from "./handlers/model"
@@ -44,6 +45,7 @@ export const handlers = Layer.mergeAll(
   ModelHandler,
   GenerateHandler,
   VoiceHandler,
+  KTetherHandler,
   ProviderHandler,
   IntegrationHandler,
   WebSearchHandler,

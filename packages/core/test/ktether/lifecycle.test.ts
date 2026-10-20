@@ -1,9 +1,8 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test"
 import fs from "node:fs"
-import path from "node:path"
-import { cleanSession, reconnectSession, runDoctor, sessionStatus, startSession, stopSession } from "./lifecycle"
-import { isValidStopMessage } from "./signaling"
-import { readState, saveState, usageHoursLastWeek } from "./state"
+import { cleanSession, getStatus, reconnectSession, runDoctor, startSession, stopSession } from "@opencode/core/ktether/lifecycle"
+import { isValidStopMessage } from "@opencode/core/ktether/signaling"
+import { readState, saveState, usageHoursLastWeek } from "@opencode/core/ktether/state"
 import {
   createFakeClock,
   createFakeRelay,
@@ -12,7 +11,7 @@ import {
   uninstallFakeKaggle,
   type FakeKaggle,
   type FakeRelay,
-} from "./test-helpers"
+} from "./helpers"
 
 const TUNNEL = "https://alpha-beta.trycloudflare.com"
 
@@ -169,15 +168,6 @@ describe("startSession", () => {
     await expect(startSession({ model: "qwen3.6-27b", timeoutMinutes: 45 }, failing)).rejects.toThrow("CUDA out of memory")
     expect(readState().status).toBe("stopped")
   })
-
-  test("writes the provider without a URL or key into the OpenCode config", async () => {
-    await startSession({ model: "qwen3.6-27b", timeoutMinutes: 45 }, kernelBecomesReady())
-    const cfg = JSON.parse(fs.readFileSync(path.join(home.dir, ".config", "opencode", "opencode.json"), "utf-8"))
-    expect(cfg.model).toBe("ktether/qwen3.6-27b")
-    expect(cfg.provider.ktether.options).toBeUndefined()
-    expect(JSON.stringify(cfg)).not.toContain("kgp_")
-    expect(Object.keys(cfg.provider.ktether.models)).toContain("qwen3.6-27b")
-  })
 })
 
 describe("stopSession", () => {
@@ -239,7 +229,7 @@ describe("cleanSession", () => {
 
   test("reports when there is nothing to delete", async () => {
     uninstallFakeKaggle()
-    const { setCliRunner } = await import("./kaggle")
+    const { setCliRunner } = await import("@opencode/core/ktether/kaggle")
     setCliRunner(() => ({ status: 1, output: "404 Not Found" }))
     expect(await cleanSession({ yes: true }, deps())).toBe(false)
     expect(lines.join("\n")).toContain("Nothing to clean")
@@ -253,7 +243,7 @@ describe("cleanSession", () => {
   })
 })
 
-describe("sessionStatus", () => {
+describe("getStatus", () => {
   test("reports health, uptime, boot stages and slot usage for a live session", async () => {
     const clock = createFakeClock()
     saveState({
@@ -266,34 +256,60 @@ describe("sessionStatus", () => {
       timings: { binaries: 30, model_download: 150 },
     })
     relay.healthy.add("alpha-beta.trycloudflare.com")
-    await sessionStatus(deps(clock))
-    const text = lines.join("\n")
-    expect(text).toContain("Health Check: HEALTHY")
-    expect(text).toContain("Uptime: 90.0 minutes")
-    expect(text).toContain("Boot breakdown: binaries 30s, model_download 120s")
-    expect(text).toContain("Server slots: 1 busy / 2")
+    const status = await getStatus(deps(clock))
+    expect(status).toMatchObject({
+      state: "ready",
+      url: TUNNEL,
+      model: "qwen3.6-27b",
+      kernel: "RUNNING",
+      uptimeMinutes: 90,
+      slots: { busy: 1, total: 2 },
+      bootStages: [
+        { stage: "binaries", seconds: 30 },
+        { stage: "model_download", seconds: 120 },
+      ],
+    })
+    expect(status.latencyMs).toBeGreaterThanOrEqual(0)
+  })
+
+  test("never exposes credentials", async () => {
+    saveState({ url: TUNNEL, status: "ready", active: true, apiKey: "kgp_secret", signingKey: "s".repeat(64) })
+    relay.healthy.add("alpha-beta.trycloudflare.com")
+    expect(JSON.stringify(await getStatus(deps()))).not.toMatch(/kgp_secret|ssssssss/)
   })
 
   test("closes a stale session whose kernel ended on its own, and counts the usage", async () => {
     const clock = createFakeClock()
     saveState({ url: TUNNEL, status: "ready", active: true, sessionStart: clock.now() - 3_600_000 })
     kaggle = installFakeKaggle(["COMPLETE"])
-    await sessionStatus(deps(clock))
-    expect(lines.join("\n")).toContain("The kernel ended (COMPLETE)")
+    const status = await getStatus(deps(clock))
+    expect(status).toMatchObject({ state: "stopped", closedStaleSession: "COMPLETE" })
     expect(readState().status).toBe("stopped")
     expect(usageHoursLastWeek(clock.now())).toBeCloseTo(1, 1)
   })
 
-  test("suggests reconnect when the tunnel is unreachable", async () => {
-    saveState({ url: TUNNEL, status: "ready", active: true })
-    await sessionStatus(deps())
-    expect(lines.join("\n")).toContain("ktether reconnect")
+  test("reports an unreachable tunnel so clients can offer reconnect", async () => {
+    saveState({ url: TUNNEL, status: "ready", active: true, model: "qwen3.6-27b" })
+    expect(await getStatus(deps())).toMatchObject({ state: "unreachable", url: TUNNEL })
   })
 
-  test("describes a pending launch", async () => {
+  test("describes a pending launch and a stopped one", async () => {
     saveState({ status: "pending", channelId: "kt_x" })
-    await sessionStatus(deps())
-    expect(lines.join("\n")).toContain("LAUNCH PENDING")
+    expect((await getStatus(deps())).state).toBe("pending")
+    saveState({ status: "stopped" })
+    expect((await getStatus(deps())).state).toBe("stopped")
+  })
+
+  test("tells clients whether Kaggle credentials exist", async () => {
+    const saved = { user: process.env.KAGGLE_USERNAME, key: process.env.KAGGLE_KEY }
+    delete process.env.KAGGLE_USERNAME
+    delete process.env.KAGGLE_KEY
+    try {
+      expect(await getStatus(deps())).toMatchObject({ hasCredentials: false, state: "stopped" })
+    } finally {
+      process.env.KAGGLE_USERNAME = saved.user
+      process.env.KAGGLE_KEY = saved.key
+    }
   })
 })
 
@@ -320,7 +336,7 @@ describe("runDoctor", () => {
   })
 
   test("reports a missing Kaggle CLI with install guidance", async () => {
-    const { setCliRunner } = await import("./kaggle")
+    const { setCliRunner } = await import("@opencode/core/ktether/kaggle")
     setCliRunner(() => ({ status: null, output: "", error: Object.assign(new Error("spawn kaggle ENOENT"), { code: "ENOENT" }) }))
     const checks = await runDoctor({ fetch: relay.fetch })
     expect(checks.find((c) => c.name === "Kaggle CLI")).toMatchObject({ ok: false })

@@ -1,8 +1,9 @@
 import fs from "node:fs"
 import os from "node:os"
 import path from "node:path"
-import { setCliRunner, type CliResult } from "./kaggle"
-import { sign } from "./signaling"
+import { setCliRunner, type CliResult } from "@opencode/core/ktether/kaggle"
+import { sign } from "@opencode/core/ktether/signaling"
+import { readState } from "@opencode/core/ktether/state"
 
 /** Points the home directory at a fresh temp dir so tests never touch real ktether or OpenCode state. */
 export function isolateHome(): { dir: string; restore: () => void } {
@@ -90,7 +91,7 @@ export function createFakeRelay(): FakeRelay {
     publish: (key, payload) => {
       messages.push(JSON.stringify({ event: "message", message: envelope(key, payload) }))
     },
-    fetch: (async (input: RequestInfo | URL, init?: RequestInit) => {
+    fetch: (async (input: string | URL | Request, init?: RequestInit) => {
       const url = String(input)
       if (init?.method === "POST") {
         relay.posted.push({ url, body: String(init.body) })
@@ -122,5 +123,34 @@ export function createFakeClock(start = 1_800_000_000_000) {
     advance: (ms: number) => {
       current += ms
     },
+  }
+}
+
+/**
+ * A sleep that doubles as the fake kernel: once the code under test has pushed a launch and saved its pending
+ * session, the next sleep makes the kernel publish a signed "ready" with the given tunnel URL.
+ */
+export function answeringKernel(
+  relay: FakeRelay,
+  clock: ReturnType<typeof createFakeClock>,
+  tunnelURL: string,
+  extra: Record<string, unknown> = {},
+) {
+  let published = false
+  return async (ms: number) => {
+    await clock.sleep(ms)
+    const state = readState()
+    if (published || state.status !== "pending" || !state.signingKey) return
+    published = true
+    relay.publish(state.signingKey, { event: "starting", timestamp: 1, gpu: "2x T4", model: "m" })
+    relay.publish(state.signingKey, {
+      event: "ready",
+      timestamp: 2,
+      tunnel_url: tunnelURL,
+      model: "m",
+      gpu: "2x T4",
+      timings: { binaries: 30, model_download: 120, server_ready: 200, tunnel: 205 },
+      ...extra,
+    })
   }
 }

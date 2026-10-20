@@ -2,9 +2,9 @@ import fs from "node:fs"
 import os from "node:os"
 import path from "node:path"
 import serverScript from "./kernel/server.py" with { type: "text" }
-import { KERNEL_SLUG, kernelRef } from "./kaggle"
-import { AVAILABLE_MODELS, DEFAULT_MODEL } from "./registry"
-import { generateApiKey, generateChannelId, generateSigningKey, relayBase } from "./signaling"
+import { KERNEL_SLUG, kernelRef } from "./kaggle.js"
+import { AVAILABLE_MODELS, DEFAULT_MODEL } from "./registry.js"
+import { generateApiKey, generateChannelId, generateSigningKey, relayBase } from "./signaling.js"
 
 export interface Bundle {
   readonly stagingDir: string

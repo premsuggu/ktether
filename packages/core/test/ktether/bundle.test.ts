@@ -2,8 +2,8 @@ import { afterEach, describe, expect, test } from "bun:test"
 import fs from "node:fs"
 import path from "node:path"
 import { spawnSync } from "node:child_process"
-import { buildKernelConfig, prepareStagingBundle, removeStagingBundle, renderKernelScript } from "./bundle"
-import { AVAILABLE_MODELS, DEFAULT_MODEL } from "./registry"
+import { buildKernelConfig, prepareStagingBundle, removeStagingBundle, renderKernelScript } from "@opencode/core/ktether/bundle"
+import { AVAILABLE_MODELS, DEFAULT_MODEL } from "@opencode/core/ktether/registry"
 
 const python = ["python", "python3"].find((bin) => spawnSync(bin, ["--version"]).status === 0)
 const dirs: string[] = []

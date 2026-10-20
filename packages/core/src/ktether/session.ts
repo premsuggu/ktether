@@ -1,5 +1,5 @@
-import { getKernelOutput, getKernelStatus, TERMINAL_STATUSES, type KernelStatus } from "./kaggle"
-import { isTunnelUrl, openEnvelope, relayBase } from "./signaling"
+import { getKernelOutput, getKernelStatus, TERMINAL_STATUSES, type KernelStatus } from "./kaggle.js"
+import { isTunnelUrl, openEnvelope, relayBase } from "./signaling.js"
 
 export interface ReadySignal {
   readonly tunnel_url: string
