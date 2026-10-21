@@ -6,6 +6,8 @@ import os from "node:os"
 import { ProviderID, type ModelID } from "../schema/index.js"
 import { OpenAICompatibleChat } from "../protocols/openai-compatible-chat.js"
 import type { RouteDefaultsInput } from "../route/client.js"
+import { Effect } from "effect"
+import { Auth, MissingCredentialError } from "../route/auth.js"
 import { AuthOptions, type ProviderAuthOption } from "../route/auth-options.js"
 import type { ProviderPackage } from "../provider-package.js"
 import type { OpenAIProviderOptionsInput } from "./openai-options.js"
@@ -42,6 +44,17 @@ export type Settings = ProviderPackage.Settings &
 
 export const routes = [OpenAICompatibleChat.route]
 
+/** Used when no key was given and no GPU session is saved: say how to get one instead of naming an env var. */
+export const noSessionAuth = Auth.effect(
+  Effect.fail(
+    new MissingCredentialError(
+      "KTETHER_API_KEY",
+      "No Kaggle GPU session is running. Start one with `ktether gpu start` (or /ktether-start in the terminal UI), " +
+        "or set KTETHER_URL and KTETHER_API_KEY to use your own server.",
+    ),
+  ),
+).bearer()
+
 export const configure = (input: LanguageModelOptions = {}) => {
   const provider = input.provider ?? "kaggle"
   const persisted = readPersistedEndpoint()
@@ -51,7 +64,7 @@ export const configure = (input: LanguageModelOptions = {}) => {
   const apiKey = input.apiKey ?? process.env.KTETHER_API_KEY ?? persisted.apiKey
 
   const { provider: _, baseURL: _b, apiKey: _apiKey, auth: _auth, ...rest } = input
-  const auth = input.auth ?? AuthOptions.bearer(apiKey !== undefined ? { apiKey } : {}, "KTETHER_API_KEY")
+  const auth = input.auth ?? (apiKey === undefined ? noSessionAuth : AuthOptions.bearer({ apiKey }, "KTETHER_API_KEY"))
   const route = OpenAICompatibleChat.route.with({
     ...rest,
     provider,
