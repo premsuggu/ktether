@@ -1,26 +1,24 @@
 import { Plugin } from "@ktether/plugin/tui"
-import { createMemo, Show } from "solid-js"
+import { createMemo, createSignal, onCleanup, onMount, Show } from "solid-js"
 import { useTerminalDimensions } from "@opentui/solid"
 import { FilePath } from "../../ui/file-path"
 import { useWorkingDirectoryActions } from "../../ui/working-directory-actions"
 import { usePromptMove } from "../../component/prompt/move"
-import { hasConnectedProvider } from "../../util/connected-provider"
+import { useClient } from "../../context/client"
 
-export function SidebarOnboarding(props: { context: Plugin.Context; sessionID: string }) {
+export type GpuState = "stopped" | "pending" | "ready" | "unreachable"
+
+export function SidebarOnboarding(props: { context: Plugin.Context; gpu: GpuState | undefined }) {
   const dimensions = useTerminalDimensions()
   const [onboarding, updateOnboarding] = props.context.storage.store("getting-started", {
     initial: { dismissed: false },
   })
-  const session = createMemo(() => props.context.data.session.get(props.sessionID))
-  const integrations = createMemo(() =>
-    props.context.data.location.integration.list(session()?.location ?? props.context.location),
-  )
+  // Shown until a GPU is ready; an unknown state (status not loaded yet) stays hidden to avoid a flash.
   const showOnboarding = createMemo(() => {
     if (dimensions().height < 22) return false
-    const list = integrations()
-    if (!list) return false
-    return !onboarding.dismissed && !hasConnectedProvider(list)
+    return !onboarding.dismissed && props.gpu !== undefined && props.gpu !== "ready"
   })
+  const starting = () => props.gpu === "pending"
 
   return (
     <Show when={showOnboarding()}>
@@ -54,19 +52,23 @@ export function SidebarOnboarding(props: { context: Plugin.Context; sessionID: s
               ✕
             </text>
           </box>
-          <text fg={props.context.theme.text.muted}>ktether includes free models so you can start immediately.</text>
           <text fg={props.context.theme.text.muted}>
-            Connect from 75+ providers to use other models, including Claude, GPT, Gemini etc
+            {starting()
+              ? "Your Kaggle GPU is starting. The first start takes about 5 to 6 minutes."
+              : "ktether runs open models on a free Kaggle GPU."}
           </text>
+          <Show when={!starting()}>
+            <text fg={props.context.theme.text.muted}>Start one, then chat as usual.</text>
+          </Show>
           <box
-            id="sidebar.footer.getting-started.connect"
+            id="sidebar.footer.getting-started.action"
             flexDirection="row"
             gap={1}
             justifyContent="space-between"
-            onMouseUp={() => props.context.keymap.dispatch("provider.connect")}
+            onMouseUp={() => props.context.keymap.dispatch(starting() ? "ktether.gpu.status" : "ktether.gpu.start")}
           >
-            <text fg={props.context.theme.text.base}>Connect provider</text>
-            <text fg={props.context.theme.text.muted}>/connect</text>
+            <text fg={props.context.theme.text.base}>{starting() ? "GPU status" : "Start GPU"}</text>
+            <text fg={props.context.theme.text.muted}>{starting() ? "/ktether" : "/ktether-start"}</text>
           </box>
         </box>
       </box>
@@ -74,7 +76,21 @@ export function SidebarOnboarding(props: { context: Plugin.Context; sessionID: s
   )
 }
 
+const GPU_POLL_MILLIS = 10_000
+
 function SidebarFooter(props: { context: Plugin.Context; sessionID: string }) {
+  const client = useClient()
+  const [gpu, setGpu] = createSignal<GpuState>()
+  onMount(() => {
+    const refresh = () =>
+      client.api.ktether.status().then(
+        (status) => setGpu(status.state),
+        () => setGpu(undefined),
+      )
+    void refresh()
+    const timer = setInterval(() => void refresh(), GPU_POLL_MILLIS)
+    onCleanup(() => clearInterval(timer))
+  })
   const session = createMemo(() => props.context.data.session.get(props.sessionID))
   const move = usePromptMove({
     projectID: () => session()?.projectID,
@@ -92,7 +108,7 @@ function SidebarFooter(props: { context: Plugin.Context; sessionID: string }) {
   })
   return (
     <box gap={1}>
-      <SidebarOnboarding context={props.context} sessionID={props.sessionID} />
+      <SidebarOnboarding context={props.context} gpu={gpu()} />
       <Show when={directory()}>
         {(value) => (
           <box

@@ -1,5 +1,12 @@
 # ktether
 
+```text
+▄     ▄         ▄   ▄
+█ ▄▀ ▀█▀▀ █▀▀█ ▀█▀▀ █▀▀▄ █▀▀█ █▀▀▀
+█▀▄   █   █▀▀▀  █   █  █ █▀▀▀ █
+▀  ▀  ▀▀▀ ▀▀▀▀  ▀▀▀ ▀▀▀▀ ▀▀▀▀ ▀
+```
+
 **Run a coding agent on a free Kaggle GPU.**
 
 ktether is a terminal-first AI coding agent that reads and edits your code, runs commands, and talks to an

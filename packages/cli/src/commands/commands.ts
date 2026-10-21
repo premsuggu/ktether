@@ -36,7 +36,7 @@ const PermissionParams = {
 }
 
 const Root = Spec.make(typeof KTETHER_CLI_NAME === "string" ? KTETHER_CLI_NAME : "ktether", {
-  description: "ktether command line interface",
+  description: "Run open-source coding models on a free Kaggle GPU",
   params: {
     ...ServerParams,
     ...PermissionParams,
@@ -57,6 +57,64 @@ const Root = Spec.make(typeof KTETHER_CLI_NAME === "string" ? KTETHER_CLI_NAME :
     prompt: Flag.String("prompt").pipe(Flag.withDescription("Prompt to use"), Flag.optional),
   },
   commands: [
+    Spec.make("gpu", {
+      description: "Run models on a free Kaggle GPU",
+      commands: [
+        Spec.make("start", {
+          description: "Start the remote Kaggle GPU backend",
+          params: {
+            ...ServerParams,
+            model: Flag.String("model").pipe(
+              Flag.withAlias("m"),
+              Flag.withDescription("Model to serve on Kaggle GPU (default: qwen3.6-27b)"),
+              Flag.withDefault("qwen3.6-27b"),
+            ),
+            timeout: Flag.Int("timeout").pipe(
+              Flag.withAlias("t"),
+              Flag.withDescription("Minutes of idle time before auto-shutdown"),
+              Flag.withDefault(45),
+            ),
+          },
+        }),
+        Spec.make("stop", {
+          description: "Stop the remote Kaggle GPU backend to preserve quota",
+          params: {
+            ...ServerParams,
+            delete: Flag.Boolean("delete").pipe(
+              Flag.withDescription("Also delete the ktether notebook from your Kaggle account"),
+              Flag.withDefault(false),
+            ),
+          },
+        }),
+        Spec.make("clean", {
+          description: "Stop the session and delete the ktether notebook from your Kaggle account",
+          params: {
+            ...ServerParams,
+            yes: Flag.Boolean("yes").pipe(
+              Flag.withAlias("y"),
+              Flag.withDescription("Confirm deletion without a preview"),
+              Flag.withDefault(false),
+            ),
+          },
+        }),
+        Spec.make("status", {
+          description: "Check the status and latency of the Kaggle GPU backend",
+          params: ServerParams,
+        }),
+        Spec.make("reconnect", {
+          description: "Re-attach to a running session whose tunnel was replaced",
+          params: ServerParams,
+        }),
+        Spec.make("doctor", {
+          description: "Check that the Kaggle CLI, credentials and network are ready for ktether",
+          params: ServerParams,
+        }),
+        Spec.make("models", {
+          description: "List available models for Kaggle GPU",
+          params: ServerParams,
+        }),
+      ],
+    }),
     Spec.make("upgrade", {
       description: "Upgrade ktether to the latest or a specific version",
       aliases: ["update"],
@@ -546,64 +604,6 @@ const Root = Spec.make(typeof KTETHER_CLI_NAME === "string" ? KTETHER_CLI_NAME :
           Flag.withDefault(false),
         ),
       },
-    }),
-    Spec.make("gpu", {
-      description: "Run models on a free Kaggle GPU",
-      commands: [
-        Spec.make("start", {
-          description: "Start the remote Kaggle GPU backend",
-          params: {
-            ...ServerParams,
-            model: Flag.String("model").pipe(
-              Flag.withAlias("m"),
-              Flag.withDescription("Model to serve on Kaggle GPU (default: qwen3.6-27b)"),
-              Flag.withDefault("qwen3.6-27b"),
-            ),
-            timeout: Flag.Int("timeout").pipe(
-              Flag.withAlias("t"),
-              Flag.withDescription("Minutes of idle time before auto-shutdown"),
-              Flag.withDefault(45),
-            ),
-          },
-        }),
-        Spec.make("stop", {
-          description: "Stop the remote Kaggle GPU backend to preserve quota",
-          params: {
-            ...ServerParams,
-            delete: Flag.Boolean("delete").pipe(
-              Flag.withDescription("Also delete the ktether notebook from your Kaggle account"),
-              Flag.withDefault(false),
-            ),
-          },
-        }),
-        Spec.make("clean", {
-          description: "Stop the session and delete the ktether notebook from your Kaggle account",
-          params: {
-            ...ServerParams,
-            yes: Flag.Boolean("yes").pipe(
-              Flag.withAlias("y"),
-              Flag.withDescription("Confirm deletion without a preview"),
-              Flag.withDefault(false),
-            ),
-          },
-        }),
-        Spec.make("status", {
-          description: "Check the status and latency of the Kaggle GPU backend",
-          params: ServerParams,
-        }),
-        Spec.make("reconnect", {
-          description: "Re-attach to a running session whose tunnel was replaced",
-          params: ServerParams,
-        }),
-        Spec.make("doctor", {
-          description: "Check that the Kaggle CLI, credentials and network are ready for ktether",
-          params: ServerParams,
-        }),
-        Spec.make("models", {
-          description: "List available models for Kaggle GPU",
-          params: ServerParams,
-        }),
-      ],
     }),
     Spec.make("serve", {
       description: "Start the v2 API and web server",
