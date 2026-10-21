@@ -76,7 +76,8 @@ export function SidebarOnboarding(props: { context: Plugin.Context; gpu: GpuStat
   )
 }
 
-const GPU_POLL_MILLIS = 10_000
+// Every status check asks Kaggle for the notebook state, so keep this slow.
+const GPU_POLL_MILLIS = 30_000
 
 function SidebarFooter(props: { context: Plugin.Context; sessionID: string }) {
   const client = useClient()

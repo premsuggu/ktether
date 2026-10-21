@@ -16,7 +16,11 @@ export interface CliResult {
 export type CliRunner = (args: readonly string[]) => CliResult
 
 const defaultRunner: CliRunner = (args) => {
-  const res = spawnSync("kaggle", [...args], { encoding: "utf-8" })
+  const res = spawnSync("kaggle", [...args], {
+    encoding: "utf-8",
+    // The background service has no console on Windows, so without this every call flashes a terminal window.
+    windowsHide: true,
+  })
   const output = `${res.stdout ?? ""}${res.stderr ?? ""}`
     .split("\n")
     .filter((line) => !/outdated `kaggle` version/.test(line))
