@@ -1,13 +1,20 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test"
 import { latestReady, pollSignaling, SessionFailure } from "@ktether/core/ktether/session"
 import { generateSigningKey } from "@ktether/core/ktether/signaling"
-import { createFakeClock, createFakeRelay, installFakeKaggle, uninstallFakeKaggle } from "./helpers"
+import { createFakeClock, createFakeRelay, installFakeKaggle, isolateHome, uninstallFakeKaggle } from "./helpers"
 
 const KEY = generateSigningKey()
 const URL1 = "https://one-two.trycloudflare.com"
 
-beforeEach(() => installFakeKaggle(["RUNNING"]))
-afterEach(() => uninstallFakeKaggle())
+let home: ReturnType<typeof isolateHome>
+beforeEach(() => {
+  home = isolateHome()
+  installFakeKaggle(["RUNNING"])
+})
+afterEach(() => {
+  uninstallFakeKaggle()
+  home.restore()
+})
 
 const poll = (relay: ReturnType<typeof createFakeRelay>, clock = createFakeClock(), extra = {}) =>
   pollSignaling("kt_chan", KEY, {

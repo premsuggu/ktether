@@ -2,6 +2,7 @@ import fs from "node:fs"
 import os from "node:os"
 import path from "node:path"
 import { spawnSync } from "node:child_process"
+import { kernelLogDirPath } from "./state.js"
 
 /** The only Kaggle notebook ktether ever creates, updates or deletes. */
 export const KERNEL_SLUG = "ktether-runner"
@@ -80,10 +81,28 @@ export const getKernelStatus = (username: string): KernelStatus | undefined =>
 export function pushKernel(stagingDir: string): string {
   const res = run(["kernels", "push", "-p", stagingDir, "--accelerator", "NvidiaTeslaT4"])
   if (res.status !== 0) throw new Error(`Kaggle push failed: ${res.output}`)
+  // The CLI exits 0 even when Kaggle rejects the push and reports it only in its output.
+  if (!/successfully pushed/i.test(res.output)) throw new Error(pushRejection(res.output))
   return res.output
 }
 
-export const getKernelOutput = (username: string): string => run(["kernels", "output", kernelRef(username)]).output
+function pushRejection(output: string) {
+  if (/quota/i.test(output))
+    return (
+      `Kaggle refused to start the notebook: ${output}
+` +
+      "Your weekly GPU quota is used up. It resets once a week, and Kaggle shows the hours you have left in a " +
+      "notebook's session panel. Nothing was started, so no GPU time is being used."
+    )
+  return `Kaggle did not accept the notebook: ${output}`
+}
+
+export function getKernelOutput(username: string): string {
+  // The CLI downloads into the current directory unless given a path.
+  const directory = kernelLogDirPath()
+  fs.mkdirSync(directory, { recursive: true })
+  return run(["kernels", "output", kernelRef(username), "-p", directory]).output
+}
 
 /** Deletes the ktether notebook (and all its versions) from the user's Kaggle account. */
 export function deleteKernel(username: string): { deleted: boolean; message: string } {

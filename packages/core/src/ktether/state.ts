@@ -29,6 +29,8 @@ const stateDir = (): string => path.join(os.homedir(), ".local", "state", "kteth
 
 export const stateFilePath = (): string => path.join(stateDir(), "session.json")
 export const usageFilePath = (): string => path.join(stateDir(), "usage.json")
+/** Where the notebook's log is downloaded when a start fails, so it never lands in the current directory. */
+export const kernelLogDirPath = (): string => path.join(stateDir(), "kernel-log")
 
 function writeJson(file: string, value: unknown): void {
   fs.mkdirSync(path.dirname(file), { recursive: true })

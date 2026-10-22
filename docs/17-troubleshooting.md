@@ -22,6 +22,7 @@ ktether gpu status     # what state is the session in, and what is the latest op
 
 | Symptom | Cause | What to do |
 | --- | --- | --- |
+| `Kaggle refused to start the notebook: ... Maximum weekly GPU quota ... reached` | You have used all of your weekly GPU hours (30 h on a standard account). The quota counts every notebook you run, not only ktether | Wait for the weekly reset. Kaggle shows the hours you have left in a notebook's session panel. Nothing was started, so no GPU time is being used. The "GPU time used" line in `gpu status` is only ktether's own estimate and can be lower than Kaggle's count. |
 | Stuck on `QUEUED` | Kaggle has no free GPU | Wait. After an hour ktether says "Still queued ... Run start again to keep waiting"; run `ktether gpu start` again (it **resumes**, it does not push a second notebook). |
 | `A previous ktether kernel is still running. Stopping it first` | An old notebook was still alive | Normal. It is stopped with a signed message, waiting up to 90 s. |
 | `Kaggle kernel ended (ERROR) before the tunnel was ready` + a log | The notebook crashed | Read the log tail. Typical causes: out of memory (model too large for the context), a download that failed, a GPU that was not attached. |
@@ -62,7 +63,7 @@ that it answers. If it keeps failing, the notebook itself may be gone: check `kt
 
 ## 17.6 Reading the notebook's own log
 
-When a notebook ends in `ERROR`, ktether prints its log. You can also see it at
+When a notebook ends in `ERROR`, ktether prints its log and saves it under `~/.local/state/ktether/kernel-log/`. You can also see it at
 `https://www.kaggle.com/code/<your-username>/ktether-runner`. Useful lines start with `[ktether]` (the supervisor),
 `[llama]` (the model server) and `[tunnel]` (cloudflared). Boot stages appear as `stage <name> done at +<seconds>s`.
 

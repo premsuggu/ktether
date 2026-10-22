@@ -97,6 +97,14 @@ describe("startSession", () => {
     expect(readState().status).toBeUndefined()
   })
 
+  // The Kaggle CLI exits 0 when it refuses a push; only its output says so.
+  test("fails with a clear message when Kaggle refuses the push over the weekly quota", async () => {
+    kaggle.pushResult = { status: 0, output: "Kernel push error: Maximum weekly GPU quota of 30.00 hours reached." }
+    await expect(startSession({ model: "qwen3.6-27b", timeoutMinutes: 45 }, deps())).rejects.toThrow("quota is used up")
+    expect(fs.existsSync(kaggle.stagingSeen[0])).toBe(false)
+    expect(readState().status).toBeUndefined()
+  })
+
   test("rejects an unknown model before touching Kaggle", async () => {
     await expect(startSession({ model: "gpt-9", timeoutMinutes: 45 }, deps())).rejects.toThrow("Invalid model")
     expect(kaggle.calls).toHaveLength(0)
